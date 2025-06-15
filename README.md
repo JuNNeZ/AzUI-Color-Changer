@@ -1,6 +1,6 @@
 # AzUI Healthbar Color Changer
 
-**Current version:** 4.7.5  
+**Current version:** 4.7.21  
 Lightweight Ace3-powered addon that lets you recolour and animate your player health-bar in **AzeriteUI, oUF layouts, or the default frames**.
 
 ---
@@ -54,12 +54,24 @@ Libs\AceAddon-3.0\AceAddon-3.0.lua
 
 ---
 
-### Change-Highlights (since 4.6)
+### Change-Highlights (since 4.7.5)
 
-* **4.7.5** – HSV Ping-Pong & Chaos overhaul, smarter toggle labels.  
-* **4.7.4** – Single-button toggles for Rainbow & Pulse, nil-safe StopRainbow.  
-* **4.7.0** – Advanced Rainbow patterns, speed slider, pulse base colour.  
-* **4.6.x** – Minimap/Titan launcher, full tooltips, colour-blind preset seeds.
+* **4.7.20**  Lua 5.4 unpack shim • Male / Female class-name buttons • Final texture logic (Blizzard gradient tinted, AzeriteUI gradient preserved)
+* **4.7.19**  Re-tint Blizzard bars instead of flat white • Fixed flat-brown AzeriteUI bar
+* **4.7.18**  Removed duplicate numeric-texture branch • Extra end in PatchFrame fixed
+* **4.7.17**  Stray end before helper removed • Deleted duplicate SetHealthColor block
+* **4.7.16**  type(texPath) guard stops numeric-index crash • Version bump
+* **4.7.15**  Closed PatchFrame correctly • Removed colour-override duplicate lines
+* **4.7.14**  Purged redundant two-line override snippet (logic cleanup)
+* **4.7.13**  Deleted duplicate Classic path & stray end (f.Health…) (line-213 crash)
+* **4.7.12**  Refactored PatchFrame order, consolidated texture handling
+* **4.7.11**  Fixed colorClass=false=false typo • VertexColor tint for Blizzard gradient
+* **4.7.10**  Dragonflight/TWW Blizzard player-frame support • Atlas vs custom texture detect
+* **4.7.9**  Temporary WHITE8X8 fallback for non-Blizzard bars (prevented green tint)
+* **4.7.8**  Retail player-frame path updated (HealthBarsContainer.HealthBar)
+* **4.7.7**  First Blizzard helper (path mis-match hot-fixed in 4.7.8)
+* **4.7.6**  Rainbow toggle shows Stop text • HSV Ping-Pong hue sweep • Hunter-pet StopRainbow nil fix
+* **4.7.5**  Advanced Rainbow patterns: Cycle / Ping-Pong / Chaos with toggle button text swap
 
 See full `CHANGELOG.md` for detailed history.
 
