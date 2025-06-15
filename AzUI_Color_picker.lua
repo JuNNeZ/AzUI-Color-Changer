@@ -1,7 +1,8 @@
+---@diagnostic disable: undefined-global, deprecated, undefined-field
 --[[
-AzUI_Color_Picker.lua – FULL SOURCE (v4.7.5)
+AzUI_Color_Picker.lua - FULL SOURCE (v4.7.20)
 * Alpha channel support (colour transparency)
-* Rainbow speed slider (0.1–5 Hz)
+* Rainbow speed slider (0.1-5 Hz)
 * “Class Colour” quick‑reset button
 * Colour‑blind friendly presets on first run
 * Hunter‑pet family fallback presets
@@ -11,7 +12,7 @@ AzUI_Color_Picker.lua – FULL SOURCE (v4.7.5)
 ---------------------------------------------------------------------
 -- SETUP & LIBS
 ---------------------------------------------------------------------
-local addonName, ns = ...
+local addonName = ...
 local addon      = CreateFrame("Frame", addonName)
 
 local AceConfig       = LibStub("AceConfig-3.0")
@@ -19,10 +20,13 @@ local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 local AceDB           = LibStub("AceDB-3.0")
 local AceAddon        = LibStub("AceAddon-3.0")
 local AceLocale       = LibStub("AceLocale-3.0")
-local L               = AceLocale:GetLocale(addonName, true) or setmetatable({}, {__index=function(t,k) return k end})
+local L               = AceLocale:GetLocale(addonName, true) or setmetatable({}, {__index=function(_,k) return k end})
 -- DataBroker / Minimap handling
 local LDB              = LibStub("LibDataBroker-1.1", true)
 local DBIcon           = LibStub("LibDBIcon-1.0", true)
+
+-- Compatibility for unpack across Lua versions
+local unpack = table.unpack or unpack
 
 ---------------------------------------------------------------------
 -- DEFAULTS
@@ -130,8 +134,6 @@ local storedPulseColor = nil
 local selectedPreset, renameBuffer = nil, ""
 local lastAppliedColor = {nil,nil,nil,nil}
 local knownFrames = setmetatable({}, {__mode="k"})
-local storedPlayerColor, storedRainbow = nil, false
-
 -- forward declarations so they exist for pop‑ups defined above their body
 local StopRainbow, StartRainbow, ApplyColor
 
@@ -187,27 +189,121 @@ local function mutateColor(r,g,b,a) DB.profile.color[1],DB.profile.color[2],DB.p
 
 local function PatchFrame(f)
   if f and f.Health and not f.Health.__AzPatched then
+    local tex = f.Health:GetStatusBarTexture()
+    local texPath = tex and tex:GetTexture()
+    -- Detect Blizzard gradient/atlas only when texture path is a string
+    if type(texPath) == "number" or (type(texPath) == "string" and texPath:match("UI%-StatusBar")) then
+      -- Numeric fileID (AzeriteUI gradient, many oUF layouts) or Blizzard default gradient texture: recolour via VertexColor
+      f.Health.__isBlizzTexture = true
+      tex:SetVertexColor(unpack(DB.profile.color))
+    elseif type(texPath) == "string" then
+      -- Unknown custom texture path: fall back to white 8×8 to avoid tint
+      if tex and tex:GetTexture() ~= "Interface\\Buttons\\WHITE8X8" then
+        f.Health:SetStatusBarTexture("Interface\\Buttons\\WHITE8X8")
+      end
+    end
+    -- Patch health bar to use our colour
+
     f.Health.colorClass=false; f.Health.colorReaction=false; f.Health.colorHealth=false; f.Health.colorDisconnected=false; f.Health.__AzPatched=true
-    hooksecurefunc(f.Health,"SetStatusBarColor",function(_,R,G,B) if not f.__block then f.__block=true; f.Health:SetStatusBarColor(unpack(DB.profile.color)); f.Health:SetAlpha(DB.profile.color[4] or 1); f.__block=false end end)
+    hooksecurefunc(f.Health, "SetStatusBarColor", function()
+      if not f.__block then
+        f.__block = true
+        if f.Health.__isBlizzTexture then
+          f.Health:GetStatusBarTexture():SetVertexColor(DB.profile.color[1], DB.profile.color[2], DB.profile.color[3])
+          f.Health:SetAlpha(DB.profile.color[4])
+        else
+          f.Health:SetStatusBarColor(unpack(DB.profile.color))
+          f.Health:SetAlpha(DB.profile.color[4])
+        end
+        f.__block = false
+      end
+    end)
   end
 end
 
-local function SetHealthColor(f,r,g,b,a)
-  if not(f and f.Health) then return end
-  knownFrames[f]=true; PatchFrame(f); f.Health:SetStatusBarColor(r,g,b); f.Health:SetAlpha(a)
+-- Universal health bar color setter (fixes missing SetHealthColor error)
+local function SetHealthColor(frame, r, g, b, a)
+  if not frame then return end
+  local bar = frame.Health or frame
+  if bar.SetStatusBarColor then bar:SetStatusBarColor(r, g, b) end
+  if bar.SetAlpha and a then bar:SetAlpha(a) end
+  if bar.GetStatusBarTexture then
+    local tex = bar:GetStatusBarTexture()
+    if tex and tex.SetVertexColor then tex:SetVertexColor(r, g, b, a) end
+  end
 end
 
-function ApplyColor()
-  local r,g,b,a=unpack(DB.profile.color)
-  if r==lastAppliedColor[1] and g==lastAppliedColor[2] and b==lastAppliedColor[3] and a==lastAppliedColor[4] then return end
-  lastAppliedColor[1],lastAppliedColor[2],lastAppliedColor[3],lastAppliedColor[4]=r,g,b,a
+---------------------------------------------------------------------
+-- BLIZZARD HEALTH BAR COLOR OVERRIDE (Dragonflight/TWW+)
+---------------------------------------------------------------------
 
-  local AUI=AceAddon:GetAddon("AzeriteUI",true); if AUI and AUI.Colors then AUI.Colors.health={r,g,b,a} end
-  if AUI and AUI.UnitFrames and AUI.UnitFrames.units then for _,u in pairs(AUI.UnitFrames.units) do SetHealthColor(u,r,g,b,a) end end
-  if PlayerFrame and PlayerFrame.healthbar then SetHealthColor(PlayerFrame,r,g,b,a) elseif PlayerFrameHealthBar then SetHealthColor({Health=PlayerFrameHealthBar},r,g,b,a) end
-  if oUF_Player then SetHealthColor(oUF_Player,r,g,b,a) end
-  for _,n in ipairs({"AzeriteUnitFramePlayer","AzeriteUnitFramePlayerAlternate","AzeriteUnitFramePlayer_Alternate"}) do local f=_G[n]; if f then SetHealthColor(f,r,g,b,a) end end
-  for f in pairs(knownFrames) do SetHealthColor(f,r,g,b,a) end
+local function GetBlizzardPlayerHealthBar()
+  -- Dragonflight/TWW retail path
+  if PlayerFrame
+    and PlayerFrame.PlayerFrameContent
+    and PlayerFrame.PlayerFrameContent.PlayerFrameContentMain
+    and PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarsContainer
+    and PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarsContainer.HealthBar
+  then
+    return PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarsContainer.HealthBar
+  end
+  -- Fallbacks for older versions
+  if PlayerFrame and PlayerFrame.healthbar then return PlayerFrame.healthbar end
+  if _G["PlayerFrameHealthBar"] then return _G["PlayerFrameHealthBar"] end
+  return nil
+end
+
+local function ForceBlizzardHealthBarColor(r, g, b, a)
+  local bar = GetBlizzardPlayerHealthBar()
+  if not bar then return end
+
+  -- 1. SetStatusBarColor
+  bar:SetStatusBarColor(r, g, b)
+  -- 2. SetVertexColor on the bar itself
+  if bar.SetVertexColor then bar:SetVertexColor(r, g, b, a) end
+  -- 3. SetVertexColor on the bar's texture
+  local tex = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
+  if tex and tex.SetVertexColor then tex:SetVertexColor(r, g, b, a) end
+  -- 4. Try SetColorOverride if available
+  if bar.SetColorOverride then pcall(bar.SetColorOverride, bar, r, g, b, a) end
+end
+
+local function HookBlizzardHealthBar()
+  local bar = GetBlizzardPlayerHealthBar()
+  if bar and not bar._azui_hooked then
+    hooksecurefunc(bar, "SetStatusBarColor", function(self)
+      local r, g, b, a = unpack(DB.profile.color)
+      C_Timer.After(0, function() ForceBlizzardHealthBarColor(r, g, b, a) end)
+    end)
+    bar._azui_hooked = true
+  end
+end
+
+---------------------------------------------------------------------
+-- APPLY COLOR TO ALL FRAMES
+---------------------------------------------------------------------
+
+function ApplyColor()
+  local r, g, b, a = unpack(DB.profile.color)
+  if r == lastAppliedColor[1] and g == lastAppliedColor[2] and b == lastAppliedColor[3] and a == lastAppliedColor[4] then return end
+  lastAppliedColor[1], lastAppliedColor[2], lastAppliedColor[3], lastAppliedColor[4] = r, g, b, a
+
+  local AUI = AceAddon:GetAddon("AzeriteUI", true)
+  if AUI and AUI.Colors then AUI.Colors.health = {r, g, b, a} end
+  if AUI and AUI.UnitFrames and AUI.UnitFrames.units then
+    for _, u in pairs(AUI.UnitFrames.units) do SetHealthColor(u, r, g, b, a) end
+  end
+
+  -- Blizzard health bar (DF/TWW+)
+  ForceBlizzardHealthBarColor(r, g, b, a)
+  HookBlizzardHealthBar()
+
+  if oUF_Player then SetHealthColor(oUF_Player, r, g, b, a) end
+  for _, n in ipairs({"AzeriteUnitFramePlayer", "AzeriteUnitFramePlayerAlternate", "AzeriteUnitFramePlayer_Alternate"}) do
+    local f = _G[n]
+    if f then SetHealthColor(f, r, g, b, a) end
+  end
+  for f in pairs(knownFrames) do SetHealthColor(f, r, g, b, a) end
 end
 
 ---------------------------------------------------------------------
@@ -244,24 +340,27 @@ function StartRainbow()
   StopRainbow(); DB.profile.rainbowActive=true
   local mode = DB.profile.rainbowMode or "cycle"; local t,dir = 0,1
   local spd = math.min(5,math.max(0.1,DB.profile.rainbowSpeed))*0.03
-  rainbowTicker = C_Timer.NewTicker(0.1,function()
-    if mode=="cycle" then t=t+spd
-    elseif mode=="ping" then
-    -- Sweep hue 0→1 then back using HSV for a sharper contrast vs Cycle
-    t = t + dir * spd
-    if t > math.pi or t < 0 then dir = -dir end
-    local hue = t / math.pi        -- 0‑1 forward, then backward
-    local r2,g2,b2 = hsvToRgb(hue)
-    mutateColor(r2,g2,b2)
-    ApplyColor()
-    return
-    
-    elseif mode=="chaos" then
-    -- Every tick choose a new random hue (lots of flicker, clearly different)
-    mutateColor(math.random(), math.random(), math.random()); ApplyColor(); return
-  end
-    local r=0.5+0.5*math.sin(t); local g=0.5+0.5*math.sin(t+2*math.pi/3); local b=0.5+0.5*math.sin(t+4*math.pi/3)
-    mutateColor(r,g,b); ApplyColor()
+  rainbowTicker = C_Timer.NewTicker(0.1, function()
+    if mode == "cycle" then
+      t = t + spd
+      local r = 0.5 + 0.5 * math.sin(t)
+      local g = 0.5 + 0.5 * math.sin(t + 2 * math.pi / 3)
+      local b = 0.5 + 0.5 * math.sin(t + 4 * math.pi / 3)
+      mutateColor(r, g, b)
+      ApplyColor()
+    elseif mode == "ping" then
+      -- Sweep hue 0→1 then back using HSV for a sharper contrast vs Cycle
+      t = t + dir * spd
+      if t > math.pi or t < 0 then dir = -dir end
+      local hue = t / math.pi        -- 0‑1 forward, then backward
+      local r2, g2, b2 = hsvToRgb(hue)
+      mutateColor(r2, g2, b2)
+      ApplyColor()
+    elseif mode == "chaos" then
+      -- Every tick choose a new random hue (lots of flicker, clearly different)
+      mutateColor(math.random(), math.random(), math.random())
+      ApplyColor()
+    end
   end)
 end
 
@@ -310,14 +409,30 @@ local function RenamePreset(newName) if selectedPreset and newName~="" then DB.p
 -- OPTIONS TABLE
 ---------------------------------------------------------------------
 local opts={ name=addonName,type="group",args={} }
-opts.args.ver = { type = "description", name = "|cff999999Version 4.7.5", order = 0 }
+opts.args.ver = { type = "description", name = "|cff999999Version 4.7.20", order = 0 }
 opts.args.col = { type="color", name=L["Healthbar Colour"],
   desc=L["Pick a custom RGB‑A colour for your own health bar. Alpha controls transparency."], hasAlpha=true, order=1, get=function() return unpack(DB.profile.color) end, set=function(_,r,g,b,a) StopRainbow(); mutateColor(r,g,b,a); ApplyColor() end }
 
 -- class colours section
 opts.args.clsH1={ type="header", name=L["Class Colours"], order=1.5 }
 opts.args.clsG={ type="group", inline=true, name="", order=1.6, args={} }
-for class,cc in pairs(RAID_CLASS_COLORS) do opts.args.clsG.args[class]={ type="execute", name=_G.LOCALIZED_CLASS_NAMES_MALE[class] or class, func=function() StopRainbow(); mutateColor(cc.r,cc.g,cc.b,DB.profile.color[4]); ApplyColor() end } end
+for class,cc in pairs(RAID_CLASS_COLORS) do
+    local male = LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[class]
+    local female = LOCALIZED_CLASS_NAMES_FEMALE and LOCALIZED_CLASS_NAMES_FEMALE[class]
+    local name = male
+    if female and female ~= male then
+        name = male .. " / " .. female
+    end
+    opts.args.clsG.args[class] = {
+        type = "execute",
+        name = name or class,
+        func = function()
+            StopRainbow()
+            mutateColor(cc.r, cc.g, cc.b, DB.profile.color[4])
+            ApplyColor()
+        end
+    }
+end
 
 -- fun options
 opts.args.funH={ type="header", name=L["Fun Options"], order=1.8 }
@@ -546,8 +661,24 @@ end
 ---------------------------------------------------------------------
 -- SLASH COMMAND
 ---------------------------------------------------------------------
-SLASH_AZCOLOR1 = "/ahui"
-SlashCmdList["AZCOLOR"] = function()
-  LoadAddOn("Blizzard_InterfaceOptions");
+SLASH_AZCOLORPICKER1 = "/ahui"
+SlashCmdList["AZCOLORPICKER"] = function()
   LibStub("AceConfigDialog-3.0"):Open(addonName)
+end
+
+---------------------------------------------------------------------
+-- ENSURE RETURN VALUE FOR checkhidden
+---------------------------------------------------------------------
+
+local function checkhidden(info, inputpos, tab)
+  if tab.cmdHidden ~= nil then
+    return tab.cmdHidden
+  end
+  local hidden = tab.hidden
+  if type(hidden) == "function" or type(hidden) == "string" then
+    info.hidden = hidden
+    hidden = callmethod(info, inputpos, tab, 'hidden')
+    info.hidden = nil
+  end
+  return hidden or false -- Always return a value
 end
