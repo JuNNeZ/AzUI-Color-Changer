@@ -1,15 +1,17 @@
 # AzUI Healthbar Color Changer
 
-**Current version:** 4.7.25  
+**Current version:** 4.7.26  
 Lightweight Ace3-powered addon that lets you recolour and animate your player health-bar in **AzeriteUI, oUF layouts, or the default frames**.
 
 ---
 
 ## ✨ Features
+
 * **Static RGBA colour** picker (alpha supported)
 * **Rainbow** (Cycle / Ping-Pong / Chaos) with speed slider & single-button toggle
 * **Pulse** effect on any colour with its own toggle
 * **Presets:** save, rename, delete, auto-apply by hunter-pet name or family
+* **Complete TWW hunter pet family coverage** with fallback colors
 * **Colour-blind presets** seeded on first run
 * **Class colour & random** one-click buttons
 * **Minimap / Titan Panel icon** (LibDataBroker) — click to toggle options
@@ -37,26 +39,30 @@ No external downloads needed — everything is embedded in `Libs\`.
 ---
 
 ## 📂 Installation
-1. Download **AzUI_Color_Picker-4.7.20-release.zip**  
+1. Download **AzUI_Color_Picker-4.7.26.zip**  
 2. Unzip to your AddOns folder; you should have:
-AddOns\AzUI_Color_Picker
-AzUI_Color_Picker.toc
-AzUI_Color_Picker.lua
-icon.tga
-Libs\LibStub\LibStub.lua
-Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
-Libs\LibDBIcon-1.0\LibDataBroker-1.1\LibDataBroker-1.1.lua
-Libs\LibDBIcon-1.0\CallbackHandler-1.0\CallbackHandler-1.0.lua
-Libs\AceAddon-3.0\AceAddon-3.0.lua
-… (other Ace3 files)
+```
+AddOns\AzUI_Color_Picker\
+    AzUI_Color_Picker.toc
+    AzUI_Color_Picker.lua
+    icon.tga
+    Libs\LibStub\LibStub.lua
+    Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
+    Libs\LibDBIcon-1.0\LibDataBroker-1.1\LibDataBroker-1.1.lua
+    Libs\LibDBIcon-1.0\CallbackHandler-1.0\CallbackHandler-1.0.lua
+    Libs\AceAddon-3.0\AceAddon-3.0.lua
+    … (other Ace3 files)
+```
 
 3. `/reload` in-game and type `/ahui` to configure.
 
 ---
 
 ### Change-Highlights (since 4.7.5)
-* **4.7.25**  Lua 5.4 unpack-shim · Male/Female class-names · Dragonflight Blizzard-bar override · Final texture logic
-* **4.7.20**  Lua 5.4 shim (initial), texture overhaul, etc.
+
+* **4.7.26**  Complete TWW hunter pet family coverage • Added 20+ missing families (Carapid, Pterrordax, Courser, Feathermane, etc.) • Normalized family naming
+* **4.7.25**  Lua 5.4 unpack shim • Male / Female class-name buttons • Enhanced Blizzard health bar override • Fixed SetHealthColor errors
+* **4.7.20**  Final texture logic (Blizzard gradient tinted, AzeriteUI gradient preserved)
 * **4.7.19**  Re-tint Blizzard bars instead of flat white • Fixed flat-brown AzeriteUI bar
 * **4.7.18**  Removed duplicate numeric-texture branch • Extra end in PatchFrame fixed
 * **4.7.17**  Stray end before helper removed • Deleted duplicate SetHealthColor block
