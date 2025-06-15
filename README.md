@@ -1,6 +1,6 @@
 # AzUI Healthbar Color Changer
 
-**Current version:** 4.7.21  
+**Current version:** 4.7.20  
 Lightweight Ace3-powered addon that lets you recolour and animate your player health-bar in **AzeriteUI, oUF layouts, or the default frames**.
 
 ---
@@ -37,7 +37,7 @@ No external downloads needed — everything is embedded in `Libs\`.
 ---
 
 ## 📂 Installation
-1. Download **AzUI_Color_Picker-4.7.5.zip**  
+1. Download **AzUI_Color_Picker-4.7.20.zip**  
 2. Unzip to your AddOns folder; you should have:
 AddOns\AzUI_Color_Picker
 AzUI_Color_Picker.toc
