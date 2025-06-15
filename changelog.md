@@ -1,3 +1,8 @@
+
+All notable changes to this project will be documented in this file.  
+This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)  
+Format inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+----------------------------------------------------------------------
 # Changelog
 
 ## [4.7.25] – 2025-06-15
@@ -23,9 +28,6 @@
 - Version bump to **4.7.25**.
 - Improved code organization with proper sectioning and comments. Picker
 
-All notable changes to this project will be documented in this file.  
-This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)  
-Format inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [4.7.20] – 2026-06-16
 
