@@ -4,6 +4,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 Format inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 --------------------------------------------------------------------
+## [4.7.5] - 2026-06-15
+### Changed
+- **Ping-Pong** pattern now sweeps half the HSV hue wheel and reverses, giving a visibly different effect from Cycle.
+- Chaos pattern now picks a fresh random hue every tick (0.1 s) for maximum contrast.
+- Rainbow toggle button text switches between **“Rainbow Effect”** and **“Stop Rainbow Effect”**.
+- Version bump to **4.7.5**.
+
+## [4.7.4] - 2026-06-15
+### Added
+- Single **toggle buttons** for both Rainbow and Pulse (start/stop in one).
+### Fixed
+- `StopRainbow` nil error in `UNIT_PET` handler by converting it to an up-value assignment.
+- 
 ## [4.7.3] - 2026-06-15
 ### Added
 - **Pulse Colour** / **Stop Pulse** buttons that pulse the currently selected colour (independent of rainbow).
