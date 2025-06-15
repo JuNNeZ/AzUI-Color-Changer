@@ -54,6 +54,15 @@ Libs\AceAddon-3.0\AceAddon-3.0.lua
 
 ---
 
+### Change-Highlights (since 4.6)
+
+* **4.7.5** – HSV Ping-Pong & Chaos overhaul, smarter toggle labels.  
+* **4.7.4** – Single-button toggles for Rainbow & Pulse, nil-safe StopRainbow.  
+* **4.7.0** – Advanced Rainbow patterns, speed slider, pulse base colour.  
+* **4.6.x** – Minimap/Titan launcher, full tooltips, colour-blind preset seeds.
+
+See full `CHANGELOG.md` for detailed history.
+
 ## 👨‍💻 Credits
 Created with ❤️ by **JuNNeZ** — code assistance & refactor ideas by **ChatGPT**.  
 Ace3, LibDataBroker, LibDBIcon © their respective authors.
