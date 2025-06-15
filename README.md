@@ -1,41 +1,59 @@
+# AzUI Healthbar Color Changer
 
-AzUI Healthbar Color Changer
+**Current version:** 4.7.5  
+Lightweight Ace3-powered addon that lets you recolour and animate your player health-bar in **AzeriteUI, oUF layouts, or the default frames**.
 
-🎨 Customize your World of Warcraft experience with AzUI Color Changer – a lightweight, powerful addon that lets you take full control over the color of your player health bar.
+---
 
-Whether you're using AzeriteUI or other oUF based addons, AzUI Color Picker gives you the freedom to:
+## ✨ Features
+* **Static RGBA colour** picker (alpha supported)
+* **Rainbow** (Cycle / Ping-Pong / Chaos) with speed slider & single-button toggle
+* **Pulse** effect on any colour with its own toggle
+* **Presets:** save, rename, delete, auto-apply by hunter-pet name or family
+* **Colour-blind presets** seeded on first run
+* **Class colour & random** one-click buttons
+* **Minimap / Titan Panel icon** (LibDataBroker) — click to toggle options
+* **AceDB profiles**, debug mode, and defensive frame hooks
 
- 
-🔧 Features
+---
 
-    ✅ Set a custom static RGB color for your player health bar.
-    🌈 Activate a smooth rainbow cycling effect for a dynamic visual style.
-    🎯 Apply colors on AzeriteUI's healthbars from oUF.
-    📁 Save, load, rename, and delete your favorite color presets.
-    🧙‍♂️ Instantly match your class color with one-click class buttons.
-    🔄 Automatically reapply colors in combat, after login, or when health changes.
-    🔍 Lightweight and optimized with defensive hooks and update tickers.
-    🧠 Debug mode for advanced users.
+## 🗺️ Slash Commands
+* `/ahui` – open the options panel
 
- 
-💬 Slash Command
+---
 
-Open the color picker panel anytime with:
-/ahui
+## 🛠️ Requirements & Libraries
 
-💾 Saved Profiles
+| Category      | Library / Addon                                                          | Bundled? | Notes                                   |
+|---------------|--------------------------------------------------------------------------|----------|-----------------------------------------|
+| **Core**      | AceAddon-3.0, AceDB-3.0, AceHook-3.0, AceConfig-3.0, AceConfigDialog-3.0 | ✔ | Shipped in *Libs\\AceXXX-3.0\\* |
+| **Minimap**   | LibDataBroker-1.1 (+ CallbackHandler-1.0)                                | ✔ | Included under *Libs\\LibDBIcon-1.0\\* |
+| **Icon**      | LibDBIcon-1.0                                                            | ✔ | Handles minimap & Titan launcher        |
+| **Stub**      | LibStub                                                                  | ✔ | Embedded                                |
+| **Optional**  | AzeriteUI                                                                | ⬇ | If installed, colours its custom frames |
 
-Built with AceDB-3.0, your settings are saved per-profile and persist between sessions. Presets are managed with AceConfig.
+No external downloads needed — everything is embedded in `Libs\`.
 
- 
-🛠️ Requirements
+---
 
-    Works best with AzeriteUI or any oUF-compatible layout
-    Supports retail versions of WoW (TWW)
-    Requires Ace3 libraries (bundled)
+## 📂 Installation
+1. Download **AzUI_Color_Picker-4.7.5.zip**  
+2. Unzip to your AddOns folder; you should have:
+AddOns\AzUI_Color_Picker
+AzUI_Color_Picker.toc
+AzUI_Color_Picker.lua
+icon.tga
+Libs\LibStub\LibStub.lua
+Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
+Libs\LibDBIcon-1.0\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Libs\LibDBIcon-1.0\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\AceAddon-3.0\AceAddon-3.0.lua
+… (other Ace3 files)
 
- 
-👨‍💻 Credits
+3. `/reload` in-game and type `/ahui` to configure.
 
-Developed by JuNNeZ
-Made with help from ChatGPT
+---
+
+## 👨‍💻 Credits
+Created with ❤️ by **JuNNeZ** — code assistance & refactor ideas by **ChatGPT**.  
+Ace3, LibDataBroker, LibDBIcon © their respective authors.
