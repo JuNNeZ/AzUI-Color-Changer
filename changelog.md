@@ -5,6 +5,28 @@ Format inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ----------------------------------------------------------------------
 # Changelog
 
+## [4.7.26] – 2025-06-15
+
+### Added (4.7.26)
+
+- **Complete TWW hunter pet family coverage**: Added all missing The War Within hunter pet families to `familyColours` table.
+- New **Exotic families**: Carapid, Pterrordax, Shale Beast.
+- New **Mammal families**: Courser, Feathermane, Gruffhorn, Hound, Mammoth, Stag, Wolf.
+- New **Bird families**: Bat, Waterfowl.
+- New **Reptile families**: Hopper, Ray, Wind Serpent.
+- New **Insect families**: Scorpid.
+- **Special skill-required families**: Blood Beast, Lesser Dragonkin, Warp Stalker.
+
+### Changed (4.7.26)
+
+- Updated hunter pet family fallback colors to include all current TWW pet families.
+- Normalized some family naming (e.g., "Shale Spider" → "Shale Beast").
+- Enhanced color variety across all pet family types with thematic color choices.
+
+### Fixed (4.7.26)
+
+- Missing fallback colors for newer hunter pet families introduced in The War Within expansion.
+
 ## [4.7.25] – 2025-06-15
 
 ### Added (4.7.25)
@@ -28,6 +50,9 @@ Format inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 - Version bump to **4.7.25**.
 - Improved code organization with proper sectioning and comments. Picker
 
+All notable changes to this project will be documented in this file.  
+This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)  
+Format inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [4.7.20] – 2026-06-16
 
