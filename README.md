@@ -55,8 +55,8 @@ Libs\AceAddon-3.0\AceAddon-3.0.lua
 ---
 
 ### Change-Highlights (since 4.7.5)
-
-* **4.7.20**  Lua 5.4 unpack shim • Male / Female class-name buttons • Final texture logic (Blizzard gradient tinted, AzeriteUI gradient preserved)
+* **4.7.25**  Lua 5.4 unpack-shim · Male/Female class-names · Dragonflight Blizzard-bar override · Final texture logic
+* **4.7.20**  Lua 5.4 shim (initial), texture overhaul, etc.
 * **4.7.19**  Re-tint Blizzard bars instead of flat white • Fixed flat-brown AzeriteUI bar
 * **4.7.18**  Removed duplicate numeric-texture branch • Extra end in PatchFrame fixed
 * **4.7.17**  Stray end before helper removed • Deleted duplicate SetHealthColor block
