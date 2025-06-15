@@ -3,7 +3,7 @@
 ## Title: |cff00ff00Az|cffFFD100UI|cffff7d0a Healthbar Color Picker|r
 ## Notes: |cffFFFFFFCustom colours, rainbow, pulse, presets & hunter-pet auto-colour.|r
 ## Author: |cffD1FF00JuNNeZ|r
-## Version: 4.7.3
+## Version: 4.7.5
 
 ## Icon: Interface\AddOns\AzUI_Color_Picker\icon.tga
 ## IconTexture: Interface\AddOns\AzUI_Color_Picker\icon.tga
