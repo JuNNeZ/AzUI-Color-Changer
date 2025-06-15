@@ -1,11 +1,12 @@
 ---@diagnostic disable: undefined-global, deprecated, undefined-field
 --[[
-AzUI_Color_Picker.lua - FULL SOURCE (v4.7.20)
+AzUI_Color_Picker.lua - FULL SOURCE (v4.8.0)
 * Alpha channel support (colour transparency)
-* Rainbow speed slider (0.1-5 Hz)
-* “Class Colour” quick‑reset button
+* Rainbow speed slider (0.1-5 Hz)
+* "Class Colour" quick‑reset button
 * Colour‑blind friendly presets on first run
-* Hunter‑pet family fallback presets
+* Hunter‑pet family fallback presets (updated for TWW)
+* Complete hunter pet family coverage for The War Within
 * AceLocale scaffold for future translations
 ]]--
 
@@ -75,53 +76,74 @@ local familyColours = {
   ["Aqiri"]        = {0.85, 0.45, 0.15, 1}, -- Bronze carapace
   ["Riverbeast"]   = {0.35, 0.65, 0.45, 1}, -- Swamp green
   ["Worm"]         = {0.70, 0.55, 0.25, 1}, -- Sandy burrower
+  ["Carapid"]      = {0.70, 0.30, 0.80, 1}, -- Purple chitin
+  ["Pterrordax"]   = {0.80, 0.60, 0.30, 1}, -- Amber wing
+  ["Shale Beast"]  = {0.65, 0.50, 0.75, 1}, -- Crystalline purple
 
   -- ✦ Mammals --------------------------------------------------------
-  ["Bear"]     = {0.45, 0.35, 0.25, 1}, -- Brown fur
-  ["Boar"]     = {0.60, 0.40, 0.30, 1}, -- Tusky brown
-  ["Cat"]      = {1.00, 0.50, 0.50, 1}, -- Pale pink
-  ["Dog"]      = {0.70, 0.55, 0.35, 1}, -- Sandy coat
-  ["Fox"]      = {0.95, 0.45, 0.20, 1}, -- Orange fur
-  ["Goat"]     = {0.85, 0.85, 0.70, 1}, -- Pale wool
-  ["Gorilla"] = {0.40, 0.40, 0.40, 1}, -- Grey shadow
-  ["Hyena"]   = {0.80, 0.60, 0.25, 1}, -- Savannah
-  ["Monkey"]  = {0.65, 0.55, 0.40, 1}, -- Jungle brown
-  ["Oxen"]    = {0.50, 0.45, 0.35, 1}, -- Taupe
-  ["Rodent"]  = {0.75, 0.65, 0.55, 1}, -- Whiskered grey
-  ["Skunk"]   = {0.20, 0.20, 0.20, 1}, -- Black stripe
-  ["Tallstrider"] = {0.85, 0.70, 0.20, 1}, -- Savannah yellow
-  ["Mouse"]   = {0.70, 0.70, 0.70, 1}, -- Tiny grey
-  ["Camel"]   = {0.75, 0.65, 0.45, 1}, -- Desert beige
+  ["Bear"]         = {0.45, 0.35, 0.25, 1}, -- Brown fur
+  ["Boar"]         = {0.60, 0.40, 0.30, 1}, -- Tusky brown
+  ["Cat"]          = {1.00, 0.50, 0.50, 1}, -- Pale pink
+  ["Dog"]          = {0.70, 0.55, 0.35, 1}, -- Sandy coat
+  ["Fox"]          = {0.95, 0.45, 0.20, 1}, -- Orange fur
+  ["Goat"]         = {0.85, 0.85, 0.70, 1}, -- Pale wool
+  ["Gorilla"]      = {0.40, 0.40, 0.40, 1}, -- Grey shadow
+  ["Hyena"]        = {0.80, 0.60, 0.25, 1}, -- Savannah
+  ["Monkey"]       = {0.65, 0.55, 0.40, 1}, -- Jungle brown
+  ["Oxen"]         = {0.50, 0.45, 0.35, 1}, -- Taupe
+  ["Rodent"]       = {0.75, 0.65, 0.55, 1}, -- Whiskered grey
+  ["Skunk"]        = {0.20, 0.20, 0.20, 1}, -- Black stripe
+  ["Tallstrider"]  = {0.85, 0.70, 0.20, 1}, -- Savannah yellow
+  ["Mouse"]        = {0.70, 0.70, 0.70, 1}, -- Tiny grey
+  ["Camel"]        = {0.75, 0.65, 0.45, 1}, -- Desert beige
+  ["Courser"]      = {0.90, 0.80, 0.60, 1}, -- Golden stallion
+  ["Feathermane"]  = {0.75, 0.50, 0.85, 1}, -- Majestic plum
+  ["Gruffhorn"]    = {0.55, 0.45, 0.30, 1}, -- Rough hide
+  ["Hound"]        = {0.60, 0.50, 0.40, 1}, -- Loyal brown
+  ["Mammoth"]      = {0.65, 0.55, 0.45, 1}, -- Tusked grey
+  ["Stag"]         = {0.50, 0.70, 0.40, 1}, -- Forest green
+  ["Wolf"]         = {0.45, 0.50, 0.55, 1}, -- Pack grey
 
   -- ✦ Birds ----------------------------------------------------------
   ["Carrion Bird"] = {0.75, 0.35, 0.20, 1}, -- Vulture red‑brown
   ["Bird of Prey"] = {0.95, 0.85, 0.30, 1}, -- Golden feather
-  ["Dragonhawk"]  = {0.90, 0.30, 0.30, 1}, -- Fiery wings
-  ["Ravager"]     = {0.80, 0.40, 0.20, 1}, -- Rust chitin
-  ["Hawk"]        = {0.95, 0.80, 0.30, 1}, -- Sky gold
-  ["Moth"]        = {0.80, 0.75, 0.85, 1}, -- Soft lilac
+  ["Dragonhawk"]   = {0.90, 0.30, 0.30, 1}, -- Fiery wings
+  ["Ravager"]      = {0.80, 0.40, 0.20, 1}, -- Rust chitin
+  ["Hawk"]         = {0.95, 0.80, 0.30, 1}, -- Sky gold
+  ["Moth"]         = {0.80, 0.75, 0.85, 1}, -- Soft lilac
+  ["Bat"]          = {0.30, 0.25, 0.35, 1}, -- Night wing
+  ["Waterfowl"]    = {0.40, 0.70, 0.90, 1}, -- Lake blue
 
   -- ✦ Reptiles / Amphibians -----------------------------------------
-  ["Basilisk"]   = {0.35, 0.75, 0.60, 1}, -- Jade hide
-  ["Crab"]       = {0.90, 0.30, 0.30, 1}, -- Scarlet shell
-  ["Crocolisk"] = {0.30, 0.70, 0.35, 1}, -- Swamp reptile
-  ["Raptor"]     = {0.80, 0.45, 0.20, 1}, -- Rust scales
-  ["Serpent"]    = {0.15, 0.75, 0.40, 1}, -- Emerald serpent
-  ["Turtle"]     = {0.20, 0.60, 0.30, 1}, -- Jade shell
-  ["Lizard"]     = {0.55, 0.80, 0.35, 1}, -- Lime scales
-  ["Sporebat"]   = {0.55, 0.80, 0.90, 1}, -- Cyan spores
+  ["Basilisk"]     = {0.35, 0.75, 0.60, 1}, -- Jade hide
+  ["Crab"]         = {0.90, 0.30, 0.30, 1}, -- Scarlet shell
+  ["Crocolisk"]    = {0.30, 0.70, 0.35, 1}, -- Swamp reptile
+  ["Raptor"]       = {0.80, 0.45, 0.20, 1}, -- Rust scales
+  ["Serpent"]      = {0.15, 0.75, 0.40, 1}, -- Emerald serpent
+  ["Turtle"]       = {0.20, 0.60, 0.30, 1}, -- Jade shell
+  ["Lizard"]       = {0.55, 0.80, 0.35, 1}, -- Lime scales
+  ["Sporebat"]     = {0.55, 0.80, 0.90, 1}, -- Cyan spores
+  ["Hopper"]       = {0.60, 0.80, 0.50, 1}, -- Leap green
+  ["Ray"]          = {0.70, 0.60, 0.90, 1}, -- Ethereal purple
+  ["Wind Serpent"] = {0.50, 0.90, 0.70, 1}, -- Airy teal
 
   -- ✦ Insects / Arachnids -------------------------------------------
-  ["Spider"]   = {0.45, 0.45, 0.55, 1}, -- Web grey
-  ["Wasp"]     = {1.00, 0.85, 0.15, 1}, -- Yellow stinger
-  ["Beetle"]   = {0.30, 0.70, 0.55, 1}, -- Jade carapace
+  ["Spider"]       = {0.45, 0.45, 0.55, 1}, -- Web grey
+  ["Wasp"]         = {1.00, 0.85, 0.15, 1}, -- Yellow stinger
+  ["Beetle"]       = {0.30, 0.70, 0.55, 1}, -- Jade carapace
+  ["Scorpid"]      = {0.85, 0.70, 0.30, 1}, -- Desert amber
 
   -- ✦ Aquatics -------------------------------------------------------
-  ["Shark"] = {0.40, 0.60, 0.80, 1}, -- Deep blue
-  ["Fish"]  = {0.25, 0.55, 0.75, 1}, -- Ocean teal
+  ["Shark"]        = {0.40, 0.60, 0.80, 1}, -- Deep blue
+  ["Fish"]         = {0.25, 0.55, 0.75, 1}, -- Ocean teal
 
   -- ✦ Mechanicals ----------------------------------------------------
-  ["Mechanical"] = {0.50, 0.80, 1.00, 1}, -- Arcane blue steel
+  ["Mechanical"]   = {0.50, 0.80, 1.00, 1}, -- Arcane blue steel
+
+  -- ✦ Special / Skill Required ------------------------------------
+  ["Blood Beast"]     = {0.80, 0.15, 0.20, 1}, -- Crimson blood
+  ["Lesser Dragonkin"] = {0.60, 0.40, 0.85, 1}, -- Dragon purple
+  ["Warp Stalker"]    = {0.85, 0.50, 0.95, 1}, -- Void pink
 }
 
 ---------------------------------------------------------------------
@@ -409,7 +431,7 @@ local function RenamePreset(newName) if selectedPreset and newName~="" then DB.p
 -- OPTIONS TABLE
 ---------------------------------------------------------------------
 local opts={ name=addonName,type="group",args={} }
-opts.args.ver = { type = "description", name = "|cff999999Version 4.7.20", order = 0 }
+opts.args.ver = { type = "description", name = "|cff999999Version 4.7.26", order = 0 }
 opts.args.col = { type="color", name=L["Healthbar Colour"],
   desc=L["Pick a custom RGB‑A colour for your own health bar. Alpha controls transparency."], hasAlpha=true, order=1, get=function() return unpack(DB.profile.color) end, set=function(_,r,g,b,a) StopRainbow(); mutateColor(r,g,b,a); ApplyColor() end }
 
