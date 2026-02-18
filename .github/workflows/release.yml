@@ -1,23 +1,26 @@
-name: Package and release
+name: Package and Release
+
+permissions:
+  contents: write
 
 on:
   push:
     tags:
-      - "*"
+      - 'v*'
+  workflow_dispatch:
 
 jobs:
   release:
-    permissions:
-      contents: write
     runs-on: ubuntu-latest
+    env:
+      CF_API_KEY: ${{ secrets.CF_API_KEY }}
+      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+
     steps:
-      - name: Checkout
+      - name: Clone project
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Package and release
         uses: BigWigsMods/packager@v2
-        env:
-          CF_API_KEY: ${{ secrets.CF_API_KEY }}
-          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}

@@ -3,4 +3,13 @@ package-as: AzUI_Color_Picker
 cf_project_id: 1286164
 
 ignore:
+  - README.md
+  - changelog.md
+  - .github
+  - .git
+  - .gitignore
   - .vscode
+
+manual-changelog:
+  filename: changelog.md
+  markup-type: markdown
