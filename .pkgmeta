@@ -1,0 +1,4 @@
+package-as: AzUI_Color_Picker
+
+ignore:
+  - .vscode
