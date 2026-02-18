@@ -7,6 +7,8 @@
 ## Author: |cffD1FF00JuNNeZ|r
 ## Version: 4.7.27
 
+## X-Curse-Project-ID: 1286164
+
 ## Icon: Interface\\AddOns\\AzUI_Color_Picker\\icon.tga
 ## IconTexture: Interface\\AddOns\\AzUI_Color_Picker\\icon.tga
 
