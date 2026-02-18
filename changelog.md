@@ -1,3 +1,7 @@
+All notable changes to this project will be documented in this file.  
+This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)  
+Format inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+----------------------------------------------------------------------
 # Changelog
 
 ## [4.7.27] - 2026-02-18
@@ -5,7 +9,6 @@
 ### Changed (4.7.27)
 
 - Version bump for release.
-
 ## [4.7.26] – 2025-06-15
 
 ### Added (4.7.26)

@@ -1,6 +1,6 @@
 ---@diagnostic disable: undefined-global, deprecated, undefined-field
 --[[
-AzUI_Color_Picker.lua - FULL SOURCE (v4.8.0)
+AzUI_Color_Picker.lua - FULL SOURCE (v4.7.27)
 * Alpha channel support (colour transparency)
 * Rainbow speed slider (0.1-5 Hz)
 * "Class Colour" quick‑reset button
@@ -156,6 +156,7 @@ local storedPulseColor = nil
 local selectedPreset, renameBuffer = nil, ""
 local lastAppliedColor = {nil,nil,nil,nil}
 local knownFrames = setmetatable({}, {__mode="k"})
+local pendingCombatApply = false
 -- forward declarations so they exist for pop‑ups defined above their body
 local StopRainbow, StartRainbow, ApplyColor
 
@@ -212,40 +213,43 @@ local function mutateColor(r,g,b,a) DB.profile.color[1],DB.profile.color[2],DB.p
 local function PatchFrame(f)
   if f and f.Health and not f.Health.__AzPatched then
     local tex = f.Health:GetStatusBarTexture()
-    local texPath = tex and tex:GetTexture()
-    -- Detect Blizzard gradient/atlas only when texture path is a string
-    if type(texPath) == "number" or (type(texPath) == "string" and texPath:match("UI%-StatusBar")) then
-      -- Numeric fileID (AzeriteUI gradient, many oUF layouts) or Blizzard default gradient texture: recolour via VertexColor
-      f.Health.__isBlizzTexture = true
-      tex:SetVertexColor(unpack(DB.profile.color))
-    elseif type(texPath) == "string" then
-      -- Unknown custom texture path: fall back to white 8×8 to avoid tint
-      if tex and tex:GetTexture() ~= "Interface\\Buttons\\WHITE8X8" then
-        f.Health:SetStatusBarTexture("Interface\\Buttons\\WHITE8X8")
-      end
+    -- Only recolor, never replace texture for custom frames (AzeriteUI, oUF, etc.)
+    if tex and tex.SetVertexColor then
+      tex:SetVertexColor(DB.profile.color[1], DB.profile.color[2], DB.profile.color[3], DB.profile.color[4] or 1)
+    elseif f.Health.SetStatusBarColor then
+      f.Health:SetStatusBarColor(DB.profile.color[1], DB.profile.color[2], DB.profile.color[3], DB.profile.color[4] or 1)
     end
-    -- Patch health bar to use our colour
-
     f.Health.colorClass=false; f.Health.colorReaction=false; f.Health.colorHealth=false; f.Health.colorDisconnected=false; f.Health.__AzPatched=true
-    hooksecurefunc(f.Health, "SetStatusBarColor", function()
-      if not f.__block then
+    knownFrames[f] = true
+    -- Patch: reapply color after AzeriteUI or oUF logic
+    if not f.Health.__AzSetColorWrapped then
+      f.Health.__AzSetColorWrapped = true
+      local origSet = f.Health.SetStatusBarColor
+      f.Health.SetStatusBarColor = function(self, ...)
+        if origSet then
+          origSet(self, ...)
+        end
+        if f.__block then
+          return
+        end
         f.__block = true
-        if f.Health.__isBlizzTexture then
-          f.Health:GetStatusBarTexture():SetVertexColor(DB.profile.color[1], DB.profile.color[2], DB.profile.color[3])
-          f.Health:SetAlpha(DB.profile.color[4])
-        else
-          f.Health:SetStatusBarColor(unpack(DB.profile.color))
-          f.Health:SetAlpha(DB.profile.color[4])
+        if origSet then
+          origSet(self, DB.profile.color[1], DB.profile.color[2], DB.profile.color[3], DB.profile.color[4] or 1)
+        end
+        local tex = self.GetStatusBarTexture and self:GetStatusBarTexture()
+        if tex and tex.SetVertexColor then
+          tex:SetVertexColor(DB.profile.color[1], DB.profile.color[2], DB.profile.color[3], DB.profile.color[4] or 1)
         end
         f.__block = false
       end
-    end)
+    end
   end
 end
 
 -- Universal health bar color setter (fixes missing SetHealthColor error)
 local function SetHealthColor(frame, r, g, b, a)
   if not frame then return end
+  PatchFrame(frame)
   local bar = frame.Health or frame
   if bar.SetStatusBarColor then bar:SetStatusBarColor(r, g, b) end
   if bar.SetAlpha and a then bar:SetAlpha(a) end
@@ -306,12 +310,34 @@ end
 ---------------------------------------------------------------------
 
 function ApplyColor()
+  local force = false
+  local AUI = AceAddon:GetAddon("AzeriteUI", true)
+  if AUI and not AUI.__AzUI_ColorPickerApplied then
+    AUI.__AzUI_ColorPickerApplied = true
+    force = true
+  end
   local r, g, b, a = unpack(DB.profile.color)
-  if r == lastAppliedColor[1] and g == lastAppliedColor[2] and b == lastAppliedColor[3] and a == lastAppliedColor[4] then return end
+  if _G.__AzUI_ColorPickerForce then
+    force = true
+    _G.__AzUI_ColorPickerForce = nil
+  end
+  if (not force) and r == lastAppliedColor[1] and g == lastAppliedColor[2] and b == lastAppliedColor[3] and a == lastAppliedColor[4] then return end
   lastAppliedColor[1], lastAppliedColor[2], lastAppliedColor[3], lastAppliedColor[4] = r, g, b, a
 
-  local AUI = AceAddon:GetAddon("AzeriteUI", true)
   if AUI and AUI.Colors then AUI.Colors.health = {r, g, b, a} end
+  if _G.oUF and _G.oUF.colors then _G.oUF.colors.health = {r, g, b, a} end
+  if AUI and AUI.GetModule then
+    if InCombatLockdown and InCombatLockdown() then
+      pendingCombatApply = true
+    else
+      local pm = AUI:GetModule("PlayerFrame", true)
+      if pm and pm.Update then pcall(pm.Update, pm) end
+      if pm and pm.frame and pm.frame.Health and pm.frame.Health.ForceUpdate then pcall(pm.frame.Health.ForceUpdate, pm.frame.Health) end
+      local pam = AUI:GetModule("PlayerFrameAlternate", true)
+      if pam and pam.Update then pcall(pam.Update, pam) end
+      if pam and pam.frame and pam.frame.Health and pam.frame.Health.ForceUpdate then pcall(pam.frame.Health.ForceUpdate, pam.frame.Health) end
+    end
+  end
   if AUI and AUI.UnitFrames and AUI.UnitFrames.units then
     for _, u in pairs(AUI.UnitFrames.units) do SetHealthColor(u, r, g, b, a) end
   end
@@ -431,7 +457,7 @@ local function RenamePreset(newName) if selectedPreset and newName~="" then DB.p
 -- OPTIONS TABLE
 ---------------------------------------------------------------------
 local opts={ name=addonName,type="group",args={} }
-opts.args.ver = { type = "description", name = "|cff999999Version 4.7.26", order = 0 }
+opts.args.ver = { type = "description", name = "|cff999999Version 4.7.27", order = 0 }
 opts.args.col = { type="color", name=L["Healthbar Colour"],
   desc=L["Pick a custom RGB‑A colour for your own health bar. Alpha controls transparency."], hasAlpha=true, order=1, get=function() return unpack(DB.profile.color) end, set=function(_,r,g,b,a) StopRainbow(); mutateColor(r,g,b,a); ApplyColor() end }
 
@@ -654,6 +680,10 @@ end
     end
 
   elseif ev == "PLAYER_ENTERING_WORLD" or ev == "PLAYER_REGEN_ENABLED" or ev == "PLAYER_REGEN_DISABLED" then
+    if ev == "PLAYER_REGEN_ENABLED" and pendingCombatApply then
+      pendingCombatApply = false
+      _G.__AzUI_ColorPickerForce = true
+    end
     C_Timer.After(0.05, ApplyColor)
   elseif ev == "UNIT_HEALTH" or ev == "UNIT_MAXHEALTH" then
     ApplyColor()
