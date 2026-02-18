@@ -1,0 +1,9 @@
+{
+    "Lua.diagnostics.disable": [
+        "deprecated",
+        "undefined-global",
+        "undefined-field",
+        "missing-return",
+        "cast-local-type"
+    ]
+}
