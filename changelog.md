@@ -4,6 +4,35 @@ Format inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ----------------------------------------------------------------------
 # Changelog
 
+## [4.8.0] - 2026-08-27
+
+### Added (4.8.0)
+
+- World of Warcraft Retail 12.1.0 support (`Interface: 120100`).
+- Native `PlayerFrame_GetHealthBar()` lookup with structural fallbacks.
+- Retail secret-value guards for hunter-pet name and family lookups.
+- AddOn Compartment registration through LibDBIcon.
+
+### Changed (4.8.0)
+
+- Updated embedded Ace3 to Release-r1403 and LibDBIcon to v12.0.3.
+- Corrected dependency order and now load complete AceGUI/AceConfig XML manifests.
+- Replaced direct status-bar method overrides with guarded secure post-hooks.
+- Reduced health-bar polling and event churn while retaining late AzeriteUI frame discovery.
+
+### Fixed (4.8.0)
+
+- Addon startup failures caused by loading LibStub, CallbackHandler, AceConfig dependencies, and AceGUI in the wrong order or not at all.
+- An endless zero-delay timer loop caused by re-entering the Blizzard `SetStatusBarColor` hook.
+- Pulse and rainbow effects running simultaneously or surviving manual colour changes.
+- Pulse/rainbow state restoration after hunter-pet overrides.
+- Pulse state not resuming after reload and reset not fully stopping active effects.
+- Alpha being applied twice to status-bar textures.
+
+### Validated (4.8.0)
+
+- Confirmed working in the World of Warcraft Retail 12.1 client after the API and library update.
+
 ## [4.7.27] - 2026-02-18
 
 ### Changed (4.7.27)

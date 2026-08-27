@@ -1,7 +1,10 @@
 # AzUI Healthbar Color Changer
 
-**Current version:** 4.7.27  
+**Current version:** 4.8.0
+
 Lightweight Ace3-powered addon that lets you recolour and animate your player health-bar in **AzeriteUI, oUF layouts, or the default frames**.
+
+Supports **World of Warcraft Retail 12.1.0** (`Interface: 120100`).
 
 ---
 
@@ -11,10 +14,10 @@ Lightweight Ace3-powered addon that lets you recolour and animate your player he
 * **Rainbow** (Cycle / Ping-Pong / Chaos) with speed slider & single-button toggle
 * **Pulse** effect on any colour with its own toggle
 * **Presets:** save, rename, delete, auto-apply by hunter-pet name or family
-* **Complete TWW hunter pet family coverage** with fallback colors
+* **Hunter pet family coverage** with name presets and fallback colours
 * **Colour-blind presets** seeded on first run
 * **Class colour & random** one-click buttons
-* **Minimap / Titan Panel icon** (LibDataBroker) — click to toggle options
+* **Minimap, AddOn Compartment & Titan Panel launcher** (LibDataBroker)
 * **AceDB profiles**, debug mode, and defensive frame hooks
 
 ---
@@ -26,30 +29,31 @@ Lightweight Ace3-powered addon that lets you recolour and animate your player he
 
 ## 🛠️ Requirements & Libraries
 
-| Category      | Library / Addon                                                          | Bundled? | Notes                                   |
-|---------------|--------------------------------------------------------------------------|----------|-----------------------------------------|
-| **Core**      | AceAddon-3.0, AceDB-3.0, AceHook-3.0, AceConfig-3.0, AceConfigDialog-3.0 | ✔ | Shipped in *Libs\\AceXXX-3.0\\* |
-| **Minimap**   | LibDataBroker-1.1 (+ CallbackHandler-1.0)                                | ✔ | Included under *Libs\\LibDBIcon-1.0\\* |
-| **Icon**      | LibDBIcon-1.0                                                            | ✔ | Handles minimap & Titan launcher        |
-| **Stub**      | LibStub                                                                  | ✔ | Embedded                                |
-| **Optional**  | AzeriteUI                                                                | ⬇ | If installed, colours its custom frames |
+| Category      | Library / Addon                                                   | Bundled? | Notes                                      |
+|---------------|-------------------------------------------------------------------|----------|--------------------------------------------|
+| **Core**      | AceAddon-3.0, AceDB-3.0, AceGUI-3.0, AceConfig-3.0                | ✔ | Ace3 Release-r1403 (Retail 12.1 compatible) |
+| **Launcher**  | LibDataBroker-1.1, LibDBIcon-1.0, CallbackHandler-1.0             | ✔ | LibDBIcon v12.0.3                          |
+| **Stub**      | LibStub                                                           | ✔ | Loaded before all embedded libraries       |
+| **Optional**  | AzeriteUI                                                         | — | Colours its custom player frames            |
 
 No external downloads needed — everything is embedded in `Libs\`.
 
 ---
 
 ## 📂 Installation
-1. Download **AzUI_Color_Picker-4.7.27.zip**  
+1. Download **AzUI_Color_Picker-4.8.0.zip**
 2. Unzip to your AddOns folder; you should have:
+
 ```
 AddOns\AzUI_Color_Picker\
     AzUI_Color_Picker.toc
-    AzUI_Color_Picker.lua
+    AzUI_Color_picker.lua
     icon.tga
     Libs\LibStub\LibStub.lua
     Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
     Libs\LibDBIcon-1.0\LibDataBroker-1.1\LibDataBroker-1.1.lua
-    Libs\LibDBIcon-1.0\CallbackHandler-1.0\CallbackHandler-1.0.lua
+    Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+    Libs\AceGUI-3.0\AceGUI-3.0.lua
     Libs\AceAddon-3.0\AceAddon-3.0.lua
     … (other Ace3 files)
 ```
@@ -60,6 +64,7 @@ AddOns\AzUI_Color_Picker\
 
 ### Change-Highlights (since 4.7.5)
 
+* **4.8.0**  Retail 12.1 API • Correct embedded-library load order • Current Ace3/LibDBIcon • Safe status-bar hooks • Fixed animation and pet-state restoration
 * **4.7.27**  Version bump for release
 * **4.7.26**  Complete TWW hunter pet family coverage • Added 20+ missing families (Carapid, Pterrordax, Courser, Feathermane, etc.) • Normalized family naming
 * **4.7.25**  Lua 5.4 unpack shim • Male / Female class-name buttons • Enhanced Blizzard health bar override • Fixed SetHealthColor errors

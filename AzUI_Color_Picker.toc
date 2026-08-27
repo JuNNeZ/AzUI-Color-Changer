@@ -1,38 +1,38 @@
-## Interface: 120000
+## Interface: 120100
 
 ## Title: |cff00ff00Az|cffFFD100UI|cffff7d0a Healthbar Color Picker|r
 ## Notes: |cffFFFFFFCustom colours, rainbow, pulse, presets & hunter-pet auto-colour.|r
 ## Category-enUS: User Interface
 ## X-Category: User Interface
 ## Author: |cffD1FF00JuNNeZ|r
-## Version: 4.7.29
+## Version: 4.8.0
 
 ## X-Curse-Project-ID: 1286164
 
 ## Icon: Interface\\AddOns\\AzUI_Color_Picker\\icon.tga
 ## IconTexture: Interface\\AddOns\\AzUI_Color_Picker\\icon.tga
 
-## X-EmbedLibraries: LibStub, LibDataBroker-1.1, LibDBIcon-1.0, AceAddon-3.0, AceDB-3.0, AceHook-3.0, AceConfig-3.0, AceConfigDialog-3.0
+## X-EmbedLibraries: LibStub, CallbackHandler-1.0, LibDataBroker-1.1, LibDBIcon-1.0, AceAddon-3.0, AceDB-3.0, AceGUI-3.0, AceConfig-3.0, AceConfigDialog-3.0
 ## OptionalDeps: AzeriteUI
 ## SavedVariables: AzUI_Color_PickerDB
 
 # -------------------------------------------------------------------
-#  Embedded libraries (exact paths from your \Libs folder)
+#  Embedded libraries
 # -------------------------------------------------------------------
 
-Libs\AceAddon-3.0\AceAddon-3.0.lua
-Libs\AceDB-3.0\AceDB-3.0.lua
-Libs\AceHook-3.0\AceHook-3.0.lua
-Libs\AceConfig-3.0\AceConfig-3.0.lua
-Libs\AceConfig-3.0\AceConfigDialog-3.0\AceConfigDialog-3.0.lua
+# Core dependency order matters: LibStub and CallbackHandler must load first.
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+Libs\AceAddon-3.0\AceAddon-3.0.xml
+Libs\AceDB-3.0\AceDB-3.0.xml
+Libs\AceGUI-3.0\AceGUI-3.0.xml
+Libs\AceConfig-3.0\AceConfig-3.0.xml
 
-# LibDBIcon distribution also contains LibDataBroker, LibStub and CallbackHandler
+# DataBroker / minimap launcher
 Libs\LibDBIcon-1.0\LibDataBroker-1.1\LibDataBroker-1.1.lua
 Libs\LibDBIcon-1.0\LibDBIcon-1.0\LibDBIcon-1.0.lua
-Libs\LibDBIcon-1.0\CallbackHandler-1.0\CallbackHandler-1.0.lua
-Libs\LibDBIcon-1.0\LibStub\LibStub.lua
 
 # -------------------------------------------------------------------
 #  Main add-on file
 # -------------------------------------------------------------------
-AzUI_Color_Picker.lua
+AzUI_Color_picker.lua
