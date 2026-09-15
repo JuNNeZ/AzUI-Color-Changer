@@ -1,12 +1,12 @@
 # Presets
 
-The preset system lets you save any color — with its full RGBA values — under a custom name and recall it instantly from a dropdown. Presets persist across sessions and are stored per character.
+The preset system lets you save any color — with its full RGBA values — under a custom name and recall it instantly from a dropdown. Presets persist across sessions and are shared by all your characters (the addon uses one **Default** profile).
 
 ---
 
 ## Built-in Presets
 
-On the very first run (new character, or after a **Reset to Defaults**) the addon seeds four colorblind-friendly presets:
+When the profile is first created (or after a **Reset to Defaults**) the addon adds four colorblind-friendly presets:
 
 | Name | Color | RGBA |
 |------|-------|------|
@@ -15,7 +15,7 @@ On the very first run (new character, or after a **Reset to Defaults**) the addo
 | `CB-Yellow` | Bright yellow | `{0.90, 0.90, 0.20, 1}` |
 | `CB-Purple` | Medium purple | `{0.60, 0.30, 0.80, 1}` |
 
-These four are designed to be easily distinguishable for players with common forms of color blindness.
+These four are designed to be easily distinguishable for players with common forms of color blindness. They are only added once: if you delete one, it stays deleted.
 
 ---
 
@@ -23,10 +23,10 @@ These four are designed to be easily distinguishable for players with common for
 
 1. Set your desired color using the **Healthbar Colour** picker (or any class/random button).
 2. Click **Save as Preset**.
-3. A popup dialog appears — type a name and click **Accept**.
+3. A popup dialog appears — type a name and click **Save** (or press Enter).
 4. The preset is immediately available in the **Select Preset** dropdown.
 
-> **Tip:** Names are case-sensitive. `"My Red"` and `"my red"` are treated as different presets.
+> **Tip:** Names are case-sensitive. `"My Red"` and `"my red"` are treated as different presets. Saving under a name that already exists replaces that preset.
 
 ---
 
@@ -39,12 +39,12 @@ Open the **Select Preset** dropdown and click the preset you want. The color is 
 ## Renaming a Preset
 
 1. Load the preset you want to rename via the **Select Preset** dropdown.
-2. Type the new name in the **Rename** input box.
-3. Click **Rename**.
+2. Type the new name in the **Rename To:** input box.
+3. Click **Rename Preset**.
 
 The preset data (color values) is moved to the new name; the old name is removed. The dropdown updates to reflect the change.
 
-> The **Rename** button is disabled when no preset is selected, or when the input box is empty.
+> The **Rename Preset** button is disabled when no preset is selected, when the input box is empty, or when the new name is the same as the current one. If another preset already uses the new name, the rename is refused and a chat message tells you why — no preset is overwritten.
 
 ---
 
@@ -61,18 +61,17 @@ The preset is removed immediately and the dropdown is refreshed. Deleted presets
 
 ## Pet Presets
 
-When you click **Save to Current Pet**, the current color is saved as a preset under your pet's exact name (e.g., `"Fluffy"`). This preset functions identically to a manual preset — it appears in the dropdown, can be renamed or deleted, and can be loaded manually at any time.
+When you click **Save to Current Pet**, the color from the color picker is saved as a preset under your pet's exact name (e.g., `"Fluffy"`). This preset functions identically to a manual preset — it appears in the dropdown, can be renamed or deleted, and can be loaded manually at any time.
 
-When **Pet Colour Overrides** is enabled, the addon automatically loads the matching pet preset whenever that pet is summoned. See the [Hunter Pet Coloring](Hunter-Pet-Coloring) page for details.
+When **Pet Colour Overrides** is enabled, the addon automatically shows the matching pet preset whenever that pet is summoned. See the [Hunter Pet Coloring](Hunter-Pet-Coloring) page for details.
 
 ---
 
 ## Tips
 
-- Create presets for each of your frequently-played characters or specs (e.g., `"Tank Red"`, `"Healer Blue"`).
+- Create presets for your frequently-played specs or characters (e.g., `"Tank Red"`, `"Healer Blue"`).
 - Use the four built-in colorblind presets as a starting point if you are unsure which colors work well.
-- The **Reset to Defaults** button deletes all presets. Make sure you have backed up any important names before resetting.
-- Presets are stored per character (AceDB profile). They are not shared between characters by default.
+- The **Reset to Defaults** button deletes all presets. Make sure you have noted any important colors before resetting.
 
 ---
 

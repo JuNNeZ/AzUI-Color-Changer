@@ -11,9 +11,10 @@ This page describes every option available in the AzUI Healthbar Color Changer o
 
 The main color of your player health bar. Supports full RGB control plus an independent alpha (transparency) channel. The color is applied instantly and saved automatically — there is no Save button.
 
-- **Alpha** controls bar transparency (0 = invisible, 1 = fully opaque).
+- **Alpha** controls the transparency of the bar fill (0 = invisible, 1 = fully opaque). Text, borders and other overlays are not affected.
 - The chosen color is stored in `DB.profile.color` as `{R, G, B, A}`.
-- Any active rainbow or pulse animation overrides the display color while running, but the base color is preserved for when you stop the animation.
+- Only you change this color. Rainbow, pulse and hunter pet colors are shown on screen but never saved over it, so stopping an effect or dismissing a pet always brings it back.
+- Picking a color stops any running rainbow or pulse.
 
 ---
 
@@ -24,10 +25,11 @@ See the **[Animations](Animations)** page for a detailed guide. Quick reference:
 ### Rainbow Effect button
 Toggles the rainbow animation on/off.  
 - Label shows **Rainbow Effect** when inactive, **Stop Rainbow Effect** when active.
+- Starting the rainbow stops the pulse.
 
 ### Rainbow Pattern
 **Type:** Dropdown  
-Controls the visual style of the animation.
+Controls the visual style of the animation. It can be changed while the rainbow is running.
 
 | Option | Description |
 |--------|-------------|
@@ -35,9 +37,9 @@ Controls the visual style of the animation.
 | **Ping-Pong** | HSV hue sweep from 0 → 1 → 0 (alternates forward and back). Produces sharper color contrast than Cycle. |
 | **Chaos** | Picks a completely random RGB value every 0.1 s. Maximum flicker/unpredictability. |
 
-### Rainbow Speed (Hz)
-**Type:** Slider, range 0.1–5 Hz  
-Controls how fast the rainbow (and pulse) animation plays. Also affects the Pulse effect.
+### Animation Speed
+**Type:** Slider, range 0.1–5  
+A speed multiplier for both the rainbow and the pulse. At **1.0** a rainbow cycle takes about 21 seconds and a pulse about 10 seconds; 2.0 is twice as fast. Chaos always changes every 0.1 s.
 
 ---
 
@@ -48,9 +50,9 @@ See the **[Animations](Animations)** page for a detailed guide. Quick reference:
 ### Pulse Colour button
 Toggles the pulse animation on/off.  
 - Label shows **Pulse Colour** when inactive, **Stop Pulse** when active.
-- The current color's brightness oscillates between 30% and 100% using a sine wave.
+- Your color's brightness oscillates between 30% and 100% using a sine wave.
 - Uses the same speed slider as the rainbow effect.
-- Completely independent of rainbow — you cannot run both at once.
+- Rainbow and pulse never run together — starting one stops the other.
 
 ---
 
@@ -79,16 +81,16 @@ See the **[Hunter Pet Coloring](Hunter-Pet-Coloring)** page for a full guide.
 
 ### Pet Colour Overrides toggle
 **Type:** Toggle (checkbox)  
-When **enabled**, the addon watches for pet summon/dismiss events (`UNIT_PET`) and automatically applies:
+When **enabled**, the addon watches for pet summon/dismiss events (`UNIT_PET`) and shows:
 1. A color saved under the pet's exact name (if one exists).
 2. A fallback color based on the pet's family type.
 
-When the pet is dismissed, the player's previous color (including active rainbow/pulse state) is fully restored.
+While a pet color is shown, a running rainbow or pulse pauses. When the pet is dismissed, your own color and effect come back. If you pick a color or start an effect while the pet is out, your choice is shown until the next pet change.
 
-When **disabled**, the player's chosen color is always displayed, regardless of which pet is active.
+When **disabled**, your chosen color is always displayed, regardless of which pet is active.
 
 ### Save to Current Pet button
-Saves the current RGBA color as a named preset under the active pet's name. Disabled when no pet is active. After saving, "Pet Colour Overrides" will use this color whenever that specific pet is summoned.
+Saves the color from the color picker as a preset under the active pet's name. Disabled when no pet is active. With "Pet Colour Overrides" on, this color is used whenever that pet is summoned.
 
 ---
 
@@ -97,14 +99,14 @@ Saves the current RGBA color as a named preset under the active pet's name. Disa
 See the **[Presets](Presets)** page for a full guide.
 
 ### Select Preset (dropdown)
-Lists all saved presets. Selecting one loads it immediately (stops rainbow, applies color).
+Lists all saved presets. Selecting one loads it immediately (stops animations, applies color).
 
 ### Save as Preset button
-Opens a popup dialog asking for a name. Saves the current RGBA color under that name.
+Opens a popup dialog asking for a name. Saves the current RGBA color under that name. Saving under an existing name replaces that preset.
 
 ### Rename Preset
 **Type:** Text input + button  
-Type a new name in the input box, then click **Rename** to rename the currently selected preset.
+Type a new name in the input box, then click **Rename Preset** to rename the currently selected preset. Names that are already in use are refused.
 
 ### Delete Preset button
 Permanently removes the currently selected preset. Disabled when no preset is selected.
@@ -115,26 +117,26 @@ Permanently removes the currently selected preset. Disabled when no preset is se
 
 ### Show Minimap Icon toggle
 **Type:** Toggle  
-Shows or hides the AzUI icon on your minimap. When hidden, use `/ahui` to open the options panel instead. Compatible with Titan Panel.
+Shows or hides the AzUI icon on your minimap. When hidden, use `/ahui` or the AddOn Compartment to open the options panel instead. Compatible with Titan Panel.
 
 ---
 
 ## Maintenance
 
 ### Reset to Defaults button
-Resets all settings and clears all presets back to factory defaults. A confirmation popup is shown before any data is deleted.
+Resets all settings in the current profile back to factory defaults and restores the four colorblind presets. A confirmation popup is shown first.
 
-> ⚠️ This also deletes all saved presets, including pet presets. This action cannot be undone.
+> ⚠️ This also deletes all saved presets in the profile, including pet presets. This action cannot be undone.
 
 ### Reload button
-Runs `/reload ui`. Stops any active rainbow or pulse before reloading. All settings are saved automatically, so no data is lost.
+Runs `/reload`. All settings are saved automatically, and a running rainbow or pulse continues after the reload.
 
 ---
 
 ## Debug Mode
 
 ### Enable Debug toggle
-When enabled, the addon prints diagnostic messages to your chat window prefixed with `[AzUI_Color_Picker]`. Useful for troubleshooting frame detection issues or unexpected color resets.
+When enabled, the addon prints diagnostic messages to your chat window prefixed with `[AzUI Color Picker]`, such as which AzeriteUI frames it found. Useful for troubleshooting frame detection issues.
 
 ---
 
@@ -143,21 +145,23 @@ When enabled, the addon prints diagnostic messages to your chat window prefixed 
 All settings are stored in:
 
 ```
-WTF\Account\<account>\<realm>\<character>\SavedVariables\AzUI_Color_PickerDB.lua
+WTF\Account\<account>\SavedVariables\AzUI_Color_PickerDB.lua
 ```
 
-The file uses AceDB-3.0's profile system. All changes are committed automatically on logout/reload — there is no manual save step.
+The file uses AceDB-3.0 with a single **Default** profile that all your characters share. All changes are committed automatically on logout/reload — there is no manual save step.
 
 ### Profile Keys Reference
 
 | Key | Type | Description |
 |-----|------|-------------|
-| `color` | table `{R, G, B, A}` | Current health bar color |
+| `color` | table `{R, G, B, A}` | Your chosen health bar color |
 | `rainbowActive` | boolean | Whether rainbow is running |
-| `rainbowMode` | string | "Cycle" / "Ping-Pong" / "Chaos" |
-| `rainbowSpeed` | number | Animation speed in Hz (0.1–5) |
+| `rainbowMode` | string | `"cycle"` / `"ping"` / `"chaos"` |
+| `rainbowSpeed` | number | Animation speed multiplier (0.1–5) |
 | `pulseActive` | boolean | Whether pulse is running |
 | `petColouring` | boolean | Pet color override enabled |
 | `presets` | table | Named color presets `{name = {R,G,B,A}}` |
+| `defaultPresetsSeeded` | boolean | Whether the colorblind presets were added |
 | `debug` | boolean | Debug mode enabled |
-| `minimap.hide` | boolean | Minimap icon hidden |
+
+The minimap icon settings (`minimap.hide`, `minimap.showInCompartment`) are stored in the account-wide `global` section.

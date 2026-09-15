@@ -4,6 +4,45 @@ Format inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ----------------------------------------------------------------------
 # Changelog
 
+## [4.9.0] - 2026-09-15
+
+### Added (4.9.0)
+
+- Support for every retail AzeriteUI edition: AzeriteUI 5.x, AzeriteUI5 JuNNeZ Edition and the official AzeriteUI for Midnight (`AzeriteUI6`), including player frames enabled after login.
+- Hunter pet family colours now work in every game language (matched by creature family ID).
+- Whiptail pet family colour.
+
+### Changed (4.9.0)
+
+- Rainbow, pulse and pet colours are only applied on screen; your saved colour is never changed by them.
+- Animations update up to 30 times per second and no longer trigger AzeriteUI frame updates.
+- "Rainbow Speed (Hz)" is now "Animation Speed". Speeds are unchanged: at 1.0 a rainbow cycle takes about 21 seconds.
+- Alpha is applied to the health bar texture instead of the whole bar frame.
+- The Blizzard player health bar art is desaturated so colours show true.
+- Picking a colour or starting an effect while a pet colour is shown takes effect immediately; the pet colour returns on the next pet change.
+- `/ahui` now opens and closes the options panel.
+- Colour-blind presets are added once per profile.
+- The TOC lists all AzeriteUI editions as optional dependencies, and release packages no longer include the wiki.
+
+### Removed (4.9.0)
+
+- The addon no longer replaces the global oUF health colour or AzeriteUI's colour table.
+- Pet family entries that are not real families (Kodo, Dog, Goat, Mouse, Skunk, Hawk, Shark, Fish, Shale Spider, Silithid). The current names Hound, Aqiri and Shale Beast keep their colours.
+
+### Fixed (4.9.0)
+
+- Pulse made the saved colour darker after every `/reload` or logout while it was running.
+- A pet colour replaced the saved player colour after a `/reload` with the pet out.
+- Stopping the rainbow did not bring back the chosen colour.
+- Renaming a preset to its own name deleted it, and renaming onto an existing name overwrote that preset.
+- Lua errors in oUF layouts caused by replacing `oUF.colors.health`.
+- One-frame colour flicker when AzeriteUI or oUF recoloured the bar, and full AzeriteUI player-frame updates running 10 times per second during animations.
+- Colours could be replaced on JuNNeZ Edition frames, whose oUF colours the bar texture directly.
+- The options panel did not refresh after saving a preset from the popup, resetting, or a pet change.
+- Deleted colour-blind presets came back on every login.
+- Possible taint from writing `lockColor` on the Blizzard player health bar.
+- The reset dialog claimed all profiles would be deleted.
+
 ## [4.8.0] - 2026-08-27
 
 ### Added (4.8.0)

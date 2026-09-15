@@ -1,17 +1,19 @@
 # Hunter Pet Coloring
 
-AzUI Healthbar Color Changer includes a system for automatically coloring your health bar based on your active hunter pet. When **Pet Colour Overrides** is enabled, the health bar changes color whenever you summon or dismiss a pet, and seamlessly reverts to your player color when no pet is active.
+AzUI Healthbar Color Changer includes a system for automatically coloring your health bar based on your active hunter pet. When **Pet Colour Overrides** is enabled, the health bar changes color whenever you summon or dismiss a pet, and returns to your own color when no pet is active.
 
 ---
 
 ## How It Works
 
-1. When you summon a pet, the addon fires on the `UNIT_PET` event.
+1. When you summon a pet, the addon reacts to the `UNIT_PET` event.
 2. It checks your saved presets for a preset **named after the pet** (exact match, case-sensitive).
-3. If a named preset is found → that color is applied.
-4. If no named preset exists → the pet's **family type** is looked up in the built-in family color table.
-5. If neither matches → the player's current color is kept unchanged.
-6. When the pet is dismissed (or dies and stays dismissed), the player's **original color is fully restored**, including any rainbow or pulse animation that was active before the pet was summoned.
+3. If a named preset is found → that color is shown.
+4. If no named preset exists → the pet's **family** is looked up in the built-in family color table. Families are matched by their game ID, so this works in every client language.
+5. If neither matches → your own color is kept.
+6. When the pet is dismissed (or dies and stays dismissed), your **own color comes back**, including any rainbow or pulse animation you had running.
+
+The pet color is only shown on screen — it is never saved over your chosen color, so `/reload`ing or logging out with a pet out cannot lose your color.
 
 ---
 
@@ -19,7 +21,7 @@ AzUI Healthbar Color Changer includes a system for automatically coloring your h
 
 Open the options panel (`/ahui`) and toggle **Pet Colour Overrides** on.
 
-> This setting is per-character. A hunter alt and a non-hunter character can have different settings.
+> Settings are stored in the shared **Default** profile, so the toggle applies to all your characters. Non-hunters are unaffected because they have no pet.
 
 ---
 
@@ -29,103 +31,100 @@ Open the options panel (`/ahui`) and toggle **Pet Colour Overrides** on.
 2. Set your desired color with the color picker.
 3. Click **Save to Current Pet**.
 
-The color is saved under the pet's exact name (e.g., `"Fluffy"`). It will also appear in the regular **Select Preset** dropdown and can be renamed or deleted there.
+The color from the color picker is saved under the pet's exact name (e.g., `"Fluffy"`) and shown straight away. It also appears in the regular **Select Preset** dropdown and can be renamed or deleted there.
 
 ---
 
 ## Built-in Pet Family Colors
 
-If no named preset exists for a pet, the addon falls back to a color based on the pet's family. All The War Within hunter pet families are covered:
+If no named preset exists for a pet, the addon falls back to a color based on the pet's family:
 
 ### Exotic Families
-| Family | Color | Notes |
-|--------|-------|-------|
-| Spirit Beast | Cyan `{0, 1, 1, 1}` | |
-| Devilsaur | Deep green `{0.20, 0.60, 0.20, 1}` | Exotic |
-| Core Hound | Dark red `{0.70, 0.20, 0.15, 1}` | Exotic |
-| Chimaera | Teal `{0.20, 0.70, 0.65, 1}` | Exotic |
-| Clefthoof | Brown-tan `{0.55, 0.40, 0.25, 1}` | Exotic |
-| Direhorn | Purple-grey `{0.55, 0.45, 0.65, 1}` | Exotic |
-| Kodo | Sandy `{0.70, 0.55, 0.30, 1}` | Exotic |
-| Scalehide | Olive `{0.50, 0.55, 0.25, 1}` | Exotic |
-| Shale Beast | Stone `{0.60, 0.55, 0.50, 1}` | Exotic |
-| Silithid | Acid yellow `{0.80, 0.80, 0.10, 1}` | Exotic |
-| Stone Hound | Rock grey `{0.55, 0.50, 0.45, 1}` | Exotic |
-| Water Strider | Ice blue `{0.50, 0.80, 0.90, 1}` | Exotic |
-| Hydra | Deep teal `{0.15, 0.60, 0.55, 1}` | Exotic |
-| Aqiri | Sand `{0.85, 0.75, 0.40, 1}` | Exotic |
-| Riverbeast | Muddy brown `{0.50, 0.40, 0.20, 1}` | Exotic |
-| Worm | Pale `{0.70, 0.65, 0.50, 1}` | Exotic |
-| Carapid | Amber `{0.80, 0.60, 0.20, 1}` | Exotic (TWW) |
-| Pterrordax | Sky blue `{0.40, 0.70, 0.90, 1}` | Exotic (TWW) |
+| Family | Color |
+|--------|-------|
+| Spirit Beast | Cyan aura `{0.00, 1.00, 1.00}` |
+| Devilsaur | Blood-red scales `{0.90, 0.20, 0.10}` |
+| Core Hound | Fiery magma `{1.00, 0.35, 0.25}` |
+| Chimaera | Frost-blue breath `{0.25, 0.80, 1.00}` |
+| Clefthoof | Earthen hide `{0.55, 0.35, 0.25}` |
+| Direhorn | Muddy horn `{0.60, 0.40, 0.20}` |
+| Scalehide | Mossy scales `{0.40, 0.70, 0.30}` |
+| Shale Beast | Crystalline purple `{0.65, 0.50, 0.75}` |
+| Stone Hound | Azure stone `{0.50, 0.70, 0.90}` |
+| Water Strider | Teal water walker `{0.20, 0.60, 0.80}` |
+| Hydra | Emerald scales `{0.25, 0.75, 0.55}` |
+| Aqiri | Bronze carapace `{0.85, 0.45, 0.15}` |
+| Riverbeast | Swamp green `{0.35, 0.65, 0.45}` |
+| Worm | Sandy burrower `{0.70, 0.55, 0.25}` |
+| Carapid | Purple chitin `{0.70, 0.30, 0.80}` |
+| Pterrordax | Amber wing `{0.80, 0.60, 0.30}` |
 
 ### Mammal Families
 | Family | Color |
 |--------|-------|
-| Bear | Brown `{0.45, 0.35, 0.25, 1}` |
-| Boar | Pink-tan `{0.70, 0.50, 0.40, 1}` |
-| Cat | Golden `{0.90, 0.75, 0.15, 1}` |
-| Dog | Tan `{0.80, 0.65, 0.40, 1}` |
-| Fox | Orange `{0.90, 0.50, 0.15, 1}` |
-| Gorilla | Dark brown `{0.40, 0.30, 0.20, 1}` |
-| Hyena | Spotted tan `{0.75, 0.65, 0.40, 1}` |
-| Monkey | Warm brown `{0.65, 0.45, 0.30, 1}` |
-| Wolf | Steel blue `{0.45, 0.50, 0.60, 1}` |
-| Mammoth | Ivory `{0.75, 0.70, 0.60, 1}` |
-| Stag | Forest green `{0.35, 0.55, 0.30, 1}` |
-| Feathermane | Feather pink `{0.85, 0.60, 0.70, 1}` |
-| Courser | Silver `{0.70, 0.72, 0.75, 1}` |
-| Gruffhorn | Charcoal `{0.40, 0.38, 0.35, 1}` |
-| Hound | Rust `{0.70, 0.40, 0.25, 1}` |
-| Tallstrider | Pale yellow `{0.90, 0.85, 0.50, 1}` |
+| Bear | Brown fur `{0.45, 0.35, 0.25}` |
+| Boar | Tusky brown `{0.60, 0.40, 0.30}` |
+| Cat | Pale pink `{1.00, 0.50, 0.50}` |
+| Fox | Orange fur `{0.95, 0.45, 0.20}` |
+| Gorilla | Grey shadow `{0.40, 0.40, 0.40}` |
+| Hyena | Savannah `{0.80, 0.60, 0.25}` |
+| Monkey | Jungle brown `{0.65, 0.55, 0.40}` |
+| Oxen | Taupe `{0.50, 0.45, 0.35}` |
+| Rodent | Whiskered grey `{0.75, 0.65, 0.55}` |
+| Tallstrider | Savannah yellow `{0.85, 0.70, 0.20}` |
+| Camel | Desert beige `{0.75, 0.65, 0.45}` |
+| Courser | Golden stallion `{0.90, 0.80, 0.60}` |
+| Feathermane | Majestic plum `{0.75, 0.50, 0.85}` |
+| Gruffhorn | Rough hide `{0.55, 0.45, 0.30}` |
+| Hound | Loyal brown `{0.60, 0.50, 0.40}` |
+| Mammoth | Tusked grey `{0.65, 0.55, 0.45}` |
+| Stag | Forest green `{0.50, 0.70, 0.40}` |
+| Wolf | Pack grey `{0.45, 0.50, 0.55}` |
 
 ### Bird Families
 | Family | Color |
 |--------|-------|
-| Bird of Prey | Amber `{0.90, 0.65, 0.10, 1}` |
-| Carrion Bird | Bone white `{0.75, 0.70, 0.60, 1}` |
-| Dragonhawk | Flame `{1, 0.40, 0.05, 1}` |
-| Bat | Dark purple `{0.30, 0.25, 0.35, 1}` |
-| Moth | Lavender `{0.75, 0.60, 0.85, 1}` |
-| Ravager | Crimson-purple `{0.60, 0.20, 0.60, 1}` |
-| Waterfowl | Lake blue `{0.40, 0.65, 0.80, 1}` |
+| Carrion Bird | Vulture red-brown `{0.75, 0.35, 0.20}` |
+| Bird of Prey | Golden feather `{0.95, 0.85, 0.30}` |
+| Dragonhawk | Fiery wings `{0.90, 0.30, 0.30}` |
+| Ravager | Rust chitin `{0.80, 0.40, 0.20}` |
+| Moth | Soft lilac `{0.80, 0.75, 0.85}` |
+| Bat | Night wing `{0.30, 0.25, 0.35}` |
+| Waterfowl | Lake blue `{0.40, 0.70, 0.90}` |
 
-### Reptile Families
+### Reptile & Amphibian Families
 | Family | Color |
 |--------|-------|
-| Serpent | Emerald `{0.15, 0.75, 0.40, 1}` |
-| Raptor | Teal `{0.20, 0.65, 0.55, 1}` |
-| Turtle | Moss `{0.40, 0.60, 0.25, 1}` |
-| Crocolisk | Swamp green `{0.35, 0.50, 0.20, 1}` |
-| Basilisk | Stone green `{0.50, 0.55, 0.35, 1}` |
-| Crab | Coral `{0.85, 0.40, 0.30, 1}` |
-| Lizard | Lime `{0.50, 0.80, 0.25, 1}` |
-| Wind Serpent | Electric blue `{0.20, 0.60, 0.95, 1}` |
-| Ray | Deep blue `{0.25, 0.40, 0.80, 1}` |
-| Hopper | Grass green `{0.40, 0.70, 0.30, 1}` |
+| Basilisk | Jade hide `{0.35, 0.75, 0.60}` |
+| Crab | Scarlet shell `{0.90, 0.30, 0.30}` |
+| Crocolisk | Swamp reptile `{0.30, 0.70, 0.35}` |
+| Raptor | Rust scales `{0.80, 0.45, 0.20}` |
+| Serpent | Emerald serpent `{0.15, 0.75, 0.40}` |
+| Turtle | Jade shell `{0.20, 0.60, 0.30}` |
+| Lizard | Lime scales `{0.55, 0.80, 0.35}` |
+| Whiptail | Olive scales `{0.60, 0.75, 0.30}` |
+| Sporebat | Cyan spores `{0.55, 0.80, 0.90}` |
+| Hopper | Leap green `{0.60, 0.80, 0.50}` |
+| Ray | Ethereal purple `{0.70, 0.60, 0.90}` |
+| Wind Serpent | Airy teal `{0.50, 0.90, 0.70}` |
 
 ### Insect Families
 | Family | Color |
 |--------|-------|
-| Spider | Midnight purple `{0.35, 0.20, 0.50, 1}` |
-| Wasp | Yellow `{1, 0.85, 0.15, 1}` |
-| Beetle | Bronze `{0.55, 0.45, 0.20, 1}` |
-| Scorpid | Orange-red `{0.80, 0.35, 0.10, 1}` |
+| Spider | Web grey `{0.45, 0.45, 0.55}` |
+| Wasp | Yellow stinger `{1.00, 0.85, 0.15}` |
+| Beetle | Jade carapace `{0.30, 0.70, 0.55}` |
+| Scorpid | Desert amber `{0.85, 0.70, 0.30}` |
 
-### Aquatic & Other
+### Mechanical & Special
 | Family | Color |
 |--------|-------|
-| Shark | Ocean blue `{0.40, 0.60, 0.80, 1}` |
-| Fish | Aqua `{0.30, 0.70, 0.75, 1}` |
-| Mechanical | Steel `{0.50, 0.80, 1, 1}` |
-| Sporebat | Violet `{0.60, 0.40, 0.75, 1}` |
+| Mechanical | Arcane blue steel `{0.50, 0.80, 1.00}` |
+| Blood Beast | Crimson blood `{0.80, 0.15, 0.20}` |
+| Lesser Dragonkin | Dragon purple `{0.60, 0.40, 0.85}` |
+| Warp Stalker | Void pink `{0.85, 0.50, 0.95}` |
 
-### Special / Skill-Required
-| Family | Color |
-|--------|-------|
-| Blood Beast | Crimson `{0.80, 0.15, 0.20, 1}` |
-| Lesser Dragonkin | Dragon gold `{0.80, 0.65, 0.10, 1}` |
-| Warp Stalker | Void purple `{0.45, 0.20, 0.65, 1}` |
+All family colors are fully opaque (alpha 1).
 
 ---
 
@@ -135,7 +134,7 @@ If no named preset exists for a pet, the addon falls back to a color based on th
 - If you want all pets of a particular family to share a color without saving individual presets, just rely on the family fallback.
 - The **Save to Current Pet** button is disabled when you have no active pet — make sure the pet is summoned before saving.
 - Pet presets can be renamed via the regular **Rename Preset** UI if you want to tidy up the dropdown.
-- Non-hunter characters can simply leave **Pet Colour Overrides** disabled — the feature has no effect when no pet is present.
+- Picking a color or starting an effect while a pet is out shows your choice right away; the pet color returns the next time your pet changes.
 
 ---
 
@@ -143,9 +142,10 @@ If no named preset exists for a pet, the addon falls back to a color based on th
 
 | Situation | Result |
 |-----------|--------|
-| Pet summoned, named preset exists | Named preset color applied |
-| Pet summoned, no named preset, family known | Family fallback color applied |
-| Pet summoned, no named preset, family unknown | Player color unchanged |
-| Pet dismissed | Player's previous color fully restored |
-| Rainbow was active before summoning pet | Rainbow resumes after pet dismissed |
-| Pulse was active before summoning pet | Pulse resumes after pet dismissed |
+| Pet summoned, named preset exists | Named preset color shown |
+| Pet summoned, no named preset, family known | Family fallback color shown |
+| Pet summoned, no named preset, family unknown | Your color unchanged |
+| Pet dismissed | Your own color shown again |
+| Rainbow was active before summoning pet | Rainbow pauses, resumes after pet dismissed |
+| Pulse was active before summoning pet | Pulse pauses, resumes after pet dismissed |
+| `/reload` or logout with pet out | Your saved color is untouched |

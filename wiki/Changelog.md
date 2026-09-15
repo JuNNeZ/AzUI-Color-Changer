@@ -5,6 +5,51 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ---
 
+## [4.9.0] – 2026-09-15
+
+### Added
+- Support for every retail AzeriteUI edition: AzeriteUI 5.x, AzeriteUI5 JuNNeZ Edition and AzeriteUI for Midnight (`AzeriteUI6`).
+- Hunter pet family colours work in every game language.
+- Whiptail pet family colour.
+
+### Changed
+- Rainbow, pulse and pet colours are only shown on screen; your saved colour is never changed by them.
+- Smoother animations (up to 30 updates per second) without AzeriteUI frame updates.
+- "Rainbow Speed (Hz)" renamed to **Animation Speed** (same speeds; 1.0 ≈ 21-second rainbow cycle).
+- Alpha applies to the bar texture only; the Blizzard bar art is desaturated so colours show true.
+- `/ahui` opens and closes the options panel.
+
+### Removed
+- Global oUF and AzeriteUI colour table overrides.
+- Pet family entries that are not real families (Kodo, Dog, Goat, Mouse, Skunk, Hawk, Shark, Fish, Shale Spider, Silithid).
+
+### Fixed
+- Pulse darkening the saved colour after every reload.
+- Pet colour replacing the player colour after a reload.
+- Stopping the rainbow not restoring your colour.
+- Preset rename deleting or overwriting presets.
+- Lua errors in oUF layouts, colour flicker, and heavy AzeriteUI updates during animations.
+- Options panel not refreshing after popups, resets and pet changes.
+- Deleted colour-blind presets coming back on login.
+
+---
+
+## [4.8.0] – 2026-08-27
+
+### Added
+- World of Warcraft Retail 12.1.0 support (`Interface: 120100`).
+- AddOn Compartment registration through LibDBIcon.
+
+### Changed
+- Updated embedded Ace3 to Release-r1403 and LibDBIcon to v12.0.3.
+- Corrected the embedded-library load order.
+
+### Fixed
+- Addon startup failures caused by library load order.
+- Pulse and rainbow running at the same time.
+
+---
+
 ## [4.7.29] – 2026-04-03
 
 ### Changed

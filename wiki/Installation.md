@@ -4,9 +4,9 @@
 
 | Requirement | Details |
 |-------------|---------|
-| **Game version** | World of Warcraft: The War Within / Dragonflight (Interface 120000+) |
+| **Game version** | World of Warcraft Retail: Midnight, patch 12.1 (Interface 120100) |
 | **External addons** | None — all libraries are bundled |
-| **Optional** | [AzeriteUI](https://www.curseforge.com/wow/addons/azeriteui) — if installed, the addon will also color its custom unit frames |
+| **Optional** | AzeriteUI for Midnight (`AzeriteUI6`), AzeriteUI5 – JuNNeZ Edition, or AzeriteUI 5.x — if installed, the addon also colors their player frames |
 
 ---
 
@@ -33,23 +33,21 @@ The final structure inside the folder should look like this:
 ```
 AzUI_Color_Picker\
 ├── AzUI_Color_Picker.toc
-├── AzUI_Color_Picker.lua
+├── AzUI_Color_picker.lua
 ├── icon.tga
 └── Libs\
     ├── LibStub\
     │   └── LibStub.lua
+    ├── CallbackHandler-1.0\
+    │   └── CallbackHandler-1.0.lua
     ├── LibDBIcon-1.0\
-    │   ├── LibDBIcon-1.0.lua
-    │   ├── LibDataBroker-1.1\
-    │   │   └── LibDataBroker-1.1.lua
-    │   └── CallbackHandler-1.0\
-    │       └── CallbackHandler-1.0.lua
+    │   ├── LibDBIcon-1.0\
+    │   │   └── LibDBIcon-1.0.lua
+    │   └── LibDataBroker-1.1\
+    │       └── LibDataBroker-1.1.lua
     ├── AceAddon-3.0\
-    │   └── AceAddon-3.0.lua
     ├── AceDB-3.0\
-    │   └── AceDB-3.0.lua
-    ├── AceHook-3.0\
-    │   └── AceHook-3.0.lua
+    ├── AceGUI-3.0\
     └── AceConfig-3.0\
         ├── AceConfig-3.0.lua
         ├── AceConfigDialog-3.0\
@@ -65,7 +63,7 @@ AzUI_Color_Picker\
 
 After logging in:
 
-- A small **AzUI icon** should appear on your minimap (unless you have hidden it in another session).
+- A small **AzUI icon** should appear on your minimap (unless you have hidden it) and in the AddOn Compartment.
 - Type `/ahui` — the options panel should open immediately.
 - If neither of these happen, check that the addon is enabled in the AddOns list and that there are no Lua errors in your chat.
 
@@ -80,7 +78,7 @@ The app handles updates automatically. You can also click **Check for Updates** 
 1. Delete the old `AzUI_Color_Picker` folder from your AddOns directory.
 2. Download the new ZIP from [Releases](https://github.com/JuNNeZ/AzUI-Color-Changer/releases) and repeat the steps above.
 
-Your saved colors and presets are stored in `WTF\Account\<account>\<realm>\<character>\SavedVariables\AzUI_Color_PickerDB.lua` and are **not** deleted when you update the addon.
+Your saved colors and presets are stored in `WTF\Account\<account>\SavedVariables\AzUI_Color_PickerDB.lua` and are **not** deleted when you update the addon.
 
 ---
 
@@ -98,11 +96,10 @@ All dependencies ship inside the `Libs\` folder — you do not need to install a
 | Library | Purpose |
 |---------|---------|
 | LibStub | Library stub loader used by all Ace libs |
-| AceAddon-3.0 | Core addon framework |
-| AceDB-3.0 | Per-character saved variables manager |
-| AceHook-3.0 | Safe function hooking |
-| AceConfig-3.0 | Options table definition system |
-| AceConfigDialog-3.0 | Blizzard-style options panel renderer |
+| CallbackHandler-1.0 | Event callback system (used by AceDB and LDB) |
+| AceAddon-3.0 | Core addon framework (also used to find AzeriteUI) |
+| AceDB-3.0 | Saved variables and profile manager |
+| AceGUI-3.0 | Widgets for the options panel |
+| AceConfig-3.0 | Options table definition system (incl. AceConfigDialog and AceConfigRegistry) |
 | LibDataBroker-1.1 | Data broker for minimap / Titan Panel |
-| CallbackHandler-1.0 | Event callback system (used by LDB) |
-| LibDBIcon-1.0 | Minimap icon and Titan Panel launcher |
+| LibDBIcon-1.0 | Minimap icon and AddOn Compartment launcher |

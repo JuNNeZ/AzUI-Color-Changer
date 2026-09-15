@@ -1,29 +1,42 @@
 # AzUI Healthbar Color Changer
 
-**Current version:** 4.8.0
+**Current version:** 4.9.0
 
-Lightweight Ace3-powered addon that lets you recolour and animate your player health-bar in **AzeriteUI, oUF layouts, or the default frames**.
+Lightweight Ace3-powered addon that lets you recolour and animate your own player health bar in **AzeriteUI** or on the **default Blizzard player frame**.
 
-Supports **World of Warcraft Retail 12.1.0** (`Interface: 120100`).
+Supports **World of Warcraft Retail 12.1** (`Interface: 120100`).
 
 ---
 
 ## ✨ Features
 
 * **Static RGBA colour** picker (alpha supported)
-* **Rainbow** (Cycle / Ping-Pong / Chaos) with speed slider & single-button toggle
-* **Pulse** effect on any colour with its own toggle
+* **Rainbow** (Cycle / Ping-Pong / Chaos) and **Pulse** effects with a shared speed slider
+* **Your colour is always kept:** effects and pet colours are only applied on screen, never saved over your chosen colour
 * **Presets:** save, rename, delete, auto-apply by hunter-pet name or family
-* **Hunter pet family coverage** with name presets and fallback colours
-* **Colour-blind presets** seeded on first run
+* **Hunter pet family colours** that work in every game language
+* **Colour-blind presets** added once per profile
 * **Class colour & random** one-click buttons
 * **Minimap, AddOn Compartment & Titan Panel launcher** (LibDataBroker)
-* **AceDB profiles**, debug mode, and defensive frame hooks
+* Debug mode for troubleshooting frame detection
+
+---
+
+## 🖼️ Supported Frames
+
+| Frame | Notes |
+|-------|-------|
+| **AzeriteUI for Midnight** (`AzeriteUI6`) | Player frame |
+| **AzeriteUI5 – JuNNeZ Edition** (`AzeriteUI5_JuNNeZ_Edition`) | Player and alternate player frames |
+| **AzeriteUI 5.x** (`AzeriteUI`) | Player and alternate player frames |
+| **Blizzard default player frame** | The bar art is desaturated so your colour shows true |
+
+Frames that AzeriteUI creates or enables after login are picked up automatically within a couple of seconds. Other unit frame addons (ElvUI, oUF layouts, ShadowedUF, …) are not coloured.
 
 ---
 
 ## 🗺️ Slash Commands
-* `/ahui` – open the options panel
+* `/ahui` – open or close the options panel
 
 ---
 
@@ -31,17 +44,17 @@ Supports **World of Warcraft Retail 12.1.0** (`Interface: 120100`).
 
 | Category      | Library / Addon                                                   | Bundled? | Notes                                      |
 |---------------|-------------------------------------------------------------------|----------|--------------------------------------------|
-| **Core**      | AceAddon-3.0, AceDB-3.0, AceGUI-3.0, AceConfig-3.0                | ✔ | Ace3 Release-r1403 (Retail 12.1 compatible) |
+| **Core**      | AceAddon-3.0, AceDB-3.0, AceGUI-3.0, AceConfig-3.0                | ✔ | Ace3 Release-r1403 |
 | **Launcher**  | LibDataBroker-1.1, LibDBIcon-1.0, CallbackHandler-1.0             | ✔ | LibDBIcon v12.0.3                          |
 | **Stub**      | LibStub                                                           | ✔ | Loaded before all embedded libraries       |
-| **Optional**  | AzeriteUI                                                         | — | Colours its custom player frames            |
+| **Optional**  | AzeriteUI (any retail edition above)                              | — | Colours its player frames                  |
 
 No external downloads needed — everything is embedded in `Libs\`.
 
 ---
 
 ## 📂 Installation
-1. Download **AzUI_Color_Picker-4.8.0.zip**
+1. Download **AzUI_Color_Picker-4.9.0.zip**
 2. Unzip to your AddOns folder; you should have:
 
 ```
@@ -50,11 +63,11 @@ AddOns\AzUI_Color_Picker\
     AzUI_Color_picker.lua
     icon.tga
     Libs\LibStub\LibStub.lua
-    Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
-    Libs\LibDBIcon-1.0\LibDataBroker-1.1\LibDataBroker-1.1.lua
     Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
-    Libs\AceGUI-3.0\AceGUI-3.0.lua
+    Libs\LibDBIcon-1.0\LibDBIcon-1.0\LibDBIcon-1.0.lua
+    Libs\LibDBIcon-1.0\LibDataBroker-1.1\LibDataBroker-1.1.lua
     Libs\AceAddon-3.0\AceAddon-3.0.lua
+    Libs\AceGUI-3.0\AceGUI-3.0.lua
     … (other Ace3 files)
 ```
 
@@ -64,6 +77,7 @@ AddOns\AzUI_Color_Picker\
 
 ### Change-Highlights (since 4.7.5)
 
+* **4.9.0**  All retail AzeriteUI editions incl. AzeriteUI6 • Saved colour never overwritten by pulse, rainbow or pet colours • Pet family colours in every language • Flicker-free, smoother animations • No more oUF colour overrides • Preset rename fixes
 * **4.8.0**  Retail 12.1 API • Correct embedded-library load order • Current Ace3/LibDBIcon • Safe status-bar hooks • Fixed animation and pet-state restoration
 * **4.7.27**  Version bump for release
 * **4.7.26**  Complete TWW hunter pet family coverage • Added 20+ missing families (Carapid, Pterrordax, Courser, Feathermane, etc.) • Normalized family naming
@@ -85,7 +99,7 @@ AddOns\AzUI_Color_Picker\
 * **4.7.6**  Rainbow toggle shows Stop text • HSV Ping-Pong hue sweep • Hunter-pet StopRainbow nil fix
 * **4.7.5**  Advanced Rainbow patterns: Cycle / Ping-Pong / Chaos with toggle button text swap
 
-See full `CHANGELOG.md` for detailed history.
+See full `changelog.md` for detailed history.
 
 ## 👨‍💻 Credits
 Created with ❤️ by **JuNNeZ** — code assistance & refactor ideas by **ChatGPT**.  

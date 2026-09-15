@@ -2,7 +2,7 @@
 
 **AzUI Healthbar Color Changer** is a lightweight, self-contained World of Warcraft addon that lets you fully customize the appearance of your player health bar. Set a static color, run animated rainbow or pulse effects, save unlimited presets, and automatically apply unique colors for your hunter pets — all from one clean options panel.
 
-> **Current version:** 4.7.29 | **Interface:** 120000 (The War Within / Dragonflight+)
+> **Current version:** 4.9.0 | **Interface:** 120100 (Midnight, patch 12.1)
 
 ---
 
@@ -23,32 +23,35 @@
 ## ✨ Feature Overview
 
 ### Static Color Picker
-Choose any RGBA color for your health bar — full RGB control plus independent alpha (transparency). Your color persists automatically across sessions and UI reloads.
+Choose any RGBA color for your health bar — full RGB control plus independent alpha (transparency). Your color persists automatically across sessions and UI reloads, and nothing else ever overwrites it: effects and pet colors are only shown on screen.
 
 ### Rainbow Animations
-Three distinct animated rainbow patterns with an adjustable speed slider (0.1–5 Hz). Toggle on and off with a single button — the button label flips between **Rainbow Effect** and **Stop Rainbow Effect** so you always know the current state.
+Three distinct animated rainbow patterns with an **Animation Speed** slider (0.1–5; at 1.0 one rainbow cycle takes about 21 seconds). Toggle on and off with a single button — the button label flips between **Rainbow Effect** and **Stop Rainbow Effect** so you always know the current state.
 
 ### Pulse Effect
-A gentle brightness pulse (30%–100%) applied to your chosen color. Independent of the rainbow effect; uses the same speed slider. Toggle with the **Pulse Colour** / **Stop Pulse** button.
+A gentle brightness pulse (30%–100%) applied to your chosen color, using the same speed slider. Toggle with the **Pulse Colour** / **Stop Pulse** button. Starting pulse stops the rainbow and vice versa.
 
 ### Preset System
-Save unlimited named color presets, load them from a dropdown, rename or delete them at any time. Four colorblind-friendly presets (`CB-Blue`, `CB-Orange`, `CB-Yellow`, `CB-Purple`) are pre-loaded on first run.
+Save unlimited named color presets, load them from a dropdown, rename or delete them at any time. Four colorblind-friendly presets (`CB-Blue`, `CB-Orange`, `CB-Yellow`, `CB-Purple`) are added once when a profile is created.
 
 ### Hunter Pet Auto-Coloring
-When a hunter summons a pet, the addon automatically applies a color based on the pet's saved name or, as a fallback, its family type. When the pet is dismissed the player's original color is fully restored — including any active rainbow or pulse.
+When a hunter summons a pet, the addon shows a color saved under the pet's name or, as a fallback, a color for its family — in every game language. When the pet is dismissed your own color and any running rainbow or pulse come back.
 
 ### Class Color Buttons
 One-click buttons for every playable class apply that class's official color immediately, stopping any active animations. A dedicated **Class Colour** button applies your *own* class color.
 
 ### Minimap / Titan Panel Icon
-A draggable minimap button (LibDataBroker + LibDBIcon) gives quick access to the options panel. Can be hidden from the options panel itself if you prefer the slash command instead.
+A draggable minimap button (LibDataBroker + LibDBIcon) gives quick access to the options panel, and the addon also appears in the AddOn Compartment. The minimap icon can be hidden from the options panel.
 
 ### Frame Compatibility
 | Frame Type | Support |
 |---|---|
-| **AzeriteUI** | Full — detects and colors all unit frames |
-| **oUF layouts** | Full — player frame detected automatically |
-| **Blizzard Default (DF / TWW)** | Full — defensive hooks prevent overwrite |
+| **AzeriteUI for Midnight** (`AzeriteUI6`) | Player frame |
+| **AzeriteUI5 – JuNNeZ Edition** | Player and alternate player frames |
+| **AzeriteUI 5.x** | Player and alternate player frames |
+| **Blizzard default player frame** | Bar art desaturated so your color shows true |
+
+Other unit frame addons (ElvUI, oUF layouts, ShadowedUF, …) are not colored.
 
 All libraries are bundled — no external downloads required.
 

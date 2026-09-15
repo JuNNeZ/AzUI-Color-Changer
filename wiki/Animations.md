@@ -1,6 +1,6 @@
 # Animations
 
-AzUI Healthbar Color Changer supports two independent animation effects: **Rainbow** and **Pulse**. Both are controlled from the options panel (`/ahui`).
+AzUI Healthbar Color Changer supports two animation effects: **Rainbow** and **Pulse**. Both are controlled from the options panel (`/ahui`).
 
 ---
 
@@ -11,7 +11,7 @@ The rainbow effect continuously changes your health bar color using one of three
 - **Rainbow Effect** — animation is currently **off**; click to start.
 - **Stop Rainbow Effect** — animation is currently **on**; click to stop.
 
-When stopped, your health bar reverts to the color stored in the color picker.
+When stopped, your health bar shows the color from the color picker again. The rainbow never changes that saved color.
 
 ### Rainbow Patterns
 
@@ -34,7 +34,7 @@ Sweeps the HSV hue from 0 → 1, then back from 1 → 0, creating a forward-and-
 Best for: high-contrast color changes that are still smooth.
 
 #### Chaos
-Picks a completely random RGB triplet every 0.1 s. There is no pattern — colors jump unpredictably on every tick.
+Picks a completely random RGB triplet every 0.1 s, regardless of the speed slider. There is no pattern — colors jump unpredictably.
 
 Best for: maximum visual noise / a fun "disco" style.
 
@@ -42,7 +42,7 @@ Best for: maximum visual noise / a fun "disco" style.
 
 ## Pulse Effect
 
-The pulse effect gently oscillates your health bar's **brightness** between 30% and 100% using a sine wave, while keeping the same hue and saturation as your chosen color.
+The pulse effect gently oscillates your health bar's **brightness** between 30% and 100% using a sine wave, while keeping the same hue and saturation as your chosen color. It starts at 30%.
 
 ```
 brightness = 0.3 + 0.7 × |sin(t)|
@@ -53,43 +53,40 @@ The toggle button works the same way as the rainbow button:
 - **Pulse Colour** — pulse is **off**; click to start.
 - **Stop Pulse** — pulse is **on**; click to stop.
 
-When stopped, the health bar reverts to the exact color that was active when you started the pulse.
+When stopped, the health bar shows your chosen color at full brightness. The pulse never changes the saved color, even if you log out or `/reload` while it runs.
 
-> **Note:** Rainbow and Pulse cannot run at the same time. Starting one will not automatically stop the other, but their shared speed slider means they would conflict visually. Use one at a time for best results.
+> **Note:** Rainbow and Pulse never run at the same time. Starting one automatically stops the other.
 
 ---
 
 ## Speed Slider
 
-The **Rainbow Speed (Hz)** slider (range **0.1 Hz – 5 Hz**) controls the animation speed for **both** the rainbow and pulse effects.
+The **Animation Speed** slider (range **0.1 – 5**) is a speed multiplier for **both** the rainbow and pulse effects. `t` in the formulas above advances by 0.3 × speed per second.
 
-| Setting | Feel |
-|---------|------|
-| 0.1 Hz | Very slow, almost imperceptible drift |
-| 0.5 Hz | Leisurely cycling (~2 s per full loop) |
-| 1.0 Hz | Default moderate pace |
-| 2.0 Hz | Fast, energetic animation |
-| 5.0 Hz | Near-maximum flicker speed |
+| Setting | Rainbow cycle / Ping-Pong round trip | One pulse |
+|---------|--------------------------------------|-----------|
+| 0.1 | ~3.5 min | ~105 s |
+| 0.5 | ~42 s | ~21 s |
+| 1.0 *(default)* | ~21 s | ~10.5 s |
+| 2.0 | ~10.5 s | ~5 s |
+| 5.0 | ~4 s | ~2 s |
 
-The speed can be changed while an animation is running; the effect updates immediately.
+The speed can be changed while an animation is running; the effect speeds up or slows down smoothly without jumping.
 
 ---
 
 ## Behavior Notes
 
-- Both animations **continue in combat** without restriction.
-- Rainbow state (`rainbowActive`, `rainbowMode`, `rainbowSpeed`) is saved to your SavedVariables and **automatically restarted** when you log in or reload the UI.
-- Pulse state (`pulseActive`) is also persisted and restarted on login.
-- Clicking any **class color button** or the **Random Colour** button stops the active animation and applies the selected color.
-- Loading a **preset** stops the active animation and applies the preset color.
-- When **hunter pet auto-coloring** is active and a pet is dismissed, any rainbow or pulse that was running before the pet was summoned is fully restored.
+- Animations update up to 30 times per second and **continue in combat** without restriction.
+- Rainbow state (`rainbowActive`, `rainbowMode`, `rainbowSpeed`) and pulse state (`pulseActive`) are saved and **automatically restarted** when you log in or reload the UI.
+- Picking a color, clicking any **class color button** or the **Random Colour** button, or loading a **preset** stops the active animation and applies that color.
+- When **hunter pet auto-coloring** shows a pet color, the animation pauses and resumes when the pet is dismissed.
 
 ---
 
 ## Tips
 
-- Use **Cycle** at low speed (0.2–0.5 Hz) for a subtle, atmospheric glow effect.
-- Use **Ping-Pong** at medium speed (1–2 Hz) for a distinctly different feel from Cycle.
-- Use **Chaos** sparingly — at high speeds it can be distracting during gameplay.
+- Use **Cycle** at low speed (0.2–0.5) for a subtle, atmospheric glow effect.
+- Use **Ping-Pong** at medium speed (1–2) for a distinctly different feel from Cycle.
+- Use **Chaos** sparingly — it can be distracting during gameplay.
 - **Pulse** pairs well with a vibrant class color for a "heartbeat" effect.
-- Set speed to **5 Hz + Chaos** for a strobing effect (not recommended for extended play).
