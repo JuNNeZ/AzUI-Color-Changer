@@ -6,7 +6,7 @@
 |-------------|---------|
 | **Game version** | World of Warcraft Retail: Midnight, patch 12.1 (Interface 120100) |
 | **External addons** | None — all libraries are bundled |
-| **Optional** | AzeriteUI for Midnight (`AzeriteUI6`), AzeriteUI5 – JuNNeZ Edition, or AzeriteUI 5.x — if installed, the addon also colors their player frames |
+| **Optional** | AzeriteUI for Midnight (`AzeriteUI6`), AzeriteUI5 – JuNNeZ Edition, or AzeriteUI 5.x — if installed, the addon also colors their player and pet frames |
 
 ---
 

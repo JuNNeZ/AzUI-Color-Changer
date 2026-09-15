@@ -18,9 +18,9 @@ No. AzeriteUI is an *optional* dependency. Without it, the addon colors the defa
 
 ### Which versions of AzeriteUI are supported?
 All retail editions:
-- **AzeriteUI for Midnight** (`AzeriteUI6`) — player frame
-- **AzeriteUI5 – JuNNeZ Edition** — player and alternate player frames
-- **AzeriteUI 5.x** — player and alternate player frames
+- **AzeriteUI for Midnight** (`AzeriteUI6`) — player and pet frames
+- **AzeriteUI5 – JuNNeZ Edition** — player, alternate player and pet frames
+- **AzeriteUI 5.x** — player, alternate player and pet frames
 
 ### Does it work with other unit frame addons?
 No. ElvUI, oUF layouts, ShadowedUnitFrames and similar addons manage their own colors and are not colored by this addon.

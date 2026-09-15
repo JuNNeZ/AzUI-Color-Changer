@@ -1,6 +1,6 @@
 # AzUI Healthbar Color Changer
 
-**Current version:** 4.9.0
+**Current version:** 4.9.1
 
 Lightweight Ace3-powered addon that lets you recolour and animate your own player health bar in **AzeriteUI** or on the **default Blizzard player frame**.
 
@@ -26,9 +26,9 @@ Supports **World of Warcraft Retail 12.1** (`Interface: 120100`).
 
 | Frame | Notes |
 |-------|-------|
-| **AzeriteUI for Midnight** (`AzeriteUI6`) | Player frame |
-| **AzeriteUI5 – JuNNeZ Edition** (`AzeriteUI5_JuNNeZ_Edition`) | Player and alternate player frames |
-| **AzeriteUI 5.x** (`AzeriteUI`) | Player and alternate player frames |
+| **AzeriteUI for Midnight** (`AzeriteUI6`) | Player and pet frames |
+| **AzeriteUI5 – JuNNeZ Edition** (`AzeriteUI5_JuNNeZ_Edition`) | Player, alternate player and pet frames |
+| **AzeriteUI 5.x** (`AzeriteUI`) | Player, alternate player and pet frames |
 | **Blizzard default player frame** | The bar art is desaturated so your colour shows true |
 
 Frames that AzeriteUI creates or enables after login are picked up automatically within a couple of seconds. Other unit frame addons (ElvUI, oUF layouts, ShadowedUF, …) are not coloured.
@@ -47,14 +47,14 @@ Frames that AzeriteUI creates or enables after login are picked up automatically
 | **Core**      | AceAddon-3.0, AceDB-3.0, AceGUI-3.0, AceConfig-3.0                | ✔ | Ace3 Release-r1403 |
 | **Launcher**  | LibDataBroker-1.1, LibDBIcon-1.0, CallbackHandler-1.0             | ✔ | LibDBIcon v12.0.3                          |
 | **Stub**      | LibStub                                                           | ✔ | Loaded before all embedded libraries       |
-| **Optional**  | AzeriteUI (any retail edition above)                              | — | Colours its player frames                  |
+| **Optional**  | AzeriteUI (any retail edition above)                              | — | Colours its player and pet frames          |
 
 No external downloads needed — everything is embedded in `Libs\`.
 
 ---
 
 ## 📂 Installation
-1. Download **AzUI_Color_Picker-4.9.0.zip**
+1. Download **AzUI_Color_Picker-4.9.1.zip**
 2. Unzip to your AddOns folder; you should have:
 
 ```
@@ -77,6 +77,7 @@ AddOns\AzUI_Color_Picker\
 
 ### Change-Highlights (since 4.7.5)
 
+* **4.9.1**  AzeriteUI pet frame shows your colour, effects and pet colours again • AzeriteUI6 pet frame coloured too
 * **4.9.0**  All retail AzeriteUI editions incl. AzeriteUI6 • Saved colour never overwritten by pulse, rainbow or pet colours • Pet family colours in every language • Flicker-free, smoother animations • No more oUF colour overrides • Preset rename fixes
 * **4.8.0**  Retail 12.1 API • Correct embedded-library load order • Current Ace3/LibDBIcon • Safe status-bar hooks • Fixed animation and pet-state restoration
 * **4.7.27**  Version bump for release

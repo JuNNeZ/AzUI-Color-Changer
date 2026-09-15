@@ -3,7 +3,7 @@
 AzUI_Color_Picker.lua
 Custom colour, rainbow/pulse animations, presets and hunter-pet colours for your
 own health bar on AzeriteUI (5.x, JuNNeZ Edition, AzeriteUI6) and the default
-Blizzard player frame.
+Blizzard player frame. AzeriteUI pet frames show the same colour.
 
 The saved colour (DB.profile.color) only changes when you pick a colour.
 Animations and pet colours are worked out at display time and never saved.
@@ -36,10 +36,17 @@ local SCAN_INTERVAL  = 2       -- seconds between looks for late-created frames
 
 -- AceAddon names of the retail AzeriteUI editions (JuNNeZ Edition also registers "AzeriteUI")
 local AZERITE_ADDONS  = { "AzeriteUI", "AzeriteUI6", "AzeriteUI5_JuNNeZ_Edition" }
--- Player unit frame modules: 5.x and JuNNeZ Edition use PlayerFrame(+Alternate), AzeriteUI6 uses Player
-local AZERITE_MODULES = { "PlayerFrame", "PlayerFrameAlternate", "Player" }
+-- Player and pet unit frame modules -> health preview brightness (AzeriteUI 5.x tints it at 90% / 70%).
+-- 5.x and JuNNeZ Edition use PlayerFrame(+Alternate) and PetFrame, AzeriteUI6 uses Player and Pet.
+local AZERITE_MODULES = {
+  PlayerFrame = 0.9, PlayerFrameAlternate = 0.9, PetFrame = 0.7,
+  Player      = 0.9, Pet                  = 0.7,
+}
 -- Global frame names, used when the module lookup finds nothing
-local AZERITE_FRAMES  = { "AzeriteUnitFramePlayer", "AzeriteUnitFramePlayerAlternate", "oUF_AzeriteUnitFramePlayer" }
+local AZERITE_FRAMES  = {
+  AzeriteUnitFramePlayer     = 0.9, AzeriteUnitFramePlayerAlternate = 0.9, AzeriteUnitFramePet = 0.7,
+  oUF_AzeriteUnitFramePlayer = 0.9, oUF_AzeriteUnitFramePet         = 0.7,
+}
 
 ---------------------------------------------------------------------
 -- DEFAULTS
@@ -318,12 +325,12 @@ local function GetBlizzardPlayerHealthBar()
   return PlayerFrame and PlayerFrame.healthbar or _G.PlayerFrameHealthBar
 end
 
-local function registerUnitFrame(frame)
+local function registerUnitFrame(frame, previewFactor)
   if type(frame) ~= "table" or knownFrames[frame] or type(frame.Health) ~= "table" then return end
   knownFrames[frame] = true
   addTarget(frame.Health, 1)
   if type(frame.Health.Preview) == "table" then
-    addTarget(frame.Health.Preview, 0.9) -- AzeriteUI 5.x tints its health preview at 90%
+    addTarget(frame.Health.Preview, previewFactor)
   end
   debugLog("Colouring AzeriteUI frame " .. tostring(frame.GetName and frame:GetName() or "?"))
 end
@@ -334,15 +341,15 @@ local function ScanFrames()
     for i = 1, #AZERITE_ADDONS do
       local aui = AceAddon:GetAddon(AZERITE_ADDONS[i], true)
       if type(aui) == "table" and type(aui.GetModule) == "function" then
-        for j = 1, #AZERITE_MODULES do
-          local module = aui:GetModule(AZERITE_MODULES[j], true)
-          if type(module) == "table" then registerUnitFrame(module.frame) end
+        for moduleName, previewFactor in pairs(AZERITE_MODULES) do
+          local module = aui:GetModule(moduleName, true)
+          if type(module) == "table" then registerUnitFrame(module.frame, previewFactor) end
         end
       end
     end
   end
-  for i = 1, #AZERITE_FRAMES do
-    registerUnitFrame(_G[AZERITE_FRAMES[i]])
+  for frameName, previewFactor in pairs(AZERITE_FRAMES) do
+    registerUnitFrame(_G[frameName], previewFactor)
   end
   local blizzardBar = GetBlizzardPlayerHealthBar()
   if blizzardBar and not targets[blizzardBar] then

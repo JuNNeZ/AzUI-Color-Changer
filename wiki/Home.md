@@ -2,7 +2,7 @@
 
 **AzUI Healthbar Color Changer** is a lightweight, self-contained World of Warcraft addon that lets you fully customize the appearance of your player health bar. Set a static color, run animated rainbow or pulse effects, save unlimited presets, and automatically apply unique colors for your hunter pets — all from one clean options panel.
 
-> **Current version:** 4.9.0 | **Interface:** 120100 (Midnight, patch 12.1)
+> **Current version:** 4.9.1 | **Interface:** 120100 (Midnight, patch 12.1)
 
 ---
 
@@ -46,9 +46,9 @@ A draggable minimap button (LibDataBroker + LibDBIcon) gives quick access to the
 ### Frame Compatibility
 | Frame Type | Support |
 |---|---|
-| **AzeriteUI for Midnight** (`AzeriteUI6`) | Player frame |
-| **AzeriteUI5 – JuNNeZ Edition** | Player and alternate player frames |
-| **AzeriteUI 5.x** | Player and alternate player frames |
+| **AzeriteUI for Midnight** (`AzeriteUI6`) | Player and pet frames |
+| **AzeriteUI5 – JuNNeZ Edition** | Player, alternate player and pet frames |
+| **AzeriteUI 5.x** | Player, alternate player and pet frames |
 | **Blizzard default player frame** | Bar art desaturated so your color shows true |
 
 Other unit frame addons (ElvUI, oUF layouts, ShadowedUF, …) are not colored.

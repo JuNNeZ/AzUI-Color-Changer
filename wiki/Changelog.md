@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ---
 
+## [4.9.1] – 2026-09-15
+
+### Fixed
+- The AzeriteUI pet frame stayed red in 4.9.0. It shows your colour, effects and pet colours again, like the player frame, and the AzeriteUI6 pet frame is coloured as well.
+
+---
+
 ## [4.9.0] – 2026-09-15
 
 ### Added
