@@ -1,6 +1,6 @@
 # AzUI Healthbar Color Changer
 
-**Current version:** 4.9.1
+**Current version:** 5.0.0
 
 Lightweight Ace3-powered addon that lets you recolour and animate your own player health bar in **AzeriteUI** or on the **default Blizzard player frame**.
 
@@ -13,8 +13,10 @@ Supports **World of Warcraft Retail 12.1** (`Interface: 120100`).
 * **Static RGBA colour** picker (alpha supported)
 * **Rainbow** (Cycle / Ping-Pong / Chaos) and **Pulse** effects with a shared speed slider
 * **Your colour is always kept:** effects and pet colours are only applied on screen, never saved over your chosen colour
-* **Presets:** save, rename, delete, auto-apply by hunter-pet name or family
-* **Hunter pet family colours** that work in every game language
+* **Presets:** save, rename, delete
+* **Hunter Pets page:** every pet listed with its icon, each with its own colour and a pulse or rainbow effect
+* **Editable pet family colours** that work in every game language
+* **Choose where pet colours go:** your health bar, the AzeriteUI pet frame, or both
 * **Colour-blind presets** added once per profile
 * **Class colour & random** one-click buttons
 * **Minimap, AddOn Compartment & Titan Panel launcher** (LibDataBroker)
@@ -54,7 +56,7 @@ No external downloads needed — everything is embedded in `Libs\`.
 ---
 
 ## 📂 Installation
-1. Download **AzUI_Color_Picker-4.9.1.zip**
+1. Download **AzUI_Color_Picker-5.0.0.zip**
 2. Unzip to your AddOns folder; you should have:
 
 ```
@@ -77,6 +79,7 @@ AddOns\AzUI_Color_Picker\
 
 ### Change-Highlights (since 4.7.5)
 
+* **5.0.0**  Hunter Pets page with pet icons • Own colour and pulse or rainbow per pet • Editable pet family colours • Choose where pet colours go • Pets recognised even when unit names are hidden
 * **4.9.1**  AzeriteUI pet frame shows your colour, effects and pet colours again • AzeriteUI6 pet frame coloured too
 * **4.9.0**  All retail AzeriteUI editions incl. AzeriteUI6 • Saved colour never overwritten by pulse, rainbow or pet colours • Pet family colours in every language • Flicker-free, smoother animations • No more oUF colour overrides • Preset rename fixes
 * **4.8.0**  Retail 12.1 API • Correct embedded-library load order • Current Ace3/LibDBIcon • Safe status-bar hooks • Fixed animation and pet-state restoration

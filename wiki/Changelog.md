@@ -5,6 +5,22 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ---
 
+## [5.0.0] – 2026-09-15
+
+### Added
+- Hunter Pets page: call-pet slots and stabled pets listed with their in-game icons.
+- Per-pet colour (family, own or none) and effect (none, pulse or rainbow).
+- Pet Families page to change every family's colour, with resets.
+- "Show Pet Colours On": health bar and pet frame, health bar only, or pet frame only.
+
+### Changed
+- Options split into Health Bar, Hunter Pets and Pet Families pages; "Pet Colour Overrides" is now "Use Pet Colours".
+- Hunter pets are recognised through the stable, so their colour also works when unit names are hidden.
+- "Save to Current Pet" sets the pet's own colour; presets named after a hunter pet are converted once.
+- Picking your colour while a pet is out no longer removes the pet colour from the pet frame.
+
+---
+
 ## [4.9.1] – 2026-09-15
 
 ### Fixed

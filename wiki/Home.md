@@ -2,7 +2,7 @@
 
 **AzUI Healthbar Color Changer** is a lightweight, self-contained World of Warcraft addon that lets you fully customize the appearance of your player health bar. Set a static color, run animated rainbow or pulse effects, save unlimited presets, and automatically apply unique colors for your hunter pets — all from one clean options panel.
 
-> **Current version:** 4.9.1 | **Interface:** 120100 (Midnight, patch 12.1)
+> **Current version:** 5.0.0 | **Interface:** 120100 (Midnight, patch 12.1)
 
 ---
 
@@ -14,7 +14,7 @@
 | **[Configuration](Configuration)** | Full reference for every option and setting |
 | **[Animations](Animations)** | Rainbow and pulse animation guide |
 | **[Presets](Presets)** | Save, load, rename, and delete color presets |
-| **[Hunter Pet Coloring](Hunter-Pet-Coloring)** | Auto-coloring by pet name and family |
+| **[Hunter Pet Coloring](Hunter-Pet-Coloring)** | Per-pet colors and effects, family colors |
 | **[FAQ](FAQ)** | Frequently asked questions and troubleshooting |
 | **[Changelog](Changelog)** | Version history |
 
@@ -34,8 +34,8 @@ A gentle brightness pulse (30%–100%) applied to your chosen color, using the s
 ### Preset System
 Save unlimited named color presets, load them from a dropdown, rename or delete them at any time. Four colorblind-friendly presets (`CB-Blue`, `CB-Orange`, `CB-Yellow`, `CB-Purple`) are added once when a profile is created.
 
-### Hunter Pet Auto-Coloring
-When a hunter summons a pet, the addon shows a color saved under the pet's name or, as a fallback, a color for its family — in every game language. When the pet is dismissed your own color and any running rainbow or pulse come back.
+### Hunter Pet Coloring
+Every hunter pet gets an entry with its icon on the **Hunter Pets** page, where you can give it its own color and a pulse or rainbow effect. Other pets use an editable color for their family, in every game language. Choose whether pet colors go on your health bar, the AzeriteUI pet frame or both. When the pet is dismissed your own color and any running rainbow or pulse come back.
 
 ### Class Color Buttons
 One-click buttons for every playable class apply that class's official color immediately, stopping any active animations. A dedicated **Class Colour** button applies your *own* class color.

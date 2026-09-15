@@ -2,6 +2,8 @@
 
 This page describes every option available in the AzUI Healthbar Color Changer options panel. Open the panel with `/ahui` or by clicking the minimap icon.
 
+The panel has three pages, listed on the left: **Health Bar** (everything below except pet coloring), **Hunter Pets** and **Pet Families**.
+
 ---
 
 ## Color Settings
@@ -79,18 +81,24 @@ Generates a random RGB color (alpha is preserved) and applies it immediately. St
 
 See the **[Hunter Pet Coloring](Hunter-Pet-Coloring)** page for a full guide.
 
-### Pet Colour Overrides toggle
+### Use Pet Colours toggle (Hunter Pets page)
 **Type:** Toggle (checkbox)  
-When **enabled**, the addon watches for pet summon/dismiss events (`UNIT_PET`) and shows:
-1. A color saved under the pet's exact name (if one exists).
-2. A fallback color based on the pet's family type.
-
-While a pet color is shown, a running rainbow or pulse pauses. When the pet is dismissed, your own color and effect come back. If you pick a color or start an effect while the pet is out, your choice is shown until the next pet change.
+When **enabled**, a pet that is out shows its color: its own color or effect from the Hunter Pets page, or its family color. When the pet is dismissed, your own color and effect come back. If you pick a color or start an effect while a pet color is on your health bar, your choice is shown there until the next pet change.
 
 When **disabled**, your chosen color is always displayed, regardless of which pet is active.
 
-### Save to Current Pet button
-Saves the color from the color picker as a preset under the active pet's name. Disabled when no pet is active. With "Pet Colour Overrides" on, this color is used whenever that pet is summoned.
+### Show Pet Colours On (Hunter Pets page)
+**Type:** Dropdown  
+**Health bar and pet frame**, **Health bar only** or **Pet frame only**. The bar that does not get the pet color keeps your own color and effect. The pet frame is AzeriteUI's.
+
+### Pet entries (Hunter Pets page)
+One entry per pet with its in-game icon: call-pet slots first, stabled pets under **Stabled Pets**. Each has **Colour** (Family colour / Own colour / No pet colour), an **Own Colour** picker, **Effect** (None / Pulse / Rainbow) and **Reset**.
+
+### Family colors (Pet Families page)
+One color picker per hunter pet family. Changed colors get a **Reset** button, and **Reset All Families** restores every built-in color.
+
+### Save to Current Pet button (Health Bar page)
+Gives the active pet the color from the color picker as its own color. Disabled when no pet is active. For a pet that is not in your stable, such as a warlock demon, it saves a preset named after the pet instead.
 
 ---
 
@@ -126,7 +134,7 @@ Shows or hides the AzUI icon on your minimap. When hidden, use `/ahui` or the Ad
 ### Reset to Defaults button
 Resets all settings in the current profile back to factory defaults and restores the four colorblind presets. A confirmation popup is shown first.
 
-> ⚠️ This also deletes all saved presets in the profile, including pet presets. This action cannot be undone.
+> ⚠️ This also deletes all saved presets, pet colors and changed family colors in the profile. This action cannot be undone.
 
 ### Reload button
 Runs `/reload`. All settings are saved automatically, and a running rainbow or pulse continues after the reload.
@@ -159,9 +167,12 @@ The file uses AceDB-3.0 with a single **Default** profile that all your characte
 | `rainbowMode` | string | `"cycle"` / `"ping"` / `"chaos"` |
 | `rainbowSpeed` | number | Animation speed multiplier (0.1–5) |
 | `pulseActive` | boolean | Whether pulse is running |
-| `petColouring` | boolean | Pet color override enabled |
+| `petColouring` | boolean | Pet colors enabled |
+| `petTarget` | string | `"both"` / `"player"` / `"pet"`: where pet colors are shown |
+| `pets` | table | Per-pet settings by pet number `{mode = "family"/"custom"/"off", color = {R,G,B,A}, effect = "static"/"pulse"/"rainbow"}` |
+| `familyColours` | table | Changed family colors by family ID `{R,G,B,A}` |
 | `presets` | table | Named color presets `{name = {R,G,B,A}}` |
 | `defaultPresetsSeeded` | boolean | Whether the colorblind presets were added |
 | `debug` | boolean | Debug mode enabled |
 
-The minimap icon settings (`minimap.hide`, `minimap.showInCompartment`) are stored in the account-wide `global` section.
+The minimap icon settings (`minimap.hide`, `minimap.showInCompartment`) and the family names the addon has learned (`familyIDs`) are stored in the account-wide `global` section. The list of your pets (`knownPets`: name, icon, family and slot) is stored per character in the `char` section.

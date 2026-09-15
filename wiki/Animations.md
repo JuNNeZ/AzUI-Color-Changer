@@ -80,7 +80,7 @@ The speed can be changed while an animation is running; the effect speeds up or 
 - Animations update up to 30 times per second and **continue in combat** without restriction.
 - Rainbow state (`rainbowActive`, `rainbowMode`, `rainbowSpeed`) and pulse state (`pulseActive`) are saved and **automatically restarted** when you log in or reload the UI.
 - Picking a color, clicking any **class color button** or the **Random Colour** button, or loading a **preset** stops the active animation and applies that color.
-- When **hunter pet auto-coloring** shows a pet color, the animation pauses and resumes when the pet is dismissed.
+- When a hunter pet color is shown on your health bar, your animation pauses there and resumes when the pet is dismissed. Pets can have their own pulse or rainbow — see [Hunter Pet Coloring](Hunter-Pet-Coloring).
 
 ---
 

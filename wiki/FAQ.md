@@ -66,7 +66,7 @@ No. Starting one automatically stops the other.
 This is intentional. Applying any static color (color picker, class button, preset, random) stops the animation and applies the new color. You can restart the rainbow manually afterward.
 
 ### My color changed after a /reload.
-Your chosen color is only changed when you pick a color yourself — rainbow, pulse and pet colors are never saved over it. If a hunter pet is out with **Pet Colour Overrides** enabled, you are seeing the pet's color. Also remember that all characters share one profile, so a color picked on another character applies here too.
+Your chosen color is only changed when you pick a color yourself — rainbow, pulse and pet colors are never saved over it. If a hunter pet is out with **Use Pet Colours** enabled, you are seeing the pet's color. Also remember that all characters share one profile, so a color picked on another character applies here too.
 
 ---
 
@@ -85,15 +85,22 @@ Yes. The addon uses a single **Default** profile, so presets, colors and setting
 
 ## Hunter Pet Coloring
 
-### Pet Colour Overrides is enabled but nothing changes when I summon my pet.
-- Make sure you have either a named preset (saved with **Save to Current Pet**) or that your pet's family appears in the built-in family color table on the [Hunter Pet Coloring](Hunter-Pet-Coloring) page.
-- Family colors work in every game language, so the displayed family name does not need to be English.
+### Use Pet Colours is enabled but nothing changes when I summon my pet.
+- Open the pet's entry on the **Hunter Pets** page and check that **Colour** is not set to **No pet colour**.
+- Check **Show Pet Colours On**: with **Pet frame only** your health bar keeps your own color, and the pet frame is only colored with AzeriteUI.
+- A pet on **Family colour** needs its family on the **Pet Families** page (see the [Hunter Pet Coloring](Hunter-Pet-Coloring) page). Family colors work in every game language.
+
+### One of my pets is missing from the Hunter Pets page.
+Pets in your call-pet slots are added when you log in or summon a pet. If a stabled pet is missing, visit a stable master once.
 
 ### My pet's family isn't in the list.
-The list covers the hunter pet families available in patch 12.1. If a new family is added, the fallback won't fire for it until the addon is updated. Please open an [issue](https://github.com/JuNNeZ/AzUI-Color-Changer/issues) with the family name and we'll add it.
+The list covers the hunter pet families available in patch 12.1. Until a new family is added to the addon, give the pet its own color on the **Hunter Pets** page, and please open an [issue](https://github.com/JuNNeZ/AzUI-Color-Changer/issues) with the family name so we can add it.
+
+### Can my pet pulse or show a rainbow?
+Yes. Set **Effect** to **Pulse** or **Rainbow** on the pet's entry. It uses the **Animation Speed** and **Rainbow Pattern** from the Health Bar page.
 
 ### I'm not a hunter. Can I disable the pet section?
-Simply leave **Pet Colour Overrides** disabled (the default). Without a pet the feature has no effect.
+Simply leave **Use Pet Colours** disabled (the default). Without a pet the feature has no effect. Other classes' pets can use a preset named after the pet.
 
 ---
 

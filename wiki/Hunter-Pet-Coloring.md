@@ -1,43 +1,78 @@
 # Hunter Pet Coloring
 
-AzUI Healthbar Color Changer includes a system for automatically coloring your health bar based on your active hunter pet. When **Pet Colour Overrides** is enabled, the health bar changes color whenever you summon or dismiss a pet, and returns to your own color when no pet is active.
+AzUI Healthbar Color Changer can color your bars based on the pet you have out. Every hunter pet can have its own color and effect, pets without one use a color for their family, and you choose whether pet colors go on your health bar, the AzeriteUI pet frame, or both. When the pet is dismissed, your own color and effects come back.
+
+Pet colors are only shown on screen — they are never saved over your chosen color, so `/reload`ing or logging out with a pet out cannot lose your color.
 
 ---
 
-## How It Works
+## Where to Find It
 
-1. When you summon a pet, the addon reacts to the `UNIT_PET` event.
-2. It checks your saved presets for a preset **named after the pet** (exact match, case-sensitive).
-3. If a named preset is found → that color is shown.
-4. If no named preset exists → the pet's **family** is looked up in the built-in family color table. Families are matched by their game ID, so this works in every client language.
-5. If neither matches → your own color is kept.
-6. When the pet is dismissed (or dies and stays dismissed), your **own color comes back**, including any rainbow or pulse animation you had running.
+Open the options panel (`/ahui`). The panel has three pages in the list on the left:
 
-The pet color is only shown on screen — it is never saved over your chosen color, so `/reload`ing or logging out with a pet out cannot lose your color.
-
----
-
-## Enabling Pet Color Overrides
-
-Open the options panel (`/ahui`) and toggle **Pet Colour Overrides** on.
-
-> Settings are stored in the shared **Default** profile, so the toggle applies to all your characters. Non-hunters are unaffected because they have no pet.
+| Page | What it holds |
+|------|---------------|
+| **Health Bar** | Your own color, effects, presets and maintenance options |
+| **Hunter Pets** | Pet colors on or off, where they go, and one entry per pet |
+| **Pet Families** | The fallback color for every pet family |
 
 ---
 
-## Saving a Color for a Specific Pet
+## Turning Pet Colors On
 
-1. Summon the pet you want to color.
-2. Set your desired color with the color picker.
-3. Click **Save to Current Pet**.
+On the **Hunter Pets** page, enable **Use Pet Colours**.
 
-The color from the color picker is saved under the pet's exact name (e.g., `"Fluffy"`) and shown straight away. It also appears in the regular **Select Preset** dropdown and can be renamed or deleted there.
+> Settings are stored in the shared **Default** profile, so the toggle and your pet colors apply to all your characters. The list of pets is kept per character.
+
+### Show Pet Colours On
+
+| Option | Health bar | AzeriteUI pet frame |
+|--------|------------|---------------------|
+| **Health bar and pet frame** (default) | Pet color | Pet color |
+| **Health bar only** | Pet color | Your color |
+| **Pet frame only** | Your color | Pet color |
+
+The bar that does not show the pet color keeps your own color and any rainbow or pulse you have running. The pet frame is only colored with AzeriteUI; the default Blizzard pet frame is not colored.
 
 ---
 
-## Built-in Pet Family Colors
+## Your Pets
 
-If no named preset exists for a pet, the addon falls back to a color based on the pet's family:
+Below the settings, the **Hunter Pets** page lists your pets with their in-game icons:
+
+- Pets in your five **Call Pet** slots, and in the Beast Mastery second-pet slot, come first in slot order.
+- Pets in your stable are grouped under **Stabled Pets**, sorted by name.
+- The pet that is out is shown in green, and its icon also appears next to **Hunter Pets** in the list.
+
+The list is filled from the game's stable information when you log in, summon a pet or use the stable. If a stabled pet is missing, visit a stable master once. Pets you abandon disappear from the list the next time you visit a stable master.
+
+### Pet settings
+
+Click a pet to open its settings:
+
+| Setting | Options |
+|---------|---------|
+| **Colour** | **Family colour** — the color for its family on the Pet Families page (default)<br>**Own colour** — the color picked below<br>**No pet colour** — this pet leaves your bars alone |
+| **Own Colour** | RGBA color picker. Picking a color switches the pet to **Own colour**. |
+| **Effect** | **None**, **Pulse** or **Rainbow** while the pet is out |
+| **Reset** | Back to the family color with no effect |
+
+Pet effects use the **Animation Speed** and **Rainbow Pattern** from the Health Bar page. A pet set to **Rainbow** shows a rainbow even when its family has no color.
+
+### Save to Current Pet
+
+The **Save to Current Pet** button on the Health Bar page gives the pet that is out the color from the main color picker as its own color. It is disabled when no pet is out.
+
+---
+
+## Pet Families
+
+Pets set to **Family colour** use the color for their family. The **Pet Families** page lists every hunter pet family, grouped like the tables below, each with its own color picker:
+
+- Change a family's color with its color picker. A **Reset** button appears next to changed colors.
+- **Reset All Families** puts every family back to its built-in color.
+
+Families are matched by their game ID, so this works in every client language.
 
 ### Exotic Families
 | Family | Color |
@@ -124,17 +159,33 @@ If no named preset exists for a pet, the addon falls back to a color based on th
 | Lesser Dragonkin | Dragon purple `{0.60, 0.40, 0.85}` |
 | Warp Stalker | Void pink `{0.85, 0.50, 0.95}` |
 
-All family colors are fully opaque (alpha 1).
+All built-in family colors are fully opaque (alpha 1).
+
+---
+
+## How the Pet Is Recognized
+
+1. When you summon or dismiss a pet (`UNIT_PET`), the addon checks which **Call Pet** spell is active and reads that pet from your stable. This also works where the game hides unit names from addons.
+2. If that does not find the pet, it matches your pet's name against your call-pet slots. If the stable has not caught up right after a summon, the addon looks again one second later.
+3. The pet's family comes from the game while the pet is out. When the game hides it, the addon uses the family it noted earlier, or the family name shown in the stable.
+4. The color is picked in this order:
+   1. **No pet colour** → no pet color.
+   2. **Own colour** → that color.
+   3. A pet that is not in your stable, such as a warlock demon, with a preset of its exact name → that preset.
+   4. Otherwise → its family color, if the family is known.
+
+### Upgrading from older versions
+
+Older versions saved a pet's color as a preset named after the pet. The first time the addon sees that pet in your stable, the preset's color becomes the pet's **Own colour**. The preset itself stays, so you can still load, rename or delete it without changing the pet.
 
 ---
 
 ## Tips
 
-- You can create per-pet colors for multiple pets and switch between them naturally by summoning different pets.
-- If you want all pets of a particular family to share a color without saving individual presets, just rely on the family fallback.
-- The **Save to Current Pet** button is disabled when you have no active pet — make sure the pet is summoned before saving.
-- Pet presets can be renamed via the regular **Rename Preset** UI if you want to tidy up the dropdown.
-- Picking a color or starting an effect while a pet is out shows your choice right away; the pet color returns the next time your pet changes.
+- Give your favorite pets their own colors and let the rest use their family colors.
+- A pulsing or rainbow pet set to **Pet frame only** keeps your health bar calm while the pet frame stands out.
+- Picking a color or starting an effect on the Health Bar page while a pet is out shows your choice on your health bar right away; the pet color returns there the next time your pet changes. If pet colors also go on the pet frame, it keeps showing the pet color.
+- Changing a pet's color, effect or family color while that pet is out shows the change immediately.
 
 ---
 
@@ -142,10 +193,10 @@ All family colors are fully opaque (alpha 1).
 
 | Situation | Result |
 |-----------|--------|
-| Pet summoned, named preset exists | Named preset color shown |
-| Pet summoned, no named preset, family known | Family fallback color shown |
-| Pet summoned, no named preset, family unknown | Your color unchanged |
+| Pet out, **Own colour** set | Its own color and effect are shown |
+| Pet out, **Family colour**, family known | Family color and the pet's effect are shown |
+| Pet out, **Family colour**, family unknown | Your color unchanged, unless the pet is set to **Rainbow** |
+| Pet out, **No pet colour** | Your color unchanged |
 | Pet dismissed | Your own color shown again |
-| Rainbow was active before summoning pet | Rainbow pauses, resumes after pet dismissed |
-| Pulse was active before summoning pet | Pulse pauses, resumes after pet dismissed |
+| Rainbow or pulse running when a pet color is shown on your health bar | Your effect pauses there and resumes when the pet is dismissed |
 | `/reload` or logout with pet out | Your saved color is untouched |

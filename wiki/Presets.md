@@ -59,11 +59,14 @@ The preset is removed immediately and the dropdown is refreshed. Deleted presets
 
 ---
 
-## Pet Presets
+## Presets and Pets
 
-When you click **Save to Current Pet**, the color from the color picker is saved as a preset under your pet's exact name (e.g., `"Fluffy"`). This preset functions identically to a manual preset — it appears in the dropdown, can be renamed or deleted, and can be loaded manually at any time.
+Hunter pet colors live on the **Hunter Pets** page instead of in presets. **Save to Current Pet** gives your active hunter pet the color from the color picker as its own color; it does not create a preset.
 
-When **Pet Colour Overrides** is enabled, the addon automatically shows the matching pet preset whenever that pet is summoned. See the [Hunter Pet Coloring](Hunter-Pet-Coloring) page for details.
+- **Presets from older versions** named after a hunter pet (e.g., `"Fluffy"`) become that pet's own color the first time the addon sees the pet in your stable. The preset stays in the dropdown, and deleting it does not remove the pet's color.
+- **Other classes' pets**, such as a warlock demon, still use a preset with the pet's exact name. For those pets, **Save to Current Pet** saves that preset.
+
+See the [Hunter Pet Coloring](Hunter-Pet-Coloring) page for details.
 
 ---
 
