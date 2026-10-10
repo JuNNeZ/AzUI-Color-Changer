@@ -234,6 +234,23 @@ check(P.ActiveRule("player") == p.rules[1], "an instance rule shows in a dungeon
 game.state.instance = nil
 game.fire("ZONE_CHANGED_NEW_AREA")
 check(not P.ActiveRule("player"), "and not outside")
+-- a buff or debuff, by spell ID or name
+check(P.SpellIDFrom(" 774 ") == 774 and P.SpellIDFrom("Rejuvenation") == 774 and P.SpellIDFrom("Nope") == nil,
+  "a spell is found by ID or name")
+check(P.SpellLabel(774) == "Rejuvenation" and P.SpellLabel(1) == "1", "a rule names its spell")
+p.rules[1].condition, p.rules[1].value = "aura", 774
+P.RulesChanged()
+check(not P.ActiveRule("player"), "an aura rule waits for its buff")
+game.state.auras = { [774] = true }
+game.fire("UNIT_AURA", "player")
+check(P.ActiveRule("player") == p.rules[1], "and shows while you have it")
+game.state.aurasSecret = true
+game.fire("UNIT_AURA", "player")
+check(not P.ActiveRule("player"), "hidden aura data makes the rule wait")
+game.state.aurasSecret, game.state.auras = nil, nil
+game.fire("UNIT_AURA", "player")
+check(not P.ActiveRule("player"), "and it goes when the buff does")
+check(P.SanitizeRule({ condition = "aura", value = "774", color = { 1, 0, 0 } }).value == 774, "an imported aura rule keeps its spell")
 for _, condition in ipairs({ "resting", "stealth", "dead" }) do
   p.rules[1].condition, p.rules[1].value = condition, nil
   game.state[condition] = true
@@ -405,6 +422,88 @@ check(not P.ProfileChoices().Tank and db.char.specProfiles[2] == nil, "deleting 
 check(not P.DeleteProfile("Default"), "the current profile cannot be deleted")
 
 ---------------------------------------------------------------------------
+-- Your cast bar (AzeriteUI's PlayerCastBarFrame module)
+do
+  local castbar = game.NewWidget("StatusBar", "AzeriteCastbar")
+  castbar.casting = true
+  game.libs["AceAddon-3.0"].GetAddon = function(_, name)
+    if name == "AzeriteUI" then
+      return { GetModule = function(_, key) if key == "PlayerCastBarFrame" then return { frame = { Castbar = castbar } } end end }
+    end
+  end
+  P.SetUserColour(0.2, 0.6, 0.3, 1)
+  P.SetEffect("static")
+  p.cast.mode = "health"
+  P.RefreshOptionalBars()
+  local h = game.azPlayer.Health.color
+  check(colourIs(castbar.color, h[1], h[2], h[3]), "the cast bar matches your health bar, rules included")
+  castbar.notInterruptible = true
+  castbar:SetStatusBarColor(1, 0, 0) -- AzeriteUI: this cast cannot be interrupted
+  check(colourIs(castbar.color, 1, 0, 0), "a cast that cannot be interrupted keeps AzeriteUI's red")
+  castbar.notInterruptible, castbar.casting = nil, false
+  castbar:SetStatusBarColor(1, 0, 0) -- AzeriteUI: the cast failed
+  check(colourIs(castbar.color, 1, 0, 0), "so does a failed or interrupted cast")
+  castbar.casting = true
+  p.cast.mode, p.cast.color = "custom", { 0.9, 0.8, 0.1, 1 }
+  game.advance(0.4) -- let any fade finish
+  check(colourIs(castbar.color, 0.9, 0.8, 0.1), "or the cast bar's own colour")
+  p.cast.mode = "off"
+  P.RefreshOptionalBars()
+  castbar:SetStatusBarColor(0.5, 0.5, 0.5)
+  check(colourIs(castbar.color, 0.5, 0.5, 0.5), "off leaves it to AzeriteUI")
+  game.libs["AceAddon-3.0"].GetAddon = function() end
+end
+
+-- Other unit frame addons: ElvUI and Unhalted Unit Frames (oUF), Shadowed Unit Frames
+do
+  local W, env = game.NewWidget, game.env
+  local function OUF(name)
+    local frame = W("Frame", name)
+    frame.Health, frame.Power, frame.Castbar = W("StatusBar"), W("StatusBar"), W("StatusBar")
+    env[name] = frame
+    return frame
+  end
+  local elv, elvPet, uuf = OUF("ElvUF_Player"), OUF("ElvUF_Pet"), OUF("UUF_Player")
+  local suf = W("Frame", "SUFUnitplayer")
+  suf.healthBar, suf.powerBar = W("StatusBar"), W("StatusBar")
+  suf.castBar = W("Frame"); suf.castBar.bar = W("StatusBar")
+  env.SUFUnitplayer = suf
+  P.SetUserColour(0.2, 0.6, 0.3, 1)
+  p.power.mode, p.cast.mode = "health", "health"
+  P.RefreshOptionalBars()
+  game.advance(0.4)
+  local h = game.azPlayer.Health.color
+  for label, bar in pairs({ ElvUI = elv.Health, Unhalted = uuf.Health, Shadowed = suf.healthBar,
+      ["ElvUI power"] = elv.Power, ["Shadowed power"] = suf.powerBar }) do
+    check(colourIs(bar.color, h[1], h[2], h[3]), label .. " is coloured like your health bar")
+  end
+  local _, channels = P.GetTargets()
+  check(channels[elvPet.Health] == "pet", "ElvUI's pet frame takes the pet colour")
+  elv.Castbar.casting = true
+  elv.Castbar:SetStatusBarColor(1, 1, 1)
+  check(colourIs(elv.Castbar.color, h[1], h[2], h[3]), "ElvUI's cast bar while casting")
+  suf.castBar.bar:SetStatusBarColor(0, 0, 0, 0)
+  check(colourIs(suf.castBar.bar.color, 0, 0, 0) and suf.castBar.bar.color[4] == 0,
+    "Shadowed Unit Frames' idle cast bar stays see-through")
+  suf.castBar.bar.spellName = "Fireball"
+  suf.castBar.bar:SetStatusBarColor(1, 0.7, 0)
+  check(colourIs(suf.castBar.bar.color, h[1], h[2], h[3]), "and is coloured while casting")
+  elv.Health:SetStatusBarColor(0.1, 0.1, 0.1)
+  check(colourIs(elv.Health.color, h[1], h[2], h[3]), "ElvUI recolouring its bar gets ours back")
+  p.power.mode, p.cast.mode = "off", "off"
+  P.RefreshOptionalBars()
+  suf.powerBar:SetStatusBarColor(0, 0, 1)
+  check(colourIs(suf.powerBar.color, 0, 0, 1), "power off hands the bar back")
+  for _, name in ipairs({ "ElvUF_Player", "ElvUF_Pet", "UUF_Player", "SUFUnitplayer" }) do env[name] = nil end
+end
+
+-- Preset packs add their colours once, and never over your own
+p.presets["Fire"] = { 0.1, 0.1, 0.1, 1 }
+local added = P.AddPresetPack("elements")
+check(added == 5 and p.presets["Ice"] and p.presets["Fire"][1] == 0.1, "a pack adds what you lack and keeps your own Fire")
+check(P.AddPresetPack("elements") == 0, "adding it again adds nothing")
+for _, key in ipairs(P.PRESET_PACK_ORDER) do check(#P.PRESET_PACKS[key].presets >= 6, "pack " .. key) end
+
 -- Every page validates with the real AceConfigRegistry, rules included
 ---------------------------------------------------------------------------
 P.AddRule()

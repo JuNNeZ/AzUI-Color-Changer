@@ -2,17 +2,19 @@
 --[[
 Core.lua - AzUI Color Picker
 Custom colour, effects, rules, presets and hunter-pet colours for your own health bar
-on AzeriteUI (5.x, JuNNeZ Edition with every theme, AzeriteUI6) and the default
-Blizzard player frame, plus the pet frames and, if you want, your power bar.
+on AzeriteUI (5.x, JuNNeZ Edition with every theme, AzeriteUI6), ElvUI, Shadowed and
+Unhalted Unit Frames and the default Blizzard player frame, plus the pet frames and,
+if you want, your power bar and cast bar.
 Runs on Retail and on Forever (Camelot).
 
 The addon is split the way the AzUI Feature Plan lays it out. Every file shares the
 private table `P` (ns.P); load order is set by the TOC:
 
+  Locales/       translations for the client's language, English where there are none
   Core.lua       saved variables, schema upgrades, events, helpers
   Effects.lua    pulse, rainbow, breathe, heartbeat, two-tone, flicker, sweep
   Pets.lua       the stable, the pet that is out, pet and family colours
-  Rules.lua      colour rules: combat, mounted, resting, stealth, spec, instance, dead
+  Rules.lua      colour rules: combat, mounted, resting, stealth, spec, instance, dead, auras
   Paint.lua      bars, channels, the mixer that picks a colour, fades, the painter
   Share.lua      import and export strings
   Profiles.lua   per-specialization profiles
@@ -28,7 +30,7 @@ local P = {}
 ns.P = P
 
 P.addonName = addonName
-P.L = setmetatable({}, { __index = function(_, key) return key end })
+P.L = ns.L or setmetatable({}, { __index = function(_, key) return key end }) -- Locales/Locale.lua
 
 P.AceConfig         = LibStub("AceConfig-3.0")
 P.AceConfigDialog   = LibStub("AceConfigDialog-3.0")
@@ -87,6 +89,7 @@ P.defaults = {
     colourPetFrames      = true,    -- colour the pet frames at all ("Show on: Pet frame")
     blizzardPetFrame     = true,    -- colour Blizzard's pet frame like AzeriteUI's
     power                = { mode = "off", color = { 0.2, 0.45, 1, 1 }, effect = "static" }, -- off | health | custom
+    cast                 = { mode = "off", color = { 1, 0.82, 0.2, 1 }, effect = "static" }, -- your cast bar, the same way
   },
   char = {
     knownPets    = {},              -- [petNumber] = { name, icon, displayID, familyName, familyID, specialization, specID, slot }

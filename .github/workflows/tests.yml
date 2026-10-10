@@ -35,8 +35,17 @@ jobs:
       - name: AzUI window, Azerite theme with Blizzard art
         run: lua5.1 Tools/TestPanel.lua plain
 
+      - name: AzUI window, Azerite theme with stock AzeriteUI 5.x
+        run: lua5.1 Tools/TestPanel.lua stock
+
+      - name: AzUI window, Azerite theme with AzeriteUI6
+        run: lua5.1 Tools/TestPanel.lua aui6
+
       - name: 5.1 and 5.2 features
         run: lua5.1 Tools/TestFeatures.lua
 
       - name: AzUI Studio pages
         run: lua5.1 Tools/TestStudio.lua
+
+      - name: Translations
+        run: lua5.1 Tools/TestLocales.lua

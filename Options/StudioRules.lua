@@ -74,6 +74,12 @@ local function CreateRow(control, index)
     Changed()
   end)
   row.condition:SetList(P.CONDITION_VALUES, P.CONDITION_SORTING)
+  -- a buff or debuff is typed in, by spell ID or name
+  row.spell = Studio.Edit(row, 110, 26, function(_, text)
+    RuleList()[row.index].value = P.SpellIDFrom(text)
+    Changed()
+  end)
+  Studio.Tooltip(row.spell, L["Spell"], L["The buff or debuff, by spell ID or name. While Blizzard hides aura data, as in some combat, the rule waits."])
   row.value = Studio.Dropdown(row, 110, function(key)
     RuleList()[row.index].value = key
     Changed()
@@ -147,12 +153,14 @@ local function LayoutRow(row, width, hasValue)
   row.condition:SetWidth(cond)
   row.condition:ClearAllPoints(); row.condition:SetPoint("LEFT", row.when, "LEFT", 36, 0)
   local after = row.condition
+  local box = row.input and row.spell or row.value
   if hasValue then
-    row.value:SetWidth(value)
-    row.value:ClearAllPoints(); row.value:SetPoint("LEFT", row.condition, "RIGHT", 8, 0)
-    after = row.value
+    box:SetWidth(value)
+    box:ClearAllPoints(); box:SetPoint("LEFT", row.condition, "RIGHT", 8, 0)
+    after = box
   end
-  row.value:SetShown(hasValue)
+  row.value:SetShown(hasValue and not row.input)
+  row.spell:SetShown(hasValue and row.input or false)
   row.show:ClearAllPoints(); row.show:SetPoint("LEFT", after, "RIGHT", 8, 0)
   row.colour:ClearAllPoints(); row.colour:SetPoint("LEFT", row.show, "LEFT", 38, 0)
   row.effect:SetWidth(effect)
@@ -167,13 +175,26 @@ local function FillRow(row, index, rule)
   local condition = P.CONDITIONS[rule.condition]
   row.switch:SetOn(rule.enabled)
   row.condition:SetValue(rule.condition)
+  row.input = condition and condition.input or false
   if row.icon then
-    row.icon:SetTexture(Studio.PackMedia("condition-" .. rule.condition))
-    row.icon:SetVertexColor(unpack(Kit.TextSelected))
+    if row.input then
+      -- a buff or debuff shows the spell's own icon, in its own colours
+      local icon = rule.value and P.SpellIcon(rule.value)
+      row.icon:SetTexture(icon or 134400)
+      row.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+      row.icon:SetVertexColor(1, 1, 1)
+    else
+      row.icon:SetTexture(Studio.PackMedia("condition-" .. rule.condition))
+      row.icon:SetTexCoord(0, 1, 0, 1)
+      row.icon:SetVertexColor(unpack(Kit.TextSelected))
+    end
   end
   row.hasValue = condition and condition.hasValue or false
-  row.value:SetShown(row.hasValue)
-  if row.hasValue then
+  row.value:SetShown(row.hasValue and not row.input)
+  row.spell:SetShown(row.hasValue and row.input)
+  if row.input then
+    row.spell:SetValue(rule.value and P.SpellLabel(rule.value) or "")
+  elseif row.hasValue then
     row.value:SetList(condition.values(), rule.condition == "instance" and P.INSTANCE_SORTING or nil)
     row.value:SetValue(rule.value)
   end
@@ -286,7 +307,7 @@ function Rules:Restyle()
     row.cross:SetVertexColor(unpack(C.faint))
     row.live:SetVertexColor(unpack(Kit.TextSelected))
     row.switch:Restyle()
-    for _, box in ipairs({ row.condition, row.value, row.effect, row.target }) do box:Restyle() end
+    for _, box in ipairs({ row.condition, row.value, row.effect, row.target, row.spell }) do box:Restyle() end
   end
   control.add:Restyle()
   control.examples:Restyle()

@@ -53,7 +53,11 @@ function Mock.New(opts)
     GetParent = function(self) return self.parent end,
     GetName = function(self) return self.name end,
     GetFont = function() return "Fonts\\FRIZQT__.TTF", 12, "" end,
-    HasFocus = function() return false end,
+    HasFocus = function(self) return self.focus == true end,
+    SetFocus = function(self) self.focus = true end,
+    ClearFocus = function(self) self.focus = false end,
+    EnableKeyboard = function(self, on) self.keyboard = on and true or false end,
+    SetPropagateKeyboardInput = function(self, on) self.propagate = on and true or false end,
     GetEffectiveScale = function() return 1 end,
     GetObjectType = function(self) return self.kind end,
     Enable = function(self) self.disabled = false end,
@@ -63,6 +67,7 @@ function Mock.New(opts)
     GetStatusBarColor = function(self) local c = self.color or {}; return c[1], c[2], c[3], c[4] end,
     SetVertexColor = function(self, r, g, b, a) self.vertex = { r, g, b, a }; self.gradient = nil end,
     SetBlendMode = function(self, mode) self.blend = mode end,
+    SetAlpha = function(self, a) self.alpha = a end,
     SetGradient = function(self, orientation, left, right) self.gradient = { left, right, orientation = orientation } end,
     SetChecked = function(self, v) self.checked = v end,
     GetChecked = function(self) return self.checked end,
@@ -128,7 +133,15 @@ function Mock.New(opts)
   env.PlaySound = function() end
   env.GetCursorPosition = function() return 0, 0 end
   env.GetTime = function() return game.time end
-  env.InCombatLockdown = function() return false end
+  env.InCombatLockdown = function() return game.lockdown and true or false end
+  env.GetLocale = function() return opts.locale or "enUS" end
+  -- Blizzard's Settings: ESC > Options > AddOns (opts.noSettings: a client without it)
+  if not opts.noSettings then
+    env.Settings = {
+      RegisterCanvasLayoutCategory = function(frame, name) game.settingsPage = frame; return { name = name } end,
+      RegisterAddOnCategory = function(category) game.settingsCategory = category end,
+    }
+  end
   env.IsShiftKeyDown = function() return game.shift and true or false end
   env.issecretvalue = function(v) return type(v) == "table" and v.secret == true end
   env.strtrim = function(s) return (tostring(s or ""):gsub("^%s+", ""):gsub("%s+$", "")) end
@@ -169,11 +182,24 @@ function Mock.New(opts)
       if key == "Version" then return "5.2.0" end
       if key == "X-AzUI-Client" and opts.forever and not opts.noMarker then return "Forever" end
     end,
-    IsAddOnLoaded = function() return opts.art and true or false end,
+    -- opts.edition picks one AzeriteUI folder; opts.art means JuNNeZ Edition
+    IsAddOnLoaded = function(name)
+      if opts.edition then return name == opts.edition end
+      return opts.art and true or false
+    end,
   }
   env.C_Spell = {
     IsCurrentSpell = function(id) return id == 883 end,
     GetSpellTexture = function() return 132161 end,
+    GetSpellName = function(id) return id == 774 and "Rejuvenation" or nil end,
+    GetSpellIDForSpellIdentifier = function(text) return text == "Rejuvenation" and 774 or nil end,
+  }
+  -- your buffs: game.state.auras[spellID] = true; game.state.aurasSecret hides them
+  env.C_UnitAuras = {
+    GetPlayerAuraBySpellID = function(id)
+      if game.state.aurasSecret then return { secret = true } end
+      return game.state.auras and game.state.auras[id] and { spellId = id } or nil
+    end,
   }
   -- hooksecurefunc on a table really hooks, so another addon's recolour can be tested
   env.hooksecurefunc = function(target, method, hook)

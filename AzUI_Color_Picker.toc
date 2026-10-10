@@ -1,18 +1,28 @@
 ## Interface: 120100, 120105
 
 ## Title: |cff00ff00Az|cffFFD100UI|cffff7d0a Healthbar Color Picker|r
-## Notes: |cffFFFFFFCustom colours, rainbow, pulse, presets & hunter-pet colours for your health bar on AzeriteUI or the Blizzard player frame.|r
+## Notes: |cffFFFFFFCustom colours, rainbow, pulse, presets & hunter-pet colours for your health bar on AzeriteUI, ElvUI, Shadowed or Unhalted Unit Frames, or the Blizzard player frame.|r
+## Notes-deDE: |cffFFFFFFEigene Farben, Regenbogen, Pulsieren, Vorlagen und Jägerbegleiter-Farben für deine Gesundheitsleiste auf AzeriteUI, ElvUI, Shadowed oder Unhalted Unit Frames oder Blizzards Spielerfenster.|r
+## Notes-frFR: |cffFFFFFFCouleurs personnalisées, arc-en-ciel, pulsation, préréglages et couleurs de familier pour votre barre de vie sur AzeriteUI, ElvUI, Shadowed ou Unhalted Unit Frames, ou le cadre de joueur de Blizzard.|r
+## Notes-esES: |cffFFFFFFColores propios, arcoíris, pulso, predefinidos y colores de mascota de cazador para tu barra de salud en AzeriteUI, ElvUI, Shadowed o Unhalted Unit Frames, o el marco de jugador de Blizzard.|r
+## Notes-esMX: |cffFFFFFFColores propios, arcoíris, pulso, predefinidos y colores de mascota de cazador para tu barra de salud en AzeriteUI, ElvUI, Shadowed o Unhalted Unit Frames, o el marco de jugador de Blizzard.|r
+## Notes-ptBR: |cffFFFFFFCores próprias, arco-íris, pulso, predefinições e cores de ajudante de caçador para sua barra de vida no AzeriteUI, ElvUI, Shadowed ou Unhalted Unit Frames, ou no quadro de jogador da Blizzard.|r
+## Notes-itIT: |cffFFFFFFColori personalizzati, arcobaleno, pulsazione, preset e colori dei famigli per la tua barra della salute su AzeriteUI, ElvUI, Shadowed o Unhalted Unit Frames, o sul riquadro giocatore di Blizzard.|r
+## Notes-ruRU: |cffFFFFFFСвои цвета, радуга, пульс, наборы и цвета питомцев охотника для полосы здоровья в AzeriteUI, ElvUI, Shadowed или Unhalted Unit Frames или на рамке игрока Blizzard.|r
+## Notes-koKR: |cffFFFFFFAzeriteUI, ElvUI, Shadowed 또는 Unhalted Unit Frames, 블리자드 플레이어 창의 생명력 바에 사용자 색상, 무지개, 맥박, 프리셋, 사냥꾼 소환수 색상을 입힙니다.|r
+## Notes-zhCN: |cffFFFFFF为 AzeriteUI、ElvUI、Shadowed 或 Unhalted Unit Frames 以及暴雪玩家框体的生命条提供自定义颜色、彩虹、脉冲、预设和猎人宠物颜色。|r
+## Notes-zhTW: |cffFFFFFF為 AzeriteUI、ElvUI、Shadowed 或 Unhalted Unit Frames 以及暴雪玩家框架的生命條提供自訂顏色、彩虹、脈衝、預設和獵人寵物顏色。|r
 ## Category-enUS: User Interface
 ## X-Category: User Interface
 ## Author: |cffD1FF00JuNNeZ|r
-## Version: 5.2.0
+## Version: 6.0.0
 
 ## X-Curse-Project-ID: 1286164
 
 ## IconTexture: Interface\\AddOns\\AzUI_Color_Picker\\icon.tga
 
 ## X-EmbedLibraries: LibStub, CallbackHandler-1.0, LibDataBroker-1.1, LibDBIcon-1.0, AceAddon-3.0, AceDB-3.0, AceGUI-3.0, AceConfig-3.0, AceConfigDialog-3.0
-## OptionalDeps: AzeriteUI, AzeriteUI6, AzeriteUI5_JuNNeZ_Edition
+## OptionalDeps: AzeriteUI, AzeriteUI6, AzeriteUI5_JuNNeZ_Edition, ElvUI, ShadowedUnitFrames, UnhaltedUnitFrames
 ## SavedVariables: AzUI_Color_PickerDB
 
 # -------------------------------------------------------------------
@@ -34,6 +44,17 @@ Libs\LibDBIcon-1.0\LibDBIcon-1.0\LibDBIcon-1.0.lua
 # -------------------------------------------------------------------
 #  The addon, one file per job (see Core.lua for the map)
 # -------------------------------------------------------------------
+Locales\Locale.lua
+Locales\deDE.lua
+Locales\frFR.lua
+Locales\esES.lua
+Locales\ptBR.lua
+Locales\itIT.lua
+Locales\ruRU.lua
+Locales\koKR.lua
+Locales\zhCN.lua
+Locales\zhTW.lua
+
 Core.lua
 Effects.lua
 Pets.lua
@@ -51,6 +72,7 @@ QuickPalette.lua
 Options\Bootstrap.lua
 Options\Kit.lua
 Options\Config.lua
+Options\Defaults.lua
 Options\Controls.lua
 Options\Color.lua
 Options\Studio.lua

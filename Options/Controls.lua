@@ -311,6 +311,65 @@ local CreateRow = function(parent, kind)
 		end
 	end
 
+	--------------------------------------------------------------
+	-- The keyboard
+	--------------------------------------------------------------
+	-- The window's keyboard ring stops on a row: a bar down its left edge says
+	-- where it is. Enter or Space does what a click does; Left and Right step a
+	-- list or a slider. Each control says what a click is by naming the button
+	-- (`press`) or the box it types into (`typeBox`).
+	local focusEdge = frame:CreateTexture(nil, "ARTWORK")
+	focusEdge:SetTexture(GetMedia("plain"))
+	focusEdge:SetWidth(2)
+	focusEdge:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -2)
+	focusEdge:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 2)
+	focusEdge:Hide()
+	control.focusEdge = focusEdge
+
+	control.SetFocused = function(self, focused)
+		self.focused = focused and true or false
+		self.focusEdge:SetVertexColor(unpack(Kit.TextSelected))
+		self.focusEdge:SetShown(self.focused)
+		self.hover:SetShown(self.focused)
+	end
+
+	-- Steps a list, or a slider, by one in `direction`. Says whether anything moved.
+	control.Nudge = function(self, direction)
+		if (self.disabled) then return false end
+		if (self.order and #self.order > 0) then
+			local at = 0
+			for i, key in ipairs(self.order) do if (key == self.value) then at = i end end
+			local nextKey = self.order[((at - 1 + direction) % #self.order) + 1]
+			if (nextKey == nil or nextKey == self.value) then return false end
+			self:SetValue(nextKey)
+			self:Fire(nextKey)
+			return true
+		end
+		if (self.min and self.max and self.SetValue) then
+			local step = (self.step and self.step > 0) and self.step or (self.max - self.min) / 20
+			local before = self.value
+			self:SetValue((self.value or self.min) + direction * step, true)
+			return self.value ~= before
+		end
+		return false
+	end
+
+	-- What a click does. A list steps on, since its pullout is for the mouse.
+	control.Activate = function(self)
+		if (self.disabled) then return false end
+		if (self.typeBox) then
+			self.typeBox:SetFocus()
+			return true
+		end
+		local press = self.press
+		local click = press and press:GetScript("OnClick")
+		if (click) then
+			click(press, "LeftButton")
+			return true
+		end
+		return self:Nudge(1)
+	end
+
 	-- Re-reads the theme. Controls add their own bits by wrapping this.
 	control.Restyle = function(self)
 		SetTextColor(self.label, self.disabled and Kit.TextDisabled or Kit.TextNormal)
@@ -482,6 +541,7 @@ Controls.CreateToggle = function(parent)
 		self.gemOn:SetVertexColor(unpack(self.disabled and Kit.TextDisabled or Kit.TextSelected))
 	end
 
+	control.press = box
 	box:SetScript("OnClick", function()
 		if (control.disabled) then return end
 		control:SetValue(not control.value)
@@ -509,6 +569,7 @@ Controls.CreateSlider = function(parent)
 	local VALUE_W = 52
 
 	local valuebox = CreateFrame("EditBox", nil, control.area)
+	control.typeBox = valuebox
 	valuebox:SetSize(VALUE_W, 18)
 	valuebox:SetPoint("RIGHT", control.area, "RIGHT", 0, 0)
 	valuebox:SetAutoFocus(false)
@@ -1138,6 +1199,7 @@ Controls.CreateInput = function(parent)
 	local control = CreateRow(parent, "input")
 
 	local box = CreateFrame("EditBox", nil, control.area)
+	control.typeBox = box
 	box:SetHeight(22)
 	box:SetPoint("RIGHT", control.area, "RIGHT", 0, 0)
 	box:SetWidth(CONTROL_WIDTH)
@@ -1262,6 +1324,7 @@ Controls.CreateButton = function(parent)
 		SetTextColor(self.text, self.disabled and Kit.TextDisabled or Kit.TextNormal)
 	end
 
+	control.press = box
 	box:SetScript("OnClick", function()
 		if (control.disabled) then return end
 		PlaySound(SOUND_CLICK)
@@ -1377,6 +1440,7 @@ Controls.CreateMultiline = function(parent)
 	control.scroll = scroll
 
 	local edit = CreateFrame("EditBox", nil, scroll)
+	control.typeBox = edit
 	edit:SetMultiLine(true)
 	edit:SetAutoFocus(false)
 	edit:SetFontObject(GetFont(12))

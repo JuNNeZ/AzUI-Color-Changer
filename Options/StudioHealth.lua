@@ -48,7 +48,7 @@ local function Snapshot()
   local p = Profile()
   return {
     color = P.CopyColour(p.color), effect = p.effect, secondColor = P.CopyColour(p.secondColor),
-    preset = P.selectedPreset, petFrames = p.colourPetFrames, power = p.power.mode,
+    preset = P.selectedPreset, petFrames = p.colourPetFrames, power = p.power.mode, cast = p.cast.mode,
   }
 end
 
@@ -65,8 +65,8 @@ local function Undo()
   p.effect, p.secondColor = snap.effect, snap.secondColor
   P.selectedPreset = snap.preset
   P.SetUserColour(snap.color[1], snap.color[2], snap.color[3], snap.color[4], true)
-  if p.colourPetFrames ~= snap.petFrames or p.power.mode ~= snap.power then
-    p.colourPetFrames, p.power.mode = snap.petFrames, snap.power
+  if p.colourPetFrames ~= snap.petFrames or p.power.mode ~= snap.power or p.cast.mode ~= snap.cast then
+    p.colourPetFrames, p.power.mode, p.cast.mode = snap.petFrames, snap.power, snap.cast
     P.RefreshOptionalBars()
   end
   P.ResetPhase()
@@ -129,6 +129,10 @@ local function PreviewBar(parent, height, kind)
   local bar = CreateFrame("StatusBar", nil, parent)
   bar:SetHeight(height)
   local art = Kit.ArtStyle == "azerite" and AZERITE_BARS[kind]
+  -- JuNNeZ Edition's Legacy HUD has flat bars and no cases
+  if art and ns.ActiveAzeriteTheme and ns.ActiveAzeriteTheme() == "LegacyHUD" then
+    art = { bar = "Legacy\\statusbar-power" }
+  end
   bar:SetStatusBarTexture(art and Kit.GetMedia(art.bar) or "Interface\\Buttons\\WHITE8X8")
   if art and art.case then
     -- the case is the bar's backdrop, as in AzeriteUI: below the fill, sized from the
@@ -608,8 +612,18 @@ local function BuildFooter(control)
     P.RefreshOptions()
   end)
   powerChip:SetPoint("LEFT", petChip, "RIGHT", 8, 0)
+  local castChip = Studio.Chip(bar, L["Cast bar"], function(self)
+    Remember()
+    local cast = Profile().cast
+    cast.mode = cast.mode ~= "off" and "off" or "health"
+    self:SetOn(cast.mode ~= "off")
+    P.RefreshOptionalBars()
+    P.RefreshOptions()
+  end)
+  castChip:SetPoint("LEFT", powerChip, "RIGHT", 8, 0)
+  Studio.Tooltip(castChip, L["Cast bar"], L["Your cast bar matches your health bar. A cast that cannot be interrupted keeps its own colour. The cast bar's own colour is on the More Bars page."])
   Studio.Tooltip(powerChip, L["Power bar"], L["Your power bar matches your health bar. Its own colour is on the More Bars page."])
-  control.chips = { healthChip, petChip, powerChip }
+  control.chips = { healthChip, petChip, powerChip, castChip }
 
   local done = Studio.Button(bar, 80, 28, L["Done"], function() if Kit.Panel then Kit.Panel:Close() end end, "gold")
   done:SetPoint("RIGHT", 0, -4)
@@ -650,6 +664,22 @@ end
 -- AzUI Azerite: AzeriteUI's bars in their cases. Sized so every case's stone stays
 -- inside the card, with the names under the portraits, clear of the stone's spikes,
 -- and the power bar under the health bar's case.
+-- With one of JuNNeZ Edition's themes on (Hunter, Mage, Paladin), the theme styles
+-- the preview's health bar itself, with the same StyleHealth it runs on the player
+-- frame, so its casing and endcaps sit by the theme's own geometry. The theme hides
+-- our case (the bar's Backdrop) where it draws its own.
+function Health:StyleWithTheme(bar)
+  local key, theme
+  if ns.ActiveAzeriteTheme then key, theme = ns.ActiveAzeriteTheme() end -- both values; `and` would keep one
+  if not (theme and theme.StyleHealth) or key == "LegacyHUD" then return end
+  if bar.case then
+    bar.Backdrop = bar.case
+    bar.case:SetAlpha(1)
+  end
+  local ok, err = pcall(theme.StyleHealth, theme, { Health = bar }, { HealthBarTexture = Kit.GetMedia("hp_cap_bar") }, false)
+  if not ok then P.Debug("Theme preview: " .. tostring(err)) end
+end
+
 function Health:LayoutAzeritePreview(card, width)
   local petW = min(130, floor(width * .17))
   local sp = petW / PET_CASE.w
@@ -666,6 +696,8 @@ function Health:LayoutAzeritePreview(card, width)
   card.health:ClearAllPoints()
   card.health:SetPoint("LEFT", card.you, "RIGHT", 16 + HEALTH_CASE.left * s, 0)
   card.health:SetWidth(healthW)
+  card.health:SetHeight(40 * s)
+  self:StyleWithTheme(card.health)
   card.power:ClearAllPoints()
   card.power:SetPoint("TOPLEFT", card.health, "BOTTOMLEFT", 0, -(HEALTH_CASE.below * s + 3))
   card.power:SetPoint("TOPRIGHT", card.health, "BOTTOMRIGHT", 0, -(HEALTH_CASE.below * s + 3))
@@ -762,6 +794,7 @@ function Health:Update()
 
   control.chips[2]:SetOn(p.colourPetFrames)
   control.chips[3]:SetOn(p.power.mode ~= "off")
+  control.chips[4]:SetOn(p.cast.mode ~= "off")
   control.undo:SetDisabled(#undo == 0)
   self:Restyle()
 end

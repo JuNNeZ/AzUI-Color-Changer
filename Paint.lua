@@ -30,13 +30,23 @@ local AZERITE_FRAMES  = {
   AzeriteUnitFramePlayer     = "player", AzeriteUnitFramePlayerAlternate = "player", AzeriteUnitFramePet = "pet",
   oUF_AzeriteUnitFramePlayer = "player", oUF_AzeriteUnitFramePet         = "pet",
 }
+-- Other unit frame addons, by global frame name, and where each keeps its bars. ElvUI and
+-- Unhalted Unit Frames are built on oUF; Shadowed Unit Frames names its bars itself.
+local OUF_PARTS = { health = "Health", power = "Power", cast = "Castbar" }
+local SUF_PARTS = { health = "healthBar", power = "powerBar",
+  cast = function(frame) return type(frame.castBar) == "table" and frame.castBar.bar or nil end }
+local OTHER_FRAMES = {
+  { parts = OUF_PARTS, frames = { ElvUF_Player = "player", ElvUF_Pet = "pet" } },              -- ElvUI
+  { parts = OUF_PARTS, frames = { UUF_Player = "player", UUF_Pet = "pet" } },                  -- Unhalted Unit Frames
+  { parts = SUF_PARTS, frames = { SUFUnitplayer = "player", SUFUnitpet = "pet" } },            -- Shadowed Unit Frames
+}
 -- AzeriteUI 5.x tints the health preview at 90% on the player frame and 70% on the pet frame
 local PREVIEW_FACTOR  = { player = 0.9, pet = 0.7 }
 
 local targets       = setmetatable({}, { __mode = "k" }) -- bar -> brightness factor
 local channels      = setmetatable({}, { __mode = "k" }) -- bar -> "player" | "pet" | "power"
 local blizzardBars  = setmetatable({}, { __mode = "k" }) -- bar -> how to hand it back to Blizzard
-local optionalBars  = setmetatable({}, { __mode = "k" }) -- bar -> "blizzardPet" | "petFrame" | "power"
+local optionalBars  = setmetatable({}, { __mode = "k" }) -- bar -> "blizzardPet" | "petFrame" | "power" | "cast"
 local textureOwners = setmetatable({}, { __mode = "k" }) -- bar texture -> bar
 local hooked        = setmetatable({}, { __mode = "k" })
 local painting      = setmetatable({}, { __mode = "k" })
@@ -97,8 +107,9 @@ end
 -- ("rule", "pet", "health", "power" or "own"). Health has no colour of its own here.
 function P.ChannelSource(channel)
   local p = P.DB.profile
-  if channel == "power" then
-    if p.power.mode == "custom" then return p.power.color, p.power.effect, "power" end
+  if channel == "power" or channel == "cast" then
+    local own = p[channel]
+    if own.mode == "custom" then return own.color, own.effect, channel end
     channel = "player" -- Match health bar
   end
   local rule = P.ActiveRule(channel)
@@ -122,7 +133,7 @@ end
 ---------------------------------------------------------------------
 -- When a colour's source changes (a pet is called, a preset loads, a rule starts),
 -- each channel blends from what it last showed to the new colour.
-local lastShown = { player = {}, pet = {}, power = {} }
+local lastShown = { player = {}, pet = {}, power = {}, cast = {} }
 local fadeFrom, fadeStart = {}, nil
 
 function P.StartFade()
@@ -302,7 +313,17 @@ local function Shimmer(at)
   return max(0, 1 - math.abs(centre - 0.5) / SWEEP_EDGE)
 end
 
+-- AzeriteUI turns your cast bar red for a cast that cannot be interrupted, and for one
+-- that failed or was interrupted. Those colours are information, so they are left alone,
+-- as is an idle bar (Shadowed Unit Frames keeps its idle cast bar see-through).
+local function CastSaysSomething(bar)
+  if channels[bar] ~= "cast" then return false end
+  if bar.notInterruptible then return true end
+  return not (bar.casting or bar.channeling or bar.empowering or bar.spellName) -- spellName: Shadowed Unit Frames
+end
+
 local function applyColour(bar, r, g, b, a, at, pr, pg, pb)
+  if CastSaysSomething(bar) then return end
   local fill = at and VisibleFill(bar)
   if at and not (fill and CreateColor) then
     local k = Shimmer(at)
@@ -359,7 +380,7 @@ function P.Repaint()
   if not P.DB then return end
   local fade = FadeProgress()
   local colours = {}
-  for _, channel in ipairs({ "player", "pet", "power" }) do
+  for _, channel in ipairs({ "player", "pet", "power", "cast" }) do
     colours[channel] = { P.ChannelColour(channel, fade) }
   end
   for bar, channel in pairs(channels) do
@@ -480,29 +501,43 @@ local function addBlizzardTarget(bar, channel, restore, optional)
   end
 end
 
-local function registerUnitFrame(frame, channel)
-  if type(frame) ~= "table" or type(frame.Health) ~= "table" then return end
-  -- Pet frames can be left to AzeriteUI ("Show on: Pet frame" off)
+local function Part(frame, part)
+  if type(part) == "function" then return part(frame) end
+  return frame[part]
+end
+
+-- `parts` says where the frame keeps its bars; AzeriteUI's own frames leave it out.
+local function registerUnitFrame(frame, channel, parts)
+  local health = type(frame) == "table" and Part(frame, (parts or OUF_PARTS).health)
+  if type(health) ~= "table" then return end
+  -- Pet frames can be left to their addon ("Show on: Pet frame" off)
   local pet = channel == "pet"
   if pet and not P.DB.profile.colourPetFrames then return end
-  if not targets[frame.Health] then
-    addTarget(frame.Health, 1, channel)
-    if pet then optionalBars[frame.Health] = "petFrame" end
-    if type(frame.Health.Preview) == "table" then
-      addTarget(frame.Health.Preview, PREVIEW_FACTOR[channel], channel)
-      if pet then optionalBars[frame.Health.Preview] = "petFrame" end
+  if not targets[health] then
+    addTarget(health, 1, channel)
+    if pet then optionalBars[health] = "petFrame" end
+    if not parts and type(health.Preview) == "table" then
+      addTarget(health.Preview, PREVIEW_FACTOR[channel], channel)
+      if pet then optionalBars[health.Preview] = "petFrame" end
     end
     if not knownFrames[frame] then
       knownFrames[frame] = true
-      P.Debug("Colouring AzeriteUI frame " .. tostring(frame.GetName and frame:GetName() or "?"))
+      P.Debug("Colouring unit frame " .. tostring(frame.GetName and frame:GetName() or "?"))
     end
   end
+  if channel ~= "player" then return end
   -- Your power bar, while that is switched on
-  if channel == "player" and P.DB.profile.power.mode ~= "off" then
+  if P.DB.profile.power.mode ~= "off" then
     -- the power bar or crystal, and JuNNeZ Edition's mana orb
-    for _, bar in ipairs({ frame.Power, frame.ManaOrb }) do
+    local bars = parts and { Part(frame, parts.power) } or { frame.Power, frame.ManaOrb }
+    for _, bar in ipairs(bars) do
       if type(bar) == "table" and addTarget(bar, 1, "power") then optionalBars[bar] = "power" end
     end
+  end
+  -- Another addon's cast bar lives on its player frame (AzeriteUI's has a module of its own)
+  if parts and P.DB.profile.cast.mode ~= "off" then
+    local cast = Part(frame, parts.cast)
+    if type(cast) == "table" and addTarget(cast, 1, "cast") then optionalBars[cast] = "cast" end
   end
 end
 
@@ -522,12 +557,26 @@ function P.ScanFrames()
   for frameName, channel in pairs(AZERITE_FRAMES) do
     registerUnitFrame(_G[frameName], channel)
   end
+  for _, addon in ipairs(OTHER_FRAMES) do
+    for frameName, channel in pairs(addon.frames) do
+      registerUnitFrame(_G[frameName], channel, addon.parts)
+    end
+  end
   addBlizzardTarget(GetBlizzardPlayerHealthBar(), "player", RestoreBlizzard)
   if P.DB.profile.blizzardPetFrame and P.DB.profile.colourPetFrames then
     addBlizzardTarget(GetBlizzardPetHealthBar(), "pet", RestoreBlizzardPet, "blizzardPet")
   end
   if P.DB.profile.power.mode ~= "off" then
     addBlizzardTarget(GetBlizzardPlayerManaBar(), "power", RestoreBlizzardMana, "power")
+  end
+  -- your cast bar: AzeriteUI 5.x's and JuNNeZ Edition's PlayerCastBarFrame module
+  if P.DB.profile.cast.mode ~= "off" and P.AceAddon then
+    for i = 1, #AZERITE_ADDONS do
+      local aui = P.AceAddon:GetAddon(AZERITE_ADDONS[i], true)
+      local module = type(aui) == "table" and type(aui.GetModule) == "function" and aui:GetModule("PlayerCastBarFrame", true)
+      local cast = type(module) == "table" and type(module.frame) == "table" and module.frame.Castbar
+      if type(cast) == "table" and addTarget(cast, 1, "cast") then optionalBars[cast] = "cast" end
+    end
   end
 end
 
@@ -536,7 +585,8 @@ end
 function P.RefreshOptionalBars()
   local p = P.DB.profile
   for bar, kind in pairs(optionalBars) do
-    if (kind == "power" and p.power.mode == "off") or (kind == "blizzardPet" and not p.blizzardPetFrame)
+    if (kind == "power" and p.power.mode == "off") or (kind == "cast" and p.cast.mode == "off")
+      or (kind == "blizzardPet" and not p.blizzardPetFrame)
       or ((kind == "petFrame" or kind == "blizzardPet") and not p.colourPetFrames) then
       removeTarget(bar)
     end
@@ -566,7 +616,9 @@ local frameElapsed = 0
 function P.NeedsAnimation()
   if P.DB.profile.reduceMotion then return false end
   if P.ChannelEffect("player") ~= "static" or P.ChannelEffect("pet") ~= "static" then return true end
-  return P.DB.profile.power.mode ~= "off" and P.ChannelEffect("power") ~= "static"
+  local p = P.DB.profile
+  return (p.power.mode ~= "off" and P.ChannelEffect("power") ~= "static")
+    or (p.cast.mode ~= "off" and P.ChannelEffect("cast") ~= "static")
 end
 
 function P.UpdateAnimator()
@@ -617,6 +669,46 @@ function P.SetUserColour(r, g, b, a, fade)
   if fade then P.PushRecent(c) end
   P.UpdateAnimator()
   P.Repaint()
+end
+
+-- Preset packs, added from the Presets section. High Contrast is the Okabe-Ito
+-- palette, chosen to stay distinct for every common kind of colour blindness.
+P.PRESET_PACK_ORDER = { "fantasy", "elements", "pastel", "contrast" }
+P.PRESET_PACKS = {
+  fantasy = { label = L["Class Fantasy"], presets = {
+    { "Fel", 0.35, 0.85, 0.20 }, { "Frost", 0.40, 0.75, 1.00 }, { "Holy Light", 1.00, 0.85, 0.40 },
+    { "Shadow", 0.45, 0.20, 0.65 }, { "Nature", 0.25, 0.70, 0.30 }, { "Arcane", 0.75, 0.45, 1.00 },
+    { "Blood", 0.70, 0.05, 0.10 }, { "Storm", 0.30, 0.55, 0.95 },
+  } },
+  elements = { label = L["Elements"], presets = {
+    { "Fire", 1.00, 0.40, 0.10 }, { "Water", 0.15, 0.50, 0.90 }, { "Earth", 0.55, 0.40, 0.20 },
+    { "Air", 0.75, 0.90, 0.95 }, { "Lightning", 0.95, 0.95, 0.35 }, { "Ice", 0.70, 0.90, 1.00 },
+  } },
+  pastel = { label = L["Pastel"], presets = {
+    { "Pastel Pink", 1.00, 0.70, 0.80 }, { "Pastel Mint", 0.65, 0.95, 0.80 }, { "Pastel Lavender", 0.80, 0.70, 1.00 },
+    { "Pastel Peach", 1.00, 0.80, 0.65 }, { "Pastel Sky", 0.65, 0.85, 1.00 }, { "Pastel Lemon", 1.00, 0.97, 0.65 },
+  } },
+  contrast = { label = L["High Contrast"], presets = {
+    { "HC Orange", 0.90, 0.60, 0.00 }, { "HC Sky Blue", 0.34, 0.71, 0.91 }, { "HC Bluish Green", 0.00, 0.62, 0.45 },
+    { "HC Yellow", 0.94, 0.89, 0.26 }, { "HC Blue", 0.00, 0.45, 0.70 }, { "HC Vermillion", 0.84, 0.37, 0.00 },
+    { "HC Reddish Purple", 0.80, 0.47, 0.65 }, { "HC White", 1.00, 1.00, 1.00 },
+  } },
+}
+
+-- Adds a pack's presets. Names you already have are left as they are.
+-- Returns how many were added.
+function P.AddPresetPack(key)
+  local pack = P.PRESET_PACKS[key]
+  if not pack then return 0 end
+  local presets, added = P.DB.profile.presets, 0
+  for _, preset in ipairs(pack.presets) do
+    if not presets[preset[1]] then
+      presets[preset[1]] = { preset[2], preset[3], preset[4], 1 }
+      added = added + 1
+    end
+  end
+  P.RefreshOptions()
+  return added
 end
 
 -- Presets in the order you dragged them into; any not placed yet follow alphabetically.

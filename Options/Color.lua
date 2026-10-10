@@ -2,9 +2,9 @@ local _, ns = ...
 local Kit = ns.OptionsKit
 local Controls = Kit.Controls
 
-if not ns.HasAzeriteArt then
-  -- Stock textures have no Azerite atlas cells, shadows or cropped bar bodies.
-  Kit.DrawSize = function(body) return body end
+-- Only JuNNeZ Edition ships the options window's glyph sheet; with any other
+-- AzeriteUI (or none) the glyphs come from Blizzard's own icons.
+if not ns.HasAzeriteMedia("options-glyphs") then
   Kit.SetGlyph = function(texture, name)
     local icons = {
       check = "Interface\\Buttons\\UI-CheckBox-Check",
@@ -19,6 +19,11 @@ if not ns.HasAzeriteArt then
     texture:SetTexture(icons[name] or "Interface\\Buttons\\UI-CheckBox-Check")
     texture:SetTexCoord(0, 1, 0, 1)
   end
+end
+
+if not ns.HasAzeriteArt then
+  -- Stock textures have no Azerite atlas cells, shadows or cropped bar bodies.
+  Kit.DrawSize = function(body) return body end
   for _, spec in ipairs({ Kit.Trough, Kit.Fill }) do
     spec.left, spec.mid, spec.right = { 0, .1, 0, 1 }, { .1, .9, 0, 1 }, { .9, 1, 0, 1 }
   end

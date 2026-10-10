@@ -26,7 +26,8 @@ for name in all:gmatch('Studio%.Media%("([%w%-]+)"%)') do
   check(exists("Media/Studio/" .. name .. ".tga"), "art " .. name)
 end
 for name in all:gmatch('Glyph%([^,]+, "([%w%-]+)"%)') do
-  check(exists("Media/Studio/glyph-" .. name .. ".tga"), "glyph " .. name)
+  -- the gem is drawn as a circle, not a file
+  check(name == "gem" or exists("Media/Studio/glyph-" .. name .. ".tga"), "glyph " .. name)
 end
 for _, r in ipairs({ 3, 4, 6, 8, 9, 10, 12 }) do
   for _, part in ipairs({ "fill", "edge", "edge2" }) do
@@ -229,6 +230,17 @@ check(p.rules[row.index].condition == "spec" and p.rules[row.index].value == 1 a
   "picking Specialization shows its value, set to the one you are in")
 row.value.owner:Fire(2)
 check(p.rules[row.index].value == 2, "the value can be changed")
+row.condition.owner:Fire("aura")
+Kit.StudioRules:Update()
+check(row.spell.shown and not row.value.shown and p.rules[row.index].value == nil, "Buff or debuff shows a spell box")
+row.spell:SetText("Rejuvenation")
+row.spell.scripts.OnEnterPressed(row.spell)
+Kit.StudioRules:Update()
+check(p.rules[row.index].value == 774 and row.spell.text == "Rejuvenation", "a spell typed by name is kept by ID")
+check(row.icon.texture == 132161, "the row shows the spell's own icon")
+row.condition.owner:Fire("spec")
+Kit.StudioRules:Update()
+check(row.value.shown and not row.spell.shown and row.icon.texture ~= 132161, "and goes back for other conditions")
 game.answer = false
 row.effect.owner:Fire("flicker")
 check(p.rules[row.index].effect ~= "flicker", "Flicker on a rule asks first")
@@ -283,6 +295,38 @@ do
     if type(w.texture) == "string" and w.texture:find("StudioPack", 1, true) and w.texture:find("logo", 1, true) then logo = w end
   end
   check(logo, "the title shows the pack's logo")
+end
+
+---------------------------------------------------------------------------
+-- AzUI Azerite follows JuNNeZ Edition's active theme
+---------------------------------------------------------------------------
+for _, which in ipairs({ "HunterTheme", "LegacyHUD" }) do
+  local themed = Mock.New({ art = true, noLogin = true })
+  local styled
+  local module = {
+    IsActive = function() return true end,
+    ResolveMedia = function(_, name) if name == "hp_cap_case" then return "THEMED:" .. name end end,
+    StyleHealth = function(_, owner, db)
+      styled = db.HealthBarTexture
+      owner.Health.Backdrop:SetAlpha(0) -- the theme draws its own casing
+    end,
+  }
+  themed.libs["AceAddon-3.0"].GetAddon = function(_, name)
+    if name == "AzeriteUI" then return { GetModule = function(_, key) if key == which then return module end end } end
+  end
+  themed.fire("ADDON_LOADED", "AzUI_Color_Picker")
+  themed.flush()
+  themed.db.global.panel.theme = "azerite"
+  themed.ns.OpenPanel("general")
+  local K = themed.ns.OptionsKit
+  local health = K.StudioHealth.control.preview.health
+  if which == "HunterTheme" then
+    check(K.GetMedia("hp_cap_case") == "THEMED:hp_cap_case", "AzUI Azerite asks the active theme for its art")
+    check(styled, "the theme styles the preview's health bar with its own StyleHealth")
+    check(health.case.alpha == 0, "and hides AzUI's case where it draws its own")
+  else
+    check(not health.case and not styled, "the Legacy HUD preview is a flat bar with no case")
+  end
 end
 
 check(#game.taint == 0, "the Studio pages write nothing onto Blizzard's frames: " .. table.concat(game.taint, ", "))

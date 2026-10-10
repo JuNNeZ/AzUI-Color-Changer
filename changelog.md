@@ -4,6 +4,26 @@ Format inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ----------------------------------------------------------------------
 # Changelog
 
+## [6.0.0] - 2026-10-10
+
+Other unit frame addons, a cast bar, buff and debuff rules, preset packs, a count of changed settings, keyboard navigation and nine translations.
+
+### Added
+
+- Preset packs: the Health Bar page has four ready-made packs (Class Fantasy, Elements, Pastel, High Contrast). Adding one only adds names you don't already have; your own presets keep their colours.
+- Cast bar: colour your cast bar like your health bar or with its own colour and effect (More Bars, or the Cast bar chip in AzUI Studio). A cast that cannot be interrupted, or one that failed, keeps its own colour.
+- Buff or debuff rules: a rule can wait for an aura on you, typed in by spell ID or name. The rule row shows the spell's own icon. While Blizzard hides aura data from addons, as in some combat, the rule waits rather than guess.
+- Other unit frames: ElvUI, Shadowed Unit Frames and Unhalted Unit Frames. Your player and pet health bars, power bar and cast bar are coloured there just as on AzeriteUI. Shadowed Unit Frames' idle cast bar stays see-through.
+- Changed settings: a gem marks every setting that differs from its default, with an arrow that puts just that one back (colours included). The pages holding changes get a gem in the rail, and the window counts them; click the count to open the first.
+- Keyboard: click the search box, then Tab and Shift-Tab walk the pages and settings. Up and Down move within a list, Enter or Space does what a click does, Left and Right step a list or a slider, and typing a letter searches. The window only listens after you click the search box, hands every other key to the game, and lets go on Escape, a mouse click, closing, or combat.
+- Translations: Deutsch, Français, Español (España and México), Português (Brasil), Italiano, Русский, 한국어, 简体中文 and 繁體中文, following your game client. Every text in the addon is translated, as is its description in the AddOns list; a text a translation lacks shows in English. These are first translations: corrections from native speakers are welcome. `/ahui effect` still takes the English effect names in every language.
+- ESC > Options > AddOns: AzUI Color Picker now has a landing page there, as AzeriteUI does, with the logo, the version, a button into the AzUI window, one into the classic window, and credits. Opening either closes Blizzard's Settings first.
+- AzUI Azerite follows your JuNNeZ Edition theme: the health preview is drawn by the active theme (Hunter, Mage, Paladin), and Legacy HUD gets its own bar.
+
+### Changed
+
+- AzUI Azerite works with every AzeriteUI: JuNNeZ Edition, stock AzeriteUI 5.x and AzeriteUI6. It draws with the art of whichever is installed, read from its own folder; the few pieces an edition does not ship (only JuNNeZ Edition has the window's own glyphs and close button; AzeriteUI6 lends its aura border for the tooltip border) come from Blizzard's art.
+
 ## [5.2.0] - 2026-10-10
 
 - Simplified the Rules and Hunter Pets empty states into compact coloured icons with soft gradients; replaced the ghost condition icon with a clear death/skull symbol.

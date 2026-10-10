@@ -67,7 +67,39 @@ P.CONDITIONS = {
     end,
   },
 }
-P.CONDITION_SORTING = { "combat", "mounted", "resting", "stealth", "dead", "spec", "instance" }
+-- A buff or debuff on you, by spell ID. Midnight hides aura data from addons in some
+-- combat (the answer comes back secret); the rule then waits rather than guess.
+P.CONDITIONS.aura = {
+  label = L["Buff or debuff"], hasValue = true, input = true,
+  test = function(value)
+    if type(value) ~= "number" or not (C_UnitAuras and C_UnitAuras.GetPlayerAuraBySpellID) then return false end
+    local ok, aura = pcall(C_UnitAuras.GetPlayerAuraBySpellID, value)
+    return ok and P.IsAccessible(aura) and aura ~= nil
+  end,
+}
+
+-- A spell ID, or a spell's name, as a spell ID.
+function P.SpellIDFrom(text)
+  text = strtrim(tostring(text or ""))
+  local id = tonumber(text)
+  if id then return id end
+  if text ~= "" and C_Spell and C_Spell.GetSpellIDForSpellIdentifier then
+    local ok, found = pcall(C_Spell.GetSpellIDForSpellIdentifier, text)
+    if ok and P.IsAccessible(found) then return found end
+  end
+end
+
+-- A spell's name for a rule, or its ID when the name is unknown.
+function P.SpellLabel(id)
+  if type(id) ~= "number" then return "" end
+  if C_Spell and C_Spell.GetSpellName then
+    local ok, name = pcall(C_Spell.GetSpellName, id)
+    if ok and P.IsAccessible(name) and name then return name end
+  end
+  return tostring(id)
+end
+
+P.CONDITION_SORTING = { "combat", "mounted", "resting", "stealth", "dead", "spec", "instance", "aura" }
 P.CONDITION_VALUES = {}
 for key, condition in pairs(P.CONDITIONS) do P.CONDITION_VALUES[key] = condition.label end
 
@@ -202,6 +234,8 @@ function P.SanitizeRule(rule)
     clean.value = tonumber(rule.value)
   elseif rule.condition == "instance" then
     clean.value = P.INSTANCE_VALUES[rule.value] and rule.value or "any"
+  elseif rule.condition == "aura" then
+    clean.value = tonumber(rule.value)
   end
   return clean
 end
@@ -236,6 +270,13 @@ for _, event in ipairs({
   P.On(event, Recheck)
 end
 P.On("PLAYER_SPECIALIZATION_CHANGED", Recheck, "player")
+-- UNIT_AURA fires many times a second in combat; only an aura rule cares about it.
+P.On("UNIT_AURA", function()
+  local rules = P.DB and P.DB.profile.rules
+  for i = 1, rules and #rules or 0 do
+    if rules[i].enabled ~= false and rules[i].condition == "aura" then return Recheck() end
+  end
+end, "player")
 
 P.OnInitialize(function()
   inCombat = UnitAffectingCombat("player") and true or false

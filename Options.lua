@@ -231,6 +231,23 @@ general.args.save = {
   desc = L["Save the current colour as a new preset."], order = 2.5,
   func = function() StaticPopup_Show("AZUI_NAME_PRESET") end,
 }
+-- preset packs: one button each, shown as a grid in the AzUI window
+general.args.packs = { type = "group", inline = true, name = L["Preset Packs"], order = 2.7, args = {} }
+for index, key in ipairs(P.PRESET_PACK_ORDER) do
+  local pack = P.PRESET_PACKS[key]
+  local names = {}
+  for _, preset in ipairs(pack.presets) do names[#names + 1] = preset[1] end
+  general.args.packs.args[key] = {
+    type = "execute", order = index,
+    name = function() return L["Add"] .. " " .. pack.label end,
+    desc = table.concat(names, ", ") .. ". " .. L["Presets you already have keep their colour."],
+    func = function()
+      local added = P.AddPresetPack(key)
+      P.Print(added .. " " .. (added == 1 and L["preset added from"] or L["presets added from"]) .. " " .. pack.label .. ".")
+    end,
+  }
+end
+
 general.args.savePet = {
   type = "execute", name = L["Save to Current Pet"],
   desc = L["Give your active pet the colour from the colour picker as its own colour."], order = 2.6,
@@ -306,7 +323,9 @@ local rulesStatic = {
 local function DescribeRule(rule)
   local condition = P.CONDITIONS[rule.condition]
   local text = condition and condition.label or "?"
-  if condition and condition.hasValue and rule.value ~= nil then
+  if condition and condition.input and rule.value ~= nil then
+    text = text .. ": " .. P.SpellLabel(rule.value)
+  elseif condition and condition.hasValue and rule.value ~= nil then
     local values = condition.values()
     text = text .. ": " .. tostring(values[rule.value] or rule.value)
   end
@@ -354,8 +373,15 @@ local function RuleGroup(index)
         set = function(_, v) rule().value = v; changed() end,
         hidden = function()
           local condition = rule() and P.CONDITIONS[rule().condition]
-          return not (condition and condition.hasValue)
+          return not (condition and condition.hasValue) or condition.input
         end,
+      },
+      spell = {
+        type = "input", name = L["Spell"], order = 3.5,
+        desc = L["The buff or debuff, by spell ID or name. While Blizzard hides aura data from addons, as in some combat, the rule waits."],
+        get = function() return rule().value and P.SpellLabel(rule().value) or "" end,
+        set = function(_, v) rule().value = P.SpellIDFrom(v); changed() end,
+        hidden = function() return not (rule() and rule().condition == "aura") end,
       },
       color = {
         type = "color", name = L["Colour"], order = 4, hasAlpha = true,
@@ -675,7 +701,7 @@ opts.args.bars = {
   args = {
     help = {
       type = "description", order = 1,
-      name = L["Bars beyond your health bar: Blizzard's pet frame and your power bar."],
+      name = L["Bars beyond your health bar: the pet frames, your power bar and your cast bar."],
     },
     petH = { type = "header", name = L["Blizzard Pet Frame"], order = 10 },
     petFrames = {
@@ -690,6 +716,28 @@ opts.args.bars = {
       desc = L["Blizzard's pet frame gets the same colour as AzeriteUI's: your pet's colour where it goes there, otherwise your own."],
       get = function() return DB().profile.blizzardPetFrame end,
       set = function(_, v) DB().profile.blizzardPetFrame = v; P.RefreshOptionalBars() end,
+    },
+    castH = { type = "header", name = L["Cast Bar"], order = 30 },
+    castMode = {
+      type = "select", name = L["Cast Bar"], order = 31,
+      desc = L["Colour your cast bar (AzeriteUI 5.x, JuNNeZ Edition, ElvUI, Shadowed and Unhalted Unit Frames). A cast that cannot be interrupted, or one that failed, keeps its own colour."],
+      values = POWER_MODES, sorting = { "off", "health", "custom" },
+      get = function() return DB().profile.cast.mode end,
+      set = function(_, v) DB().profile.cast.mode = v; P.RefreshOptionalBars() end,
+    },
+    castColour = {
+      type = "color", name = L["Cast Bar Colour"], order = 32, hasAlpha = true,
+      get = function() return GetColour(DB().profile.cast.color) end,
+      set = function(_, r, g, b, a) DB().profile.cast.color = { r, g, b, a or 1 }; P.Repaint() end,
+      disabled = function() return DB().profile.cast.mode ~= "custom" end,
+    },
+    castEffect = {
+      type = "select", name = L["Cast Bar Effect"], order = 33,
+      values = P.EFFECT_VALUES, sorting = P.EFFECTS,
+      confirm = function(_, value) return P.EffectConfirm(value) or false end,
+      get = function() return DB().profile.cast.effect end,
+      set = function(_, v) DB().profile.cast.effect = v; P.UpdateAnimator(); P.Repaint() end,
+      disabled = function() return DB().profile.cast.mode ~= "custom" end,
     },
     powerH = { type = "header", name = L["Power Bar"], order = 20 },
     powerMode = {
@@ -1083,6 +1131,96 @@ ns.Core = {
 }
 
 ---------------------------------------------------------------------
+-- ESC > OPTIONS > ADDONS
+---------------------------------------------------------------------
+-- As AzeriteUI does it: Blizzard's Settings get a landing page with the logo, the
+-- version and a button into the AzUI window, rather than the whole option list.
+-- A client without the canvas Settings API gets the Ace3 page as before.
+local function FontObject(...)
+  for i = 1, select("#", ...) do
+    local name = select(i, ...)
+    if _G[name] then return name end
+  end
+end
+
+-- Leaves Blizzard's Settings first, so the window is not opened underneath it.
+function P.OpenFromSettings(classic)
+  if SettingsPanel and SettingsPanel:IsShown() and HideUIPanel then HideUIPanel(SettingsPanel) end
+  if classic then
+    local panel = Panel()
+    if panel then panel:Close() end
+    P.ToggleClassicOptions()
+    return
+  end
+  local panel = Panel()
+  if not (panel and panel:IsShown()) then P.ToggleWindow() end
+end
+
+function P.RegisterSettingsPage()
+  if ns.settingsCategory then return end
+  if not (Settings and Settings.RegisterCanvasLayoutCategory and Settings.RegisterAddOnCategory) then
+    ns.optionsFrame, ns.optionsCategoryID = P.AceConfigDialog:AddToBlizOptions(addonName, "AzUI Color Picker")
+    return
+  end
+
+  local page = CreateFrame("Frame")
+
+  local logo = page:CreateTexture(nil, "ARTWORK")
+  logo:SetSize(72, 72)
+  logo:SetPoint("CENTER", page, "CENTER", 0, 130)
+  logo:SetTexture("Interface\\AddOns\\" .. addonName .. "\\Media\\StudioPack\\logo")
+
+  local title = page:CreateFontString(nil, "ARTWORK", FontObject("GameFontNormalHuge3", "GameFontNormalHuge", "GameFontNormalLarge"))
+  title:SetPoint("CENTER", page, "CENTER", 0, 70)
+  title:SetText("|cff00ff00Az|r|cffFFD100UI|r |cffff7d0aColor Picker|r")
+
+  local version = page:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+  version:SetPoint("TOP", title, "BOTTOM", 0, -8)
+  local v = (C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata)(addonName, "Version") or ""
+  version:SetText("|cff999999" .. L["Version"] .. " " .. v .. "|r")
+
+  local about = page:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+  about:SetPoint("TOP", version, "BOTTOM", 0, -18)
+  about:SetWidth(520)
+  about:SetText(L["Open the AzUI window with /ahui or the button below."])
+
+  local function Button(text, scale, onClick)
+    local button = CreateFrame("Button", nil, page, "UIPanelButtonTemplate")
+    button:SetText(text)
+    local label = button:GetFontString()
+    local width = label and (label.GetUnboundedStringWidth and label:GetUnboundedStringWidth() or label:GetStringWidth()) or 0
+    button:SetSize(math.max(180, math.ceil(width + 40)), 24)
+    button:SetScale(scale)
+    button:SetScript("OnClick", onClick)
+    return button
+  end
+  local open = Button(L["Open the AzUI window"], 1.6, function() P.OpenFromSettings() end)
+  open:SetPoint("TOP", about, "BOTTOM", 0, -16)
+  local classic = Button(L["Open the Classic Window"], 1, function() P.OpenFromSettings(true) end)
+  classic:SetPoint("TOP", open, "BOTTOM", 0, -14)
+
+  local creditsHead = page:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+  creditsHead:SetPoint("BOTTOM", page, "BOTTOM", 0, 74)
+  creditsHead:SetText(L["Credits"])
+  local credits = page:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+  credits:SetPoint("TOP", creditsHead, "BOTTOM", 0, -4)
+  credits:SetWidth(520)
+  credits:SetText("|cffD1FF00JuNNeZ|r|cff999999 - " .. L["Author"] .. "|r\n"
+    .. "|cffffcc00Goldpaw|r|cff999999 & |r|cffffcc00Blakmane|r|cff999999 - " .. L["AzeriteUI, whose art AzUI Azerite borrows with their blessing"] .. "|r")
+
+  -- Settings asks a canvas page for these
+  page.OnCommit = function() end
+  page.OnDefault = function() end
+  page.OnRefresh = function() end
+
+  local category = Settings.RegisterCanvasLayoutCategory(page, "AzUI Color Picker")
+  category.ID = "AzUI Color Picker"
+  Settings.RegisterAddOnCategory(category)
+  page.open, page.classic = open, classic
+  ns.settingsCategory, ns.optionsFrame, ns.optionsCategoryID = category, page, category.ID
+end
+
+---------------------------------------------------------------------
 -- SET-UP
 ---------------------------------------------------------------------
 P.OnInitialize(function()
@@ -1091,7 +1229,7 @@ P.OnInitialize(function()
   P.BuildRuleOptions()
   P.AceConfig:RegisterOptionsTable(addonName, opts)
   P.optionsRegistered = true
-  ns.optionsFrame, ns.optionsCategoryID = P.AceConfigDialog:AddToBlizOptions(addonName, "AzUI Color Picker")
+  P.RegisterSettingsPage()
 
   -- Minimap, AddOn Compartment, Titan Panel and other DataBroker displays
   if P.LDB and not ns.dataObj then

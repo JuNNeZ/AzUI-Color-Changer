@@ -152,7 +152,7 @@ local PAGE_DESC = {
   rules    = L["Colours that take over while something is true: in combat, mounted, in a dungeon."],
   pets     = L["Every pet you have tamed, with its own colour and effect."],
   families = L["The colour each pet family, and each specialization, shows by default."],
-  bars     = L["Blizzard's pet frame and your power bar."],
+  bars     = L["The pet frames, your power bar and your cast bar."],
   profiles = L["Keep different settings per character or per specialization."],
   share    = L["Copy your setup as a line of text, or bring in someone else's."],
 }
@@ -222,6 +222,7 @@ local function StyleRailRow(row)
   row.highlight:SetVertexColor(1, 1, 1, selected and .06 or .03)
   local colour = selected and Kit.TextSelected or row.hovered and Kit.TextHighlight or Kit.TextNormal
   row.text:SetTextColor(colour[1], colour[2], colour[3])
+  if row.dot then row.dot:SetVertexColor(unpack(Kit.TextSelected)) end
 end
 
 local function CreateRailRow(index)
@@ -247,16 +248,25 @@ local function CreateRailRow(index)
   icon:SetPoint("LEFT", row, "LEFT", 12, 0)
   row.icon = icon
 
+  -- a gem on a page holding settings that differ from their defaults
+  local dot = row:CreateTexture(nil, "OVERLAY")
+  dot:SetSize(8, 8)
+  dot:SetPoint("RIGHT", row, "RIGHT", -8, 0)
+  Kit.SetGlyph(dot, "gem")
+  dot:Hide()
+  row.dot = dot
+
   local text = row:CreateFontString(nil, "OVERLAY")
   text:SetFontObject(Kit.GetFont(13))
   text:SetPoint("LEFT", icon, "RIGHT", 8, 0)
-  text:SetPoint("RIGHT", row, "RIGHT", -8, 0)
+  text:SetPoint("RIGHT", row, "RIGHT", -20, 0)
   text:SetJustifyH("LEFT")
   text:SetWordWrap(false)
   row.text = text
 
   row:SetScript("OnClick", function(self)
     PlaySound(852)
+    Panel:ClearKeyboardFocus()
     Panel:ClearSearch()
     Panel:SelectPage(self.key)
   end)
@@ -288,6 +298,33 @@ function Panel:BuildRail()
     offset = offset + RAIL_ROW_H + 2
   end
   for index = #self.pages + 1, #railRows do railRows[index]:Hide() end
+  self:UpdateCounts()
+end
+
+-- The gems beside the pages and the tally under the title. Counting asks every
+-- setting for its value twice, so it runs when the window opens or a page redraws,
+-- not while it is merely shown.
+function Panel:UpdateCounts()
+  local Defaults = Kit.Defaults
+  local total, first = 0, nil
+  self.changedByPage = {}
+  for index, info in ipairs(self.pages or {}) do
+    local changed = 0
+    if Defaults and not info.window then
+      local ok, count = pcall(Defaults.CountModified, OPTIONS, { info.key })
+      changed = ok and count or 0
+    end
+    local row = railRows[index]
+    self.changedByPage[info.key] = changed
+    if row and row.dot then row.dot:SetShown(changed > 0) end
+    if changed > 0 and not first then first = info.key end
+    total = total + changed
+  end
+  self.firstChanged = first
+  if not self.count then return end
+  self.count:SetShown(total > 0)
+  self.count.text:SetText(total == 1 and L["1 setting changed"] or string.format(L["%d settings changed"], total))
+  self.count:SetWidth(self.count.text:GetStringWidth() + 18)
 end
 
 --------------------------------------------------------------------------
@@ -438,6 +475,187 @@ function Panel:ClearSearch(keepText)
 end
 
 --------------------------------------------------------------------------
+-- The keyboard
+--------------------------------------------------------------------------
+-- As in JuNNeZ Edition: the window never listens to the keyboard until asked.
+-- A shown frame with the keyboard on gets every key you press, so a window that
+-- did that while merely open would eat W, A, S and D. The ring starts when you
+-- click into the search box and ends on Escape, a mouse click, closing, or combat
+-- (where an addon may not hand keys back to the game).
+--
+-- Tab and Shift-Tab walk search -> pages -> the page's settings. Up and Down stay
+-- in the group they are in. Enter or Space does what a click does, Left and Right
+-- step a list or a slider, and a letter or a digit searches.
+local KEY_CONSUMED = { TAB = true, UP = true, DOWN = true, LEFT = true, RIGHT = true, ENTER = true, SPACE = true, ESCAPE = true }
+local TYPED = {}
+for i = 1, 26 do TYPED[string.char(64 + i)] = string.char(96 + i) end
+for i = 0, 9 do TYPED[tostring(i)] = tostring(i) end
+
+local function PageControls()
+  return page and page:GetControls() or {}
+end
+
+-- Everything the ring can stop on, in the order Tab walks it.
+local function FocusStops()
+  local stops = { { kind = "search" } }
+  for index, row in ipairs(railRows) do
+    if row:IsShown() then stops[#stops + 1] = { kind = "rail", index = index } end
+  end
+  for index, control in ipairs(PageControls()) do
+    -- a heading is not a stop, and nor is a Studio card: it takes the mouse
+    if control.SetFocused and control.frame:IsShown() and control.kind ~= "header" and control.kind ~= "description" then
+      stops[#stops + 1] = { kind = "control", index = index }
+    end
+  end
+  return stops
+end
+
+local function Unmark()
+  for _, control in ipairs(PageControls()) do
+    if control.SetFocused and control.focused then control:SetFocused(false) end
+  end
+  for _, row in ipairs(railRows) do if row.focusEdge then row.focusEdge:Hide() end end
+end
+
+local function ReleaseHost(host)
+  if host and host.EnableKeyboard then
+    host:EnableKeyboard(false)
+    host:SetScript("OnKeyDown", nil)
+  end
+end
+
+function Panel:ClearKeyboardFocus()
+  local was = self.keyboard
+  self.keyboard = nil
+  Unmark()
+  ReleaseHost(self.keyboardHost)
+  self.keyboardHost = nil
+  return was ~= nil
+end
+
+function Panel:SetKeyboardFocus(at)
+  if InCombatLockdown() then return self:ClearKeyboardFocus() end
+  local stops = FocusStops()
+  at = min(#stops, max(1, at or 1))
+  local stop = stops[at]
+  Unmark()
+  self.keyboard = at
+
+  local host
+  if stop.kind == "search" then
+    -- the box gets what is typed itself; its Tab is its own script
+    self.searchBox:SetFocus()
+  elseif stop.kind == "rail" then
+    local row = railRows[stop.index]
+    host = row
+    self.searchBox:ClearFocus()
+    if not row.focusEdge then
+      local edge = row:CreateTexture(nil, "OVERLAY")
+      edge:SetTexture(Kit.GetMedia("plain"))
+      edge:SetWidth(2)
+      edge:SetPoint("TOPRIGHT", row, "TOPRIGHT", -1, -3)
+      edge:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -1, 3)
+      row.focusEdge = edge
+    end
+    row.focusEdge:SetVertexColor(unpack(Kit.TextSelected))
+    row.focusEdge:Show()
+  else
+    local control = PageControls()[stop.index]
+    host = control.frame
+    self.searchBox:ClearFocus()
+    control:SetFocused(true)
+    -- a row you cannot see is not focus, it is a mark somewhere off screen
+    local top, rowTop = pageContent:GetTop(), control.frame:GetTop()
+    if top and rowTop then
+      local offset, height = top - rowTop, contentScroll:GetHeight() or 0
+      local scroll, range = contentScroll:GetVerticalScroll() or 0, contentScroll:GetVerticalScrollRange() or 0
+      local rowHeight = control.frame:GetHeight() or 40
+      local want = scroll
+      if offset < scroll then want = offset elseif offset + rowHeight > scroll + height then want = offset + rowHeight - height end
+      contentScroll:SetVerticalScroll(min(range, max(0, want)))
+    end
+  end
+
+  -- only the frame the ring is on listens, and it hands back what it does not use
+  if self.keyboardHost ~= host then ReleaseHost(self.keyboardHost) end
+  self.keyboardHost = host
+  if host and host.EnableKeyboard then
+    host:EnableKeyboard(true)
+    host:SetScript("OnKeyDown", function(_, key) Panel:OnKey(key) end)
+  end
+  return true
+end
+
+function Panel:MoveKeyboardFocus(delta)
+  local stops = FocusStops()
+  local at = (self.keyboard or 1) + delta
+  if at < 1 then at = #stops elseif at > #stops then at = 1 end
+  return self:SetKeyboardFocus(at)
+end
+
+function Panel:GetKeyboardFocus()
+  local stop = self.keyboard and FocusStops()[self.keyboard]
+  if stop then return stop.kind, stop.index end
+end
+
+function Panel:OnKey(key)
+  local host = self.keyboardHost
+  if not host then return false end
+  if InCombatLockdown() then self:ClearKeyboardFocus(); return false end
+  -- set first, so no early return below can swallow a key the game wants
+  if host.SetPropagateKeyboardInput then host:SetPropagateKeyboardInput(not (KEY_CONSUMED[key] or TYPED[key])) end
+
+  local kind, index = self:GetKeyboardFocus()
+  if not kind then return false end
+  if key == "ESCAPE" then self:ClearKeyboardFocus(); return true end
+  if key == "TAB" then self:MoveKeyboardFocus(IsShiftKeyDown() and -1 or 1); return true end
+  if key == "UP" or key == "DOWN" then
+    local wanted = self.keyboard + (key == "DOWN" and 1 or -1)
+    local stop = FocusStops()[wanted]
+    if stop and stop.kind == kind then self:SetKeyboardFocus(wanted) end
+    return true
+  end
+  if kind == "rail" and (key == "ENTER" or key == "SPACE") then
+    local row = railRows[index]
+    if row and row.key then
+      PlaySound(852)
+      self:ClearSearch()
+      self:SelectPage(row.key)
+      self:SetKeyboardFocus(self.keyboard)
+    end
+    return true
+  end
+  if kind == "control" then
+    local control = PageControls()[index]
+    if not control then return false end
+    if key == "ENTER" or key == "SPACE" then
+      local at = self.keyboard
+      control:Activate()
+      -- a box with a caret is typing now, not walking; its own Enter and Escape finish
+      if control.typeBox and control.typeBox:HasFocus() then self:ClearKeyboardFocus()
+      elseif self.keyboard then self:SetKeyboardFocus(at) end
+      return true
+    end
+    if key == "LEFT" or key == "RIGHT" then
+      local at = self.keyboard
+      control:Nudge(key == "RIGHT" and 1 or -1)
+      if self.keyboard then self:SetKeyboardFocus(at) end
+      return true
+    end
+  end
+  -- a letter or a digit searches, wherever the ring is
+  local typed = TYPED[key]
+  if typed then
+    self.searchBox:SetText(IsShiftKeyDown() and key or typed)
+    self.searchBox.placeholder:Hide()
+    self:SetKeyboardFocus(1)
+    self:ShowResults(self.searchBox:GetText())
+    return true
+  end
+  return false
+end
+
+--------------------------------------------------------------------------
 -- Theme, scale and position
 --------------------------------------------------------------------------
 function Panel:ApplyTheme()
@@ -462,6 +680,8 @@ function Panel:ApplyTheme()
   self.title:SetTextColor(unpack(self.windowRound and Kit.TextSelected or Kit.TextHighlight))
   self.version:SetTextColor(unpack(Kit.TextDisabled))
   self.footerText:SetTextColor(unpack(Kit.TextDisabled))
+  self.count.text:SetTextColor(unpack(Kit.TextNormal))
+  self.count.gem:SetVertexColor(unpack(Kit.TextSelected))
   self.pageTitle:SetTextColor(unpack(Kit.TextSelected))
   self.pageDesc:SetTextColor(unpack(Kit.TextNormal))
   local border = Kit.BorderIdle
@@ -537,11 +757,14 @@ local function Build()
     Panel.casing = casing
   end
 
+  frame:RegisterEvent("PLAYER_REGEN_DISABLED")
+  frame:SetScript("OnEvent", function() Panel:ClearKeyboardFocus() end)
   frame:SetScript("OnHide", function()
     if Controls.CloseDropdown then Controls.CloseDropdown() end
     if Controls.CloseColor then Controls.CloseColor() end
     if Kit.PetGallery then Kit.PetGallery:OnHide() end
     if Kit.StudioHealth then Kit.StudioHealth:OnHide() end
+    Panel:ClearKeyboardFocus()
     SaveGeometry()
   end)
 
@@ -572,7 +795,7 @@ local function Build()
     cross:SetVertexColor(unpack(Kit.Studio.C.muted))
     close:SetScript("OnEnter", function() cross:SetVertexColor(1, 1, 1) end)
     close:SetScript("OnLeave", function() cross:SetVertexColor(unpack(Kit.Studio.C.muted)) end)
-  elseif ns.HasAzeriteArt then
+  elseif ns.HasAzeriteMedia("options-close") then
     close = CreateFrame("Button", nil, header)
     close:SetSize(26, 26)
     local size = Kit.DrawSize(26, "options_close")
@@ -672,11 +895,42 @@ local function Build()
     placeholder:SetShown(self:GetText() == "")
     if userInput then Panel:ShowResults(self:GetText()) end
   end)
-  search:SetScript("OnEscapePressed", function() Panel:ClearSearch() end)
+  search:SetScript("OnEscapePressed", function() Panel:ClearKeyboardFocus(); Panel:ClearSearch() end)
+  search:SetScript("OnTabPressed", function()
+    if InCombatLockdown() then return end
+    Panel.keyboard = Panel.keyboard or 1
+    Panel:MoveKeyboardFocus(IsShiftKeyDown() and -1 or 1)
+  end)
   search:SetScript("OnEnterPressed", function(self)
     local first = resultRows[1]
     if Panel.searching and first and first:IsShown() then Panel:OpenResult(first.result) else self:ClearFocus() end
   end)
+  -- how many settings differ from their defaults; a click opens the first page with one
+  local count = CreateFrame("Button", nil, searchRow)
+  count:SetHeight(20)
+  count:SetPoint("RIGHT", searchRow, "RIGHT", -8, 0)
+  local countGem = count:CreateTexture(nil, "OVERLAY")
+  countGem:SetSize(8, 8)
+  countGem:SetPoint("LEFT", 0, 0)
+  Kit.SetGlyph(countGem, "gem")
+  local countText = count:CreateFontString(nil, "OVERLAY")
+  countText:SetFontObject(Kit.GetFont(12))
+  countText:SetPoint("LEFT", countGem, "RIGHT", 6, 0)
+  count.text, count.gem = countText, countGem
+  count:SetScript("OnClick", function()
+    if Panel.firstChanged then PlaySound(852); Panel:ClearSearch(); Panel:SelectPage(Panel.firstChanged) end
+  end)
+  count:SetScript("OnEnter", function(self)
+    self.text:SetTextColor(unpack(Kit.TextHighlight))
+    GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT")
+    GameTooltip:AddLine(L["Changed from default"], unpack(Kit.TextSelected))
+    GameTooltip:AddLine(L["Pages with a gem hold settings you have changed. Click to open the first. The arrow on a setting puts it back."], 1, 1, 1, true)
+    GameTooltip:Show()
+  end)
+  count:SetScript("OnLeave", function(self) self.text:SetTextColor(unpack(Kit.TextNormal)); GameTooltip:Hide() end)
+  count:Hide()
+  Panel.count = count
+
   search:SetScript("OnEditFocusGained", function() Kit.SetBorderColor(Panel.searchBackdrop, Kit.BorderFocus) end)
   search:SetScript("OnEditFocusLost", function() Kit.SetBorderColor(Panel.searchBackdrop, Kit.BorderIdle) end)
 
@@ -753,6 +1007,13 @@ local function Build()
   end)
   page = Renderer:CreatePage(pageContent)
   Panel.page = page
+  -- a setting changed on the page: bring the gems and the tally up to date
+  local refresh = page.Refresh
+  page.Refresh = function(self, ...)
+    refresh(self, ...)
+    if not Panel.searching then Panel:UpdateCounts() end
+    if Panel.keyboard and Panel.keyboardHost then Panel:SetKeyboardFocus(Panel.keyboard) end
+  end
 
   resultsScroll, resultsContent = Scroller(RESULT_H)
   resultsScroll:SetScript("OnSizeChanged", function(_, width)

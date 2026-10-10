@@ -5,6 +5,22 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ---
 
+## [6.0.0] – 2026-10-10
+
+### Added
+- **Other unit frames:** ElvUI, Shadowed Unit Frames and Unhalted Unit Frames. Player and pet health, power and cast bars are coloured as on AzeriteUI.
+- **Cast bar:** matches your health bar or takes its own colour and effect. A cast that cannot be interrupted, or a failed one, keeps its own colour.
+- **Buff and debuff rules:** typed in by spell ID or name; the row shows the spell's icon. While aura data is hidden from addons the rule waits.
+- **Preset packs:** Class Fantasy, Elements, Pastel and High Contrast. A pack only adds names you don't have.
+- **Changed settings:** a gem on every changed setting with an arrow to put it back, a gem on each page with changes, and a count in the window.
+- **Keyboard:** click the search box, then Tab, the arrow keys, Enter and letters to search. The window never takes keys before that, and lets go in combat.
+- **Translations:** Deutsch, Français, Español, Português, Italiano, Русский, 한국어, 简体中文, 繁體中文.
+- **ESC → Options → AddOns:** a landing page with a button into the AzUI window, as AzeriteUI has.
+- **AzUI Azerite** follows JuNNeZ Edition's class themes.
+
+### Changed
+- AzUI Azerite works with every AzeriteUI edition: JuNNeZ Edition, stock 5.x and AzeriteUI6, using the art of whichever is installed.
+
 ## [5.2.0] – 2026-10-10
 
 ### Added

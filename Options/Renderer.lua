@@ -151,6 +151,13 @@ local Bind = function(control, option, options, path, page)
 				meta.reset()
 				page:Refresh()
 			end)
+		else
+			control:SetOnRevert(function(self)
+				if (Kit.Defaults and Kit.Defaults.Revert(options, bound)) then
+					PreviewChange(options, bound, label)
+					page:Refresh()
+				end
+			end)
 		end
 		MarkModified(control, options, bound)
 
