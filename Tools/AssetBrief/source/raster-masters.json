@@ -1,0 +1,13 @@
+{
+  "logo": "logo.png",
+  "corner": "corner.png",
+  "condition-combat": "condition-combat.png",
+  "condition-mounted": "condition-mounted.png",
+  "condition-resting": "condition-resting.png",
+  "condition-stealth": "condition-stealth.png",
+  "condition-dead": "condition-dead.png",
+  "condition-spec": "condition-spec.png",
+  "condition-instance": "condition-instance.png",
+  "empty-rules": "empty-rules.png",
+  "empty-pets": "empty-pets.png"
+}

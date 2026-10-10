@@ -75,11 +75,23 @@ The speed can be changed while an animation is running; the effect speeds up or 
 
 ---
 
+## More Effects
+
+| Effect | What it does |
+|--------|--------------|
+| **Breathe** | A slow, soft rise and fall, about 14 seconds at speed 1.0; calmer than Pulse. |
+| **Heartbeat** | Two quick beats and a rest, about every 1.5 seconds; each beat lifts the color towards white. |
+| **Two-tone** | Blends between your color and the **Second Colour**. |
+| **Flicker** | Uneven, candle-like brightness. Asks before it starts, because of the flashing. |
+| **Sweep** | The bar dims to about 60% and a bright band of your colour crosses it, left to right, every 2.4 seconds. |
+
+**Reduce Motion** shows every effect as its static color. **Smooth Fades** blend into a new color when a pet is called, a preset loads or a rule starts.
+
 ## Behavior Notes
 
-- Animations update up to 30 times per second and **continue in combat** without restriction.
-- Rainbow state (`rainbowActive`, `rainbowMode`, `rainbowSpeed`) and pulse state (`pulseActive`) are saved and **automatically restarted** when you log in or reload the UI.
-- Picking a color, clicking any **class color button** or the **Random Colour** button, or loading a **preset** stops the active animation and applies that color.
+- Animations update 30 times per second by default (15, 30 or 60 under **Update Rate**) and **continue in combat** without restriction.
+- Your effect, pattern and speed are saved and **automatically restarted** when you log in or reload the UI.
+- Picking a color stops **Rainbow**, which ignores your color; other effects keep running on the new color.
 - When a hunter pet color is shown on your health bar, your animation pauses there and resumes when the pet is dismissed. Pets can have their own pulse or rainbow — see [Hunter Pet Coloring](Hunter-Pet-Coloring).
 
 ---

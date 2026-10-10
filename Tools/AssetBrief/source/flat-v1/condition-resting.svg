@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>Moon above an inn</title>
+  <g fill="none" stroke="white" stroke-width="6.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 45 28 30 47 45M17 41V55H39V41"/>
+    <path d="M44 8C31 9 32 26 44 27 50 27 54 23 55 19 47 22 40 16 44 8Z"/>
+  </g>
+</svg>

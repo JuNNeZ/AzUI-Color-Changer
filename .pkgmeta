@@ -8,6 +8,10 @@ ignore:
   - .gitignore
   - .vscode
   - wiki
+  - Tools
+  - .luacheckrc
+  - .claude
+  - .codex
 
 manual-changelog:
   filename: changelog.md

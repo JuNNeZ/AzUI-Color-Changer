@@ -4,9 +4,9 @@
 
 | Requirement | Details |
 |-------------|---------|
-| **Game version** | World of Warcraft Retail: Midnight, patch 12.1 (Interface 120100) |
+| **Game version** | Retail 12.1 (Interface 120100, 120105) or Forever / Camelot 1.60.1 (Interface 16001) |
 | **External addons** | None — all libraries are bundled |
-| **Optional** | AzeriteUI for Midnight (`AzeriteUI6`), AzeriteUI5 – JuNNeZ Edition, or AzeriteUI 5.x — if installed, the addon also colors their player and pet frames |
+| **Optional** | AzeriteUI for Midnight (`AzeriteUI6`), AzeriteUI5 – JuNNeZ Edition (any theme), or AzeriteUI 5.x — if installed, the addon also colors their player and pet frames |
 
 ---
 
@@ -28,13 +28,19 @@
 World of Warcraft\_retail_\Interface\AddOns\AzUI_Color_Picker\
 ```
 
+For Forever beta, use `_classic_beta_\Interface\AddOns` instead. Keep both TOCs; the client selects the appropriate one. AzeriteUI must also support the chosen client: JuNNeZ Edition and AzeriteUI6 1.0.7 or later both run on Forever.
+
 The final structure inside the folder should look like this:
 
 ```
 AzUI_Color_Picker\
 ├── AzUI_Color_Picker.toc
-├── AzUI_Color_picker.lua
+├── AzUI_Color_Picker_Camelot.toc
+├── Bindings.xml
+├── Core.lua, Effects.lua, Pets.lua, Rules.lua, Paint.lua,
+│   Share.lua, Profiles.lua, Options.lua, QuickPalette.lua
 ├── icon.tga
+├── Options\          (the AzUI window)
 └── Libs\
     ├── LibStub\
     │   └── LibStub.lua

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="128" viewBox="0 0 256 128">
+  <title>An empty stable stall with a paw print</title>
+  <g fill="none" stroke="#9C95A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M58 47 128 20 198 47M66 45V105M190 45V105M66 55H190M85 105V66H171V105M56 106H200"/>
+    <path d="M74 61V98M182 61V98"/>
+  </g>
+  <g fill="#FFD100">
+    <path d="M116 93C119 89 121 84 128 84S137 89 140 93C145 101 135 104 128 101 121 104 111 101 116 93Z"/>
+    <ellipse cx="112" cy="83" rx="4" ry="5" transform="rotate(-24 112 83)"/>
+    <ellipse cx="122" cy="77" rx="4" ry="5"/>
+    <ellipse cx="134" cy="77" rx="4" ry="5"/>
+    <ellipse cx="144" cy="83" rx="4" ry="5" transform="rotate(24 144 83)"/>
+  </g>
+</svg>

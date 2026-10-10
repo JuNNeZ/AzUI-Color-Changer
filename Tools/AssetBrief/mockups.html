@@ -1,0 +1,305 @@
+<title>AzUI Studio Art Pack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column; the in-game parts are shown at real pixel size in dark "game" panes,
+   with every slot for new art drawn as a dashed blueprint box and labelled with its file. */
+:root {
+  --page: #EEEBF2; --paper: #FFFFFF; --ink: #1D1A27; --muted: #5F5A6E; --line: #D9D4E2;
+  --blueprint: #0E7C93; --blueprint-soft: #DDF0F4; --gold-ink: #8A6400;
+  --display: "Marcellus", "Palatino Linotype", Georgia, serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  /* the game's own palette (Studio.C) - the panes always use these */
+  --g-window: #15141B; --g-header: #1F1D27; --g-rail: #1A1921; --g-surface: #1D1C24; --g-raised: #2B2733;
+  --g-inset: #0F0E14; --g-line: #2E2B36; --g-line2: #3A3645; --g-gold: #FFD100; --g-golddim: #5A4513;
+  --g-bronze: #6E5B2A; --g-text: #E8E2D0; --g-muted: #9C95A8; --g-faint: #6B6577; --g-slot: #5FD0E0;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #101016; --paper: #18171F; --ink: #ECE8F3; --muted: #A49FB4; --line: #2C2A36;
+    --blueprint: #5FD0E0; --blueprint-soft: #10303A; --gold-ink: #E8BC3C; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #101016; --paper: #18171F; --ink: #ECE8F3; --muted: #A49FB4; --line: #2C2A36;
+  --blueprint: #5FD0E0; --blueprint-soft: #10303A; --gold-ink: #E8BC3C; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font: 17px/1.6 var(--body); }
+.wrap { max-width: 980px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 96px; }
+h1, h2 { font-family: var(--display); font-weight: 400; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.1rem, 5vw, 3rem); line-height: 1.1; }
+h2 { font-size: 1.7rem; line-height: 1.2; margin-bottom: 10px; }
+h3 { font-size: 1.05rem; margin: 22px 0 6px; }
+p { margin: 0 0 12px; max-width: 66ch; }
+.kicker { font: 600 .74rem/1.2 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--gold-ink); margin: 0 0 10px; }
+.lede { color: var(--muted); font-size: 1.12rem; max-width: 62ch; margin-top: 14px; }
+code, .file { font-family: var(--mono); font-size: .84em; }
+.file { color: var(--blueprint); font-weight: 600; }
+section { margin-top: 56px; padding-top: 40px; border-top: 1px solid var(--line); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 22px; font-size: .92rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.swatch-slot { width: 22px; height: 16px; border: 2px dashed var(--blueprint); border-radius: 3px; background: var(--blueprint-soft); }
+.note { border-left: 3px solid var(--gold-ink); padding: 10px 16px; background: var(--paper); border-radius: 0 8px 8px 0; max-width: 72ch; font-size: .96rem; }
+
+/* game panes */
+.pane-scroll { overflow-x: auto; margin: 20px 0 8px; padding: 26px 0; }
+.pane { background: #0B0A0F; border-radius: 12px; padding: 28px; width: max-content; min-width: 100%; }
+.cap { color: var(--muted); font-size: .9rem; margin-top: 8px; max-width: 72ch; }
+.g { font-family: "Source Sans 3", sans-serif; color: var(--g-text); }
+.win { position: relative; width: 660px; height: 300px; background: var(--g-window); border: 2px solid var(--g-bronze); border-radius: 10px; box-shadow: 0 18px 40px rgba(0,0,0,.65); }
+.win-head { display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 18px; }
+.win-title { font-family: "Marcellus", serif; font-size: 20px; color: var(--g-gold); }
+.win-close { margin-left: auto; color: var(--g-muted); font-size: 18px; }
+.win-ver { color: var(--g-faint); font-size: 12px; margin-left: auto; margin-right: 14px; }
+.rail { position: absolute; left: 14px; top: 98px; width: 180px; bottom: 14px; background: var(--g-rail); border: 1px solid var(--g-line); border-radius: 8px; padding: 8px; display: grid; gap: 2px; align-content: start; }
+.rail div { font-size: 13px; padding: 6px 10px; border-radius: 6px; color: var(--g-text); }
+.rail .on { background: var(--g-raised); color: var(--g-gold); }
+.search { position: absolute; left: 14px; top: 58px; width: 300px; height: 26px; background: var(--g-inset); border: 1px solid var(--g-line2); border-radius: 4px; color: var(--g-faint); font-size: 12px; padding: 4px 26px; }
+.page-title { position: absolute; left: 212px; top: 98px; font-family: "Marcellus", serif; font-size: 20px; color: var(--g-gold); }
+.page-desc { position: absolute; left: 212px; top: 128px; font-size: 12px; color: var(--g-text); }
+.page-card { position: absolute; left: 212px; right: 16px; top: 160px; bottom: 16px; background: var(--g-surface); border: 1px solid var(--g-line); border-radius: 8px; }
+
+.slot { position: absolute; border: 2px dashed var(--g-slot); background: rgba(95,208,224,.12); border-radius: 4px; display: grid; place-items: center; }
+.slot svg { width: 100%; height: 100%; }
+.tag { position: absolute; white-space: nowrap; font: 600 11px/1.2 "JetBrains Mono", monospace; color: var(--g-slot); }
+
+/* rules row */
+.rule { width: 700px; height: 46px; background: var(--g-surface); border: 1px solid var(--g-line); border-radius: 6px; display: flex; align-items: center; gap: 8px; padding: 0 10px; font-size: 12px; color: var(--g-muted); position: relative; }
+.grip { color: var(--g-faint); letter-spacing: -2px; }
+.switch { width: 34px; height: 18px; border-radius: 9px; background: var(--g-golddim); border: 1px solid var(--g-gold); position: relative; }
+.switch::after { content: ""; position: absolute; right: 3px; top: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--g-gold); }
+.dd { height: 26px; background: var(--g-inset); border: 1px solid var(--g-line2); border-radius: 4px; color: var(--g-text); font-size: 13px; display: flex; align-items: center; padding: 0 10px; }
+.colour { width: 40px; height: 24px; border-radius: 3px; background: #D12E2E; }
+.icon-slot { position: relative; width: 20px; height: 20px; border: 2px dashed var(--g-slot); border-radius: 3px; flex: none; }
+
+/* icon sheet */
+.icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin-top: 18px; }
+.icon-card { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 14px; min-width: 0; }
+.icon-art { display: flex; align-items: end; gap: 14px; background: #15141B; border-radius: 6px; padding: 12px; }
+.icon-art .big { width: 64px; height: 64px; border: 1px dashed #3A3645; border-radius: 4px; }
+.icon-art .small { width: 20px; height: 20px; }
+.icon-card .file { display: block; margin-top: 10px; font-size: .78rem; overflow-wrap: anywhere; }
+.icon-card p { font-size: .88rem; color: var(--muted); margin: 4px 0 0; }
+
+.empties { display: flex; flex-wrap: wrap; gap: 18px; }
+.empty { width: 330px; background: var(--g-surface); border: 1px solid var(--g-line); border-radius: 8px; padding: 18px; }
+.empty .art { width: 256px; height: 128px; margin: 0 auto 12px; border: 2px dashed var(--g-slot); border-radius: 4px; background: rgba(95,208,224,.08); }
+.empty p { font-size: 13px; color: var(--g-muted); margin: 0; text-align: center; }
+
+/* spec table */
+.table-scroll { overflow-x: auto; margin-top: 16px; }
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: .94rem; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* palette */
+.palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 14px; }
+.chip { display: flex; gap: 10px; align-items: center; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 8px; min-width: 0; }
+.chip i { width: 30px; height: 30px; border-radius: 6px; flex: none; box-shadow: inset 0 0 0 1px rgba(127,127,127,.35); }
+.chip b { display: block; font-size: .86rem; }
+.chip code { color: var(--muted); }
+
+/* prompt */
+.prompt-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+button.copy { font: 600 .9rem var(--body); color: var(--page); background: var(--ink); border: 0; border-radius: 6px; padding: 8px 14px; cursor: pointer; }
+button.copy:focus-visible { outline: 3px solid var(--blueprint); outline-offset: 2px; }
+pre.prompt { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 18px; overflow-x: auto; white-space: pre-wrap; font: .84rem/1.6 var(--mono); max-height: 520px; overflow-y: auto; margin-top: 12px; }
+@media (max-width: 520px) { body { font-size: 16px; } .pane { padding: 18px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <p class="kicker">AzUI Color Picker · brief for Codex</p>
+  <h1>AzUI Studio Art Pack</h1>
+  <p class="lede">Five pieces of hand-drawn art for the AzUI Studio window: a logo, bronze corner filigree, seven rule-condition icons and two empty-state illustrations. The window already works without them; each one turns on once its file is in place.</p>
+  <div class="legend">
+    <span><i class="swatch-slot"></i> A slot for new art, at the size it is drawn in game</span>
+    <span>Files go in <code>Media/StudioPack/</code> as 32-bit TGA with alpha</span>
+  </div>
+
+  <section id="window">
+    <p class="kicker">1 · logo.tga and corner.tga</p>
+    <h2>The window</h2>
+    <p>The logo sits left of the <em>AzUI Studio</em> title and is drawn at 28×28. The corner filigree is drawn once, as the top-left corner, and the code mirrors it into the other three. Each copy is 40×40, 3&nbsp;px outside the window's 10&nbsp;px rounded corner.</p>
+    <div class="pane-scroll">
+      <div class="pane">
+        <div class="win g">
+          <div class="win-head">
+            <div style="width:28px;height:28px"></div>
+            <span class="win-title">AzUI Studio</span>
+            <span class="win-ver">v5.0.0</span>
+            <span class="win-close">✕</span>
+          </div>
+          <div class="search">Search settings and pets</div>
+          <div class="rail">
+            <div class="on">Health Bar</div><div>Rules</div><div>Hunter Pets</div><div>Pet Families</div><div>More Bars</div>
+          </div>
+          <div class="page-title">Health Bar</div>
+          <div class="page-desc">Your own health bar: its colour, effects and presets.</div>
+          <div class="page-card"></div>
+
+          <div class="slot" style="left:16px;top:10px;width:32px;height:32px" aria-label="logo slot">
+            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 6 L54 32 L32 58 L10 32 Z" fill="none" stroke="#FFD100" stroke-width="3"/><path d="M10 32 L54 32" stroke="#6E5B2A" stroke-width="3"/><rect x="4" y="27" width="40" height="10" rx="3" fill="#FFD100" opacity=".85"/></svg>
+          </div>
+          <span class="tag" style="left:56px;top:-22px">logo.tga · 64×64 · drawn at 28</span>
+
+          <div class="slot" style="left:-5px;top:-5px;width:40px;height:40px" aria-label="corner slot">
+            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M6 58 C6 26 26 6 58 6" fill="none" stroke="#6E5B2A" stroke-width="4"/><path d="M14 58 C14 34 34 14 58 14" fill="none" stroke="#A08A4E" stroke-width="1.5"/><circle cx="12" cy="12" r="5" fill="none" stroke="#A08A4E" stroke-width="2"/><path d="M22 6 C22 14 14 22 6 22" fill="none" stroke="#6E5B2A" stroke-width="2"/></svg>
+          </div>
+          <div class="slot" style="right:-5px;top:-5px;width:40px;height:40px;transform:scaleX(-1)"></div>
+          <div class="slot" style="left:-5px;bottom:-5px;width:40px;height:40px;transform:scaleY(-1)"></div>
+          <div class="slot" style="right:-5px;bottom:-5px;width:40px;height:40px;transform:scale(-1)"></div>
+          <span class="tag" style="left:-4px;bottom:-24px">corner.tga · 64×64 · top-left only, drawn at 40, mirrored ×3</span>
+        </div>
+      </div>
+    </div>
+    <p class="cap">Real size. Sketches in the slots show the idea only; redraw them properly. Keep the inner two thirds of the corner transparent so it never covers content.</p>
+  </section>
+
+  <section id="conditions">
+    <p class="kicker">2 · condition-&lt;key&gt;.tga</p>
+    <h2>Rule-condition icons</h2>
+    <p>Each rule on the Rules page reads as a sentence. The icon for its condition goes before <em>When</em>, drawn at 20×20 and tinted gold by the code, so draw them <strong>white on transparent</strong>, with even 2&nbsp;px strokes at 20&nbsp;px (about 6&nbsp;px at 64) and no fine detail.</p>
+    <div class="pane-scroll">
+      <div class="pane">
+        <div class="rule g">
+          <span class="grip">⋮⋮</span><span class="switch"></span>
+          <span class="icon-slot"></span>
+          <span>When</span><span class="dd" style="width:150px">In combat</span>
+          <span>show</span><span class="colour"></span><span class="dd" style="width:96px">Pulse</span>
+          <span>on</span><span class="dd" style="width:140px">Health bar</span>
+          <span style="margin-left:auto;color:#6B6577">✕</span>
+          <span class="tag" style="left:66px;top:-20px">condition-combat.tga · drawn at 20</span>
+        </div>
+      </div>
+    </div>
+    <div class="icons" id="icon-sheet"></div>
+    <p class="cap">Each card shows a rough concept at 64 and 20 px on the window colour. Keep one consistent line style across all seven.</p>
+  </section>
+
+  <section id="empty">
+    <p class="kicker">3 · empty-rules.tga and empty-pets.tga</p>
+    <h2>Empty states</h2>
+    <p>Quiet line illustrations above the text that shows when a page has nothing on it yet. Gold and muted lines on transparent, with no background box, 256×128.</p>
+    <div class="pane-scroll">
+      <div class="pane empties">
+        <div class="empty g">
+          <div class="art"><svg viewBox="0 0 256 128" aria-hidden="true"><rect x="28" y="70" width="200" height="16" rx="4" fill="none" stroke="#9C95A8" stroke-width="2"/><rect x="30" y="72" width="80" height="12" rx="3" fill="#D12E2E"/><rect x="110" y="72" width="70" height="12" fill="#FFD100" opacity=".8"/><path d="M110 34 V96 M110 34 L150 44 L110 54" fill="none" stroke="#FFD100" stroke-width="2"/></svg></div>
+          <p>No rules yet. A rule shows its colour while something is true: in combat, mounted, in a dungeon and so on.</p>
+          <span class="file" style="display:block;text-align:center;margin-top:8px;font-size:11px">empty-rules.tga · 256×128</span>
+        </div>
+        <div class="empty g">
+          <div class="art"><svg viewBox="0 0 256 128" aria-hidden="true"><path d="M70 110 V44 L128 20 L186 44 V110" fill="none" stroke="#9C95A8" stroke-width="2"/><path d="M90 110 V66 H166 V110" fill="none" stroke="#9C95A8" stroke-width="2"/><g fill="#FFD100"><ellipse cx="128" cy="96" rx="9" ry="7"/><circle cx="116" cy="84" r="4"/><circle cx="124" cy="80" r="4"/><circle cx="133" cy="80" r="4"/><circle cx="141" cy="84" r="4"/></g></svg></div>
+          <p>No pets known yet. Call your pets, or visit a stable master to list every pet in your stable.</p>
+          <span class="file" style="display:block;text-align:center;margin-top:8px;font-size:11px">empty-pets.tga · 256×128</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="spec">
+    <p class="kicker">Specification</p>
+    <h2>Files, sizes and switches</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>File</th><th>Size</th><th>Drawn at</th><th>Colour</th><th>Switch in <code>Options/StudioPack.lua</code></th></tr></thead>
+        <tbody>
+          <tr><td><span class="file">logo.tga</span></td><td class="num">64×64</td><td class="num">28×28</td><td>Own colours: gold and bronze</td><td><code>logo</code></td></tr>
+          <tr><td><span class="file">corner.tga</span></td><td class="num">64×64</td><td class="num">40×40 ×4</td><td>Own colours: bronze, highlights ≤ <code>#A08A4E</code></td><td><code>corners</code></td></tr>
+          <tr><td><span class="file">condition-&lt;key&gt;.tga</span> ×7</td><td class="num">64×64</td><td class="num">20×20</td><td>White on transparent, tinted by code</td><td><code>conditions</code></td></tr>
+          <tr><td><span class="file">empty-rules.tga</span></td><td class="num">256×128</td><td class="num">256×128</td><td>Own colours: gold and muted</td><td><code>emptyRules</code></td></tr>
+          <tr><td><span class="file">empty-pets.tga</span></td><td class="num">256×128</td><td class="num">256×128</td><td>Own colours: gold and muted</td><td><code>emptyPets</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Palette (Studio.C)</h3>
+    <div class="palette" id="palette"></div>
+    <p class="note" style="margin-top:22px"><strong>Two looks, one rule.</strong> This pack is for <em>AzUI Studio</em>, AzUI's own design, so draw it new. <em>AzUI Azerite</em> needs no new art: it dresses the same window in AzeriteUI's own art, read from the installed AzeriteUI. Blakmane and Goldpaw have given permission to use their art; never copy AzeriteUI's files into AzUI, reference them from its folder.</p>
+  </section>
+
+  <section id="prompt">
+    <div class="prompt-head">
+      <div><p class="kicker">Hand this to Codex</p><h2>The prompt</h2></div>
+      <button class="copy" id="copy-prompt" type="button">Copy prompt</button>
+    </div>
+    <p>The same text is in <code>Tools/AssetBrief/README.md</code> in the addon folder.</p>
+    <pre class="prompt" id="prompt-text">You are drawing the optional art pack for AzUI Studio, the options window of the World of Warcraft addon AzUI Color Picker. The window is already built and works without this pack. The pack adds hand-made art where the window currently uses generated shapes or nothing at all.
+
+Read first
+- Tools/AssetBrief/mockups.html: every asset in place, at real size, with its slot and file name.
+- Options/StudioPack.lua: the list of files and the switches that turn each piece on.
+- Options/Studio.lua: the palette (Studio.C) and the generated shapes the art must sit beside (Media/Studio/*.tga, made by Tools/MakeStudioArt.py).
+
+Look
+Flat and dark, with rounded surfaces, a thin bronze window edge, and gold for whatever is selected. Titles are set in Marcellus, everything else in Source Sans 3. The art should feel like the bronze and gold fittings of a well-made instrument case: fine engraved lines and restrained ornament, not glossy or painterly. It should echo the spirit of AzeriteUI. AzUI has two looks: AzUI Studio, its own design, which this pack is for, and AzUI Azerite, which already dresses the same window in AzeriteUI's own art, read at runtime from the installed AzeriteUI. Blakmane and Goldpaw, AzeriteUI's designer and developer, have given permission to use their art, but never copy AzeriteUI's files into AzUI: reference them from AzeriteUI's folder instead. This pack is AzUI's own, so draw it new; matching AzeriteUI's bronze-and-stone feel is welcome.
+
+Palette: window #15141B, surface #1D1C24, raised #2B2733, line #2E2B36, bronze #6E5B2A, gold #FFD100, goldDim #5A4513, text #E8E2D0, muted #9C95A8.
+
+Files to make (all 32-bit TGA with alpha, into Media/StudioPack/)
+1. logo.tga, 64x64. The mark left of the "AzUI Studio" title (drawn at 28x28). A small emblem: a health-bar sliver crossing a gem or prism, gold and bronze on transparent. It must read at 28 px: two or three shapes at most.
+2. corner.tga, 64x64. Bronze filigree for the top-left corner of the window, drawn at 40x40 and mirrored by code for the other three. The outer curve follows the window's 10 px corner radius, 3 px outside it. Bronze #6E5B2A, highlights no brighter than #A08A4E. Keep the inner two thirds transparent.
+3. condition-&lt;key&gt;.tga, 64x64 each, white on transparent (the code tints them gold): combat (crossed blades), mounted (horse head or saddle), resting (moon over an inn roof), stealth (eye with a slash), dead (skull, or a soft ghost), spec (three stacked talent diamonds), instance (stone doorway). Drawn at 20x20: 2 px strokes at that size (about 6 px at 64), one consistent line style, no fine detail.
+4. empty-rules.tga, 256x128. Above "No rules yet" on the Rules page: a quiet line illustration of a health bar changing colour as it passes a gate or banner. Gold and muted lines on transparent, no background box.
+5. empty-pets.tga, 256x128. Above "No pets known yet" on the Hunter Pets page: an empty stable stall with a paw print, in the same style.
+
+Then
+- Set each finished piece to true in Studio.Pack in Options/StudioPack.lua.
+- Run the tests from the addon folder with Lua 5.1; all must pass: lua Tools/TestStudio.lua, lua Tools/TestPanel.lua, lua Tools/TestPanel.lua art, lua Tools/TestPanel.lua plain, lua Tools/TestFeatures.lua, lua Tools/TestClients.lua.
+- Add a short note under ## [Unreleased] in changelog.md naming the art you added.
+- Put the source files you drew from (SVG or layered files) in Tools/AssetBrief/source/. Tools/ is not packaged.
+
+Checks before you finish
+- Each TGA opens with alpha and has the exact size above.
+- condition-*.tga are pure white where opaque, so tinting gives a clean gold.
+- Look at each piece at the size it is drawn in game (28, 40, 20 and 256x128 px) on #15141B; it must still read.</pre>
+  </section>
+</div>
+
+<script>
+// Concept sketches for the seven condition icons, drawn in the game's gold at 64 and 20 px.
+const icons = [
+  ["combat", "In combat", "Crossed blades.", '<path d="M14 50 L50 14 M50 50 L14 14" /><path d="M10 44 L20 54 M44 54 L54 44" />'],
+  ["mounted", "Mounted", "Horse head or saddle.", '<path d="M18 52 C18 34 26 20 42 14 L48 22 C40 24 38 30 40 38 L46 52 Z" />'],
+  ["resting", "Resting", "Moon over an inn roof.", '<path d="M10 54 L32 34 L54 54" /><path d="M44 10 A10 10 0 1 0 54 24 A8 8 0 1 1 44 10 Z" />'],
+  ["stealth", "Stealthed", "An eye with a slash.", '<path d="M8 32 C18 18 46 18 56 32 C46 46 18 46 8 32 Z" /><circle cx="32" cy="32" r="6" /><path d="M14 52 L50 12" />'],
+  ["dead", "Dead or a ghost", "A skull, or a soft ghost.", '<path d="M16 30 C16 14 48 14 48 30 C48 38 44 40 42 42 V50 H22 V42 C20 40 16 38 16 30 Z" /><circle cx="25" cy="30" r="4" /><circle cx="39" cy="30" r="4" />'],
+  ["spec", "Specialization", "Three stacked talent diamonds.", '<path d="M32 6 L42 16 L32 26 L22 16 Z M32 22 L42 32 L32 42 L22 32 Z M32 38 L42 48 L32 58 L22 48 Z" />'],
+  ["instance", "In an instance", "A stone doorway.", '<path d="M14 56 V26 C14 14 50 14 50 26 V56" /><path d="M24 56 V32 C24 24 40 24 40 32 V56" />'],
+];
+const sheet = document.getElementById("icon-sheet");
+for (const [key, label, idea, paths] of icons) {
+  const art = (size, w) => `<svg class="${size}" viewBox="0 0 64 64" aria-hidden="true"><g fill="none" stroke="#FFD100" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${paths}</g></svg>`;
+  const card = document.createElement("div");
+  card.className = "icon-card";
+  card.innerHTML = `<div class="icon-art">${art("big", 4)}${art("small", 6)}</div><b>${label}</b><p>${idea}</p><span class="file">condition-${key}.tga</span>`;
+  sheet.appendChild(card);
+}
+
+// The palette swatches, read from the same tokens the panes use.
+const palette = [["window", "--g-window"], ["surface", "--g-surface"], ["raised", "--g-raised"], ["line", "--g-line"],
+  ["bronze", "--g-bronze"], ["gold", "--g-gold"], ["goldDim", "--g-golddim"], ["text", "--g-text"], ["muted", "--g-muted"]];
+const style = getComputedStyle(document.documentElement);
+const grid = document.getElementById("palette");
+for (const [name, token] of palette) {
+  const hex = style.getPropertyValue(token).trim();
+  const chip = document.createElement("div");
+  chip.className = "chip";
+  chip.innerHTML = `<i style="background:var(${token})"></i><span><b>${name}</b><code>${hex}</code></span>`;
+  grid.appendChild(chip);
+}
+
+// Copy the prompt; if the browser refuses, select it so Ctrl+C works.
+const button = document.getElementById("copy-prompt");
+button.addEventListener("click", () => {
+  const pre = document.getElementById("prompt-text");
+  const select = () => { const range = document.createRange(); range.selectNodeContents(pre); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(range); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(pre.textContent).then(() => { button.textContent = "Copied"; setTimeout(() => button.textContent = "Copy prompt", 1800); },
+      () => { select(); button.textContent = "Press Ctrl+C"; });
+  } else { select(); button.textContent = "Press Ctrl+C"; }
+});
+</script>

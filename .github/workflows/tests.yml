@@ -1,0 +1,42 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone project
+        uses: actions/checkout@v4
+
+      - name: Install Lua 5.1 and luacheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.1 liblua5.1-0-dev luarocks
+          sudo luarocks install luacheck
+
+      - name: Accidental globals (luacheck)
+        run: luacheck .
+
+      - name: Hunter stable on Retail and Forever
+        run: lua5.1 Tools/TestClients.lua
+
+      - name: AzUI window, Studio theme
+        run: lua5.1 Tools/TestPanel.lua
+
+      - name: AzUI window, Azerite theme with AzeriteUI art
+        run: lua5.1 Tools/TestPanel.lua art
+
+      - name: AzUI window, Azerite theme with Blizzard art
+        run: lua5.1 Tools/TestPanel.lua plain
+
+      - name: 5.1 and 5.2 features
+        run: lua5.1 Tools/TestFeatures.lua
+
+      - name: AzUI Studio pages
+        run: lua5.1 Tools/TestStudio.lua

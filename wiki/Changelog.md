@@ -5,6 +5,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ---
 
+## [5.2.0] – 2026-10-10
+
+### Added
+- **AzUI Studio**, the new options window (`/ahui`): live preview of your bars, colour wheel with Hex, R G B and Alpha, recent colours, preset swatches you drag into order, a card per effect, "Show on" chips, Undo and Done. **AzUI Azerite** dresses the same window in AzeriteUI's own art. `/ahui classic` opens the previous window.
+- Pet gallery: every pet as a card with its portrait, a turning 3D model, filters, search and "Use for all" for its family; specialization colours.
+- Rules: a colour and effect while you are in combat, mounted, resting, stealthed, dead, in a specialization or an instance; five example rules, switched off.
+- Effects: Breathe, Heartbeat, Two-tone, Flicker and Sweep (with Sweep Strength), smooth fades, Reduce Motion and Update Rate.
+- Quick palette on the minimap button's right-click, slash commands and key bindings.
+- Share strings to export and import your setup; profiles, with switching per specialization.
+- Power bar (including AzeriteUI's crystal and mana orb) and Blizzard's pet frame; Colour by Health.
+- WoW Forever (Camelot 1.60.1) support.
+
+### Fixed
+- `TextStatusBar.lua: attempt to compare a secret number value (execution tainted by 'AzUI_Color_Picker')`: nothing is written onto Blizzard's frames any more.
+
 ## [5.0.0] – 2026-09-15
 
 ### Added

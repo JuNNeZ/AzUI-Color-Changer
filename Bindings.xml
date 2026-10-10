@@ -1,0 +1,7 @@
+<Bindings>
+	<Binding name="AZUICOLORPICKER_OPEN" header="AZUICOLORPICKER" category="ADDONS">AzUIColorPicker_Binding("open")</Binding>
+	<Binding name="AZUICOLORPICKER_RAINBOW" category="ADDONS">AzUIColorPicker_Binding("rainbow")</Binding>
+	<Binding name="AZUICOLORPICKER_PULSE" category="ADDONS">AzUIColorPicker_Binding("pulse")</Binding>
+	<Binding name="AZUICOLORPICKER_NEXT" category="ADDONS">AzUIColorPicker_Binding("next")</Binding>
+	<Binding name="AZUICOLORPICKER_PETS" category="ADDONS">AzUIColorPicker_Binding("pets")</Binding>
+</Bindings>

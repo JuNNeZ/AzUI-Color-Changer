@@ -60,10 +60,10 @@ The addon hooks the health bar and puts your color back in the same frame whenev
 Make sure you are running one of the supported AzeriteUI editions and that it loaded correctly. Frames are picked up automatically within about 2 seconds, including frames AzeriteUI enables later. With debug enabled, the chat shows `Colouring AzeriteUI frame …` when a frame is found.
 
 ### Can I run rainbow and pulse at the same time?
-No. Starting one automatically stops the other.
+Your own color has one effect at a time. Rules, pets and the power bar each have their own, so a combat rule can pulse while your own color breathes.
 
 ### The rainbow stopped when I applied a class color / loaded a preset.
-This is intentional. Applying any static color (color picker, class button, preset, random) stops the animation and applies the new color. You can restart the rainbow manually afterward.
+This is intentional: Rainbow ignores your color, so picking a color (color picker, class button, preset, random) stops it to show the new color. Every other effect keeps running on the new color.
 
 ### My color changed after a /reload.
 Your chosen color is only changed when you pick a color yourself — rainbow, pulse and pet colors are never saved over it. If a hunter pet is out with **Use Pet Colours** enabled, you are seeing the pet's color. Also remember that all characters share one profile, so a color picked on another character applies here too.

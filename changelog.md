@@ -4,6 +4,83 @@ Format inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ----------------------------------------------------------------------
 # Changelog
 
+## [5.2.0] - 2026-10-10
+
+- Simplified the Rules and Hunter Pets empty states into compact coloured icons with soft gradients; replaced the ghost condition icon with a clear death/skull symbol.
+
+- Completed the original AzUI Studio art pack in a Warcraft cartoon fantasy style with sculpted bronze, faceted gold and stone: prism-and-health-bar logo (beside the title in both AzUI Studio and AzUI Azerite), bronze corner fittings, seven rule-condition icons, and rules/pets empty-state illustrations. All eleven alpha TGA assets are enabled; high-resolution PNG masters, SVG placement wrappers and the offline fitting preview are in `Tools/AssetBrief/`.
+
+Everything planned for 5.1 and 5.2 in the AzUI Feature Plan, the AzUI window with its pet gallery, and Forever support.
+
+### Added: 5.1, polish and sharing
+
+- Quick palette: right-click the minimap button (or its AddOn Compartment entry) for your colour, your presets as swatches, every effect, pet colours on or off, and a way into the AzUI window. Shift-click loads your next preset; the tooltip shows your colour, effect and the pet that is out.
+- Slash commands: `/ahui color #ff8800` (also `1 0.5 0` or `255 128 0`), `/ahui preset <name>`, `/ahui next`, `/ahui effect <name>|off`, `/ahui pets on|off`, `/ahui share`, `/ahui help`.
+- Key bindings under AddOns: open the AzUI window, toggle rainbow, toggle pulse, next preset, toggle pet colours.
+- Smooth fades: the bars blend into a new colour over a third of a second when a pet is called, a preset loads or a rule starts. Can be switched off.
+- Share page: turn your colour and effect, presets, pet colours, family and specialization colours and rules into one `!AZUI1!` line of text, and import one with a preview of what it changes. Uses Blizzard's own encoder; everything imported is checked and capped.
+- Blizzard's pet frame is coloured like AzeriteUI's, and can be switched off on the More Bars page.
+- Tests run on GitHub on every push, with luacheck for accidental globals.
+
+### Added: 5.2, rules and effects
+
+- Rules page: show a colour and effect while you are in combat, mounted, resting, stealthed, dead, in a specialization or in a kind of instance. Rules come before pet colours and your own colour; the first matching rule wins for each bar. Rules can be switched off, moved and deleted.
+- New effects: Breathe, Heartbeat, Two-tone (with a second colour) and Flicker, which asks before it starts. Sweep dims the bar and sends a bright band across it, left to right, as in the Feature Plan's preview.
+- Reduce Motion shows every effect as its static colour; Update Rate sets 15, 30 or 60 repaints a second.
+- Profiles page: make, switch, copy, reset and delete profiles, and switch profile with your specialization.
+- Power bar on the More Bars page: leave it alone, match your health bar, or give it its own colour and effect. Colours AzeriteUI's power bar and Blizzard's.
+- Colour by Health: your health bar runs from your colour to a low-health colour as your health drops. The game works the colour out with a colour curve, so it works with Midnight's hidden health values.
+
+### Fixed
+
+- `TextStatusBar.lua: attempt to compare a secret number value (execution tainted by 'AzUI_Color_Picker')`. The addon wrote `lockColor` onto Blizzard's player, pet and mana bars and called Blizzard's own bar updates when handing a bar back; both tainted Blizzard's code, which may not compare Midnight's secret health values while tainted. Nothing is written onto or run in Blizzard's frames any more; the colour is kept by the existing hook instead. The tests now fail if anything is.
+
+### Added: AzUI Studio and AzUI Azerite
+
+- The AzUI window's new look, from the Feature Plan's mock-ups and now its default theme: a rounded dark window with a bronze edge and soft shadow, gold for what is selected, and the Marcellus and Source Sans 3 fonts (both SIL Open Font License, in `Media/Fonts`). The shapes are the addon's own, drawn by `Tools/MakeStudioArt.py`; no AzeriteUI art is copied. The Azerite, Dark, Light and Class Color themes are still there; changing between Studio and them asks for a /reload.
+- Health Bar page: a live preview of your health bar, power bar and pet's bar; a colour wheel with Hex, R G B and Alpha; your last eight colours; presets as swatches you can drag into order and right-click to rename, overwrite or delete; a card per effect that plays it; the speed; "Show on" chips for the pet frames and the power bar; Undo for the changes made since the window opened; and Done.
+- Rules page: each rule is one sentence (when, show, on) with a switch, a colour swatch and a drag handle to reorder; the rule showing now wears a gold dot.
+- Five example rules, switched off, for every profile that has no rules of its own: grey while dead, a red pulse in combat, violet in stealth, gold in raids and green while resting. "Add example rules" adds them again.
+- With Colour by Health on, an effect you pick now shows instead of it (it cannot carry an effect); None brings colouring by health back. Before, effects picked on the Health Bar page seemed to do nothing.
+- Sweep follows the shape of the bar it crosses: the band is cut by a mask made from the bar's own fill texture, so it keeps to the angled ends of AzeriteUI's health bar and the facets of its power crystal (JuNNeZ Edition's FakeFill), instead of a rectangle swiping across the bar's box. It crosses horizontal bars left to right and climbs vertical ones, like the crystal, from the bottom. A bar with no fill texture to follow, such as the mana orb, shimmers as the band passes.
+- Sweep's band adds light on top of the bar instead of painting over it, so the bar's texture (the crystal's facets) shows through. It is at 60% by default and softer still on vertical bars such as the crystal. "Sweep Strength" on the Health Bar page sets it from 10% to 100%.
+- JuNNeZ Edition's mana orb is coloured with the power bar.
+- AzUI Azerite's live preview is sized from AzeriteUI's own cases (measured off the textures), so the health bar's stone and the pet bar's case stay inside the card, with the names under the portraits and the power bar under the health bar.
+- "Colour the Pet Frames" (More Bars, or "Show on: Pet frame") leaves AzeriteUI's and Blizzard's pet frames to their own colours.
+- **AzUI Azerite**, AzUI's second look (the Azerite theme): the same window and pages dressed in AzeriteUI's own art, read from the installed AzeriteUI and never copied: its sculpted borders on cards and buttons, and its health bar in its case in the live preview. Used with the permission of Blakmane and Goldpaw.
+
+### Added: the AzUI window and pet gallery
+
+- New AzUI window, opened with `/ahui` or the minimap button. It is the options window from AzeriteUI – JuNNeZ Edition: a rail of pages, one search across every setting and pet, and a heading on each page. It uses AzeriteUI's own art and themes (Azerite, Dark, Light, Class Color) when JuNNeZ Edition is loaded, and Blizzard's art otherwise.
+- The window has a page of its own for its theme, opacity and scale. It can be moved and resized, and remembers where it was.
+- Pet gallery on the Hunter Pets page: every pet as a card with its portrait, name, family and colour. The pet that is out has a badge.
+- The selected pet gets a detail panel with its 3D model, slowly turning (drag it to turn it yourself), next to its colour, own colour, effect and Reset.
+- Filters for All, Call slots (Current pet on Forever) and Stabled, plus a search by name, family or specialization.
+- "Use for all" on a pet copies its colour to its whole family.
+- Specialization colours (Retail): one colour each for Ferocity, Tenacity and Cunning. When switched on, pets set to their family colour show their specialization's colour instead.
+- Class colour buttons are shown in their class colours, as a grid in the new window.
+- Changed family and specialization colours have a reset arrow beside them in the new window.
+
+### Changed
+
+- One Effect setting replaces the Rainbow and Pulse buttons. A running rainbow or pulse carries over once, the first time you log in.
+- Picking a colour now only stops Rainbow, which ignores your colour; other effects keep running on the new colour.
+- Pets and rules can use every effect.
+- The addon is split into files by job (Core, Effects, Pets, Rules, Paint, Share, Profiles, Options, QuickPalette) as the Feature Plan laid out. `AzUI_Color_picker.lua` is gone; when installing by hand, replace the whole folder.
+- `/ahui classic` opens the previous Ace3 window, which has the same settings. The Window page can make it the default again.
+- Pets are now remembered with their display, specialization and level from the stable, for the gallery. Pets remembered by an older version use their icon until their slot or the stable is read again.
+
+### Forever and AzeriteUI
+
+- Added a Forever / Camelot TOC for Interface 16001, alongside Retail support.
+- Forever is also recognised from the game's build number, so pet slots stay right even if the client loads the Retail TOC.
+- Retail TOC also lists Interface 120105, so the addon is not flagged as out of date on the next 12.1 patch.
+- Checked against AzeriteUI5 – JuNNeZ Edition 5.19.3 and every theme (Azerite, Hunter, Mage, Paladin, Legacy HUD): each one keeps the native health bar, so your colour and effects apply under all of them, including after a theme switch without a reload.
+- Checked against AzeriteUI6 1.0.7-Alpha, which now runs on Forever as well as Retail.
+- Hunter pet colours on Forever now use its current-pet slot; stored pets appear under Stabled Pets instead of Retail's Call Pet slots.
+- Incomplete stable reads no longer remove previously discovered pets from the list.
+- Checked against Blizzard's Camelot stable source and a Lua client regression harness. In-game validation is still required.
+
 ## [5.0.0] - 2026-09-15
 
 ### Added (5.0.0)

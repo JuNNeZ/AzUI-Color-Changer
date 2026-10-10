@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>AzUI Studio: health sliver crossing a prism</title>
+  <path d="M32 5 54 29 32 59 10 29Z" fill="none" stroke="#6E5B2A" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M32 8 49 27H15Z" fill="#FFD100"/>
+  <path d="M6 30H46V39H6Z" fill="#FFD100"/>
+</svg>

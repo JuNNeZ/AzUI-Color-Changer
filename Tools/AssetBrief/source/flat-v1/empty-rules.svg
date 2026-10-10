@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="128" viewBox="0 0 256 128">
+  <title>A health bar changes colour at a rule banner</title>
+  <g fill="none" stroke="#9C95A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="26" y="68" width="204" height="22" rx="5"/>
+    <path d="M34 102H222M34 98V106M222 98V106"/>
+  </g>
+  <rect x="31" y="73" width="75" height="12" rx="2" fill="#9C95A8"/>
+  <path d="M112 73H201V85H112Z" fill="#FFD100"/>
+  <g fill="none" stroke="#FFD100" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M109 24V98M109 27H154L147 38 154 49H109"/>
+    <path d="M125 34 129 38 136 31"/>
+  </g>
+</svg>

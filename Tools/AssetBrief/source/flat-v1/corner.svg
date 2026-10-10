@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>Top-left bronze fitting; the content-facing interior stays clear</title>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 58V22Q6 6 22 6H58" stroke="#6E5B2A" stroke-width="3.2"/>
+    <path d="M13 54V26Q13 13 26 13H54" stroke="#A08A4E" stroke-width="1.6"/>
+    <path d="M3 39Q10 39 10 32M39 3Q39 10 32 10" stroke="#6E5B2A" stroke-width="2"/>
+    <path d="M5 18 10 10 18 5" stroke="#A08A4E" stroke-width="1.6"/>
+  </g>
+  <path d="M10 10 14 8 16 10 12 14Z" fill="#6E5B2A"/>
+</svg>
