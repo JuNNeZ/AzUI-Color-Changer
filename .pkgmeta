@@ -2,6 +2,7 @@ package-as: AzUI_Color_Picker
 
 ignore:
   - README.md
+  - CURSEFORGE.md
   - changelog.md
   - .github
   - .git

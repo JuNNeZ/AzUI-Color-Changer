@@ -131,5 +131,5 @@ WTF\Account\<account>\SavedVariables\AzUI_Color_PickerDB.lua
 ## Contributing & Reporting Bugs
 
 - **Bug reports / feature requests:** [GitHub Issues](https://github.com/JuNNeZ/ABCS-Advanced-Bar-Coloring-System/issues)
-- **CurseForge page:** [Project 1286164](https://www.curseforge.com/wow/addons/azui-color-changer)
+- **CurseForge page:** [Project 1286164](https://www.curseforge.com/projects/1286164)
 - **Author:** JuNNeZ
