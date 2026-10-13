@@ -50,7 +50,10 @@ function P.BuildExport(parts)
   if parts.pets then
     data.pets = {}
     for number, settings in pairs(p.pets) do
-      data.pets[number] = { mode = settings.mode, effect = settings.effect, color = settings.color and P.CopyColour(settings.color) }
+      data.pets[number] = {
+        mode = settings.mode, effect = settings.effect, color = settings.color and P.CopyColour(settings.color),
+        color2 = settings.color2 and P.CopyColour(settings.color2),
+      }
     end
   end
   if parts.families then
@@ -117,6 +120,7 @@ local function Sanitize(data)
         clean.pets[number] = {
           mode = mode, color = P.SanitizeColour(settings.color),
           effect = P.IsEffect(settings.effect) and settings.effect or "static",
+          color2 = settings.color2 ~= nil and P.SanitizeColour(settings.color2) or nil,
         }
       end
     end

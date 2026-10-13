@@ -15,7 +15,7 @@
 ## Category-enUS: User Interface
 ## X-Category: User Interface
 ## Author: |cffD1FF00JuNNeZ|r
-## Version: 6.0.0
+## Version: 7.0.0
 
 ## X-Curse-Project-ID: 1286164
 
@@ -58,10 +58,21 @@ Locales\zhTW.lua
 Core.lua
 Effects.lua
 Pets.lua
+Spells.lua
 Rules.lua
 Paint.lua
+Frames.lua
 Share.lua
+ShareChat.lua
 Profiles.lua
+Pages\Table.lua
+Pages\Health.lua
+Pages\Rules.lua
+Pages\Pets.lua
+Pages\Families.lua
+Pages\Bars.lua
+Pages\Profiles.lua
+Pages\Share.lua
 Options.lua
 QuickPalette.lua
 

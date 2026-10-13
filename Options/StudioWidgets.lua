@@ -59,18 +59,51 @@ function Studio.Button(parent, width, height, label, onClick, style)
   button.text:SetPoint("CENTER")
   button.text:SetText(label)
   button.style = style
+  -- An icon before the label, the two centred together; with no label, the icon alone.
+  button.icon = button:CreateTexture(nil, "OVERLAY")
+  button.icon:SetSize(14, 14)
+  button.icon:Hide()
+  function button:SetIcon(glyph)
+    self.glyph = glyph
+    self.icon:ClearAllPoints()
+    self.text:ClearAllPoints()
+    if not glyph then
+      self.icon:Hide()
+      self.text:SetPoint("CENTER")
+      return
+    end
+    Studio.Glyph(self.icon, glyph)
+    self.icon:Show()
+    local shown = self.text:GetText()
+    if shown and shown ~= "" then
+      local w = (self.text:GetStringWidth() or 0) + 14 + 6
+      -- room for a longer translation and the icon both
+      self:SetWidth(max(self:GetWidth() or 0, w + 24))
+      self.icon:SetPoint("LEFT", self, "CENTER", -w / 2, 0)
+      self.text:SetPoint("LEFT", self.icon, "RIGHT", 6, 0)
+    else
+      self.icon:SetPoint("CENTER")
+      self.text:SetPoint("CENTER")
+    end
+    self:Restyle()
+  end
   function button:Restyle()
     local C = Studio.C
+    local tint
     if self.disabled then
       self.round:SetFill(Kit.InsetColor); self.round:SetEdge(Kit.BorderIdle, .5); Tint(self.text, Kit.TextDisabled)
+      tint = Kit.TextDisabled
     elseif self.style == "gold" then
       self.round:SetFill(C.goldDim); self.round:SetEdge(Kit.TextSelected, self.hovered and 1 or .85)
       Tint(self.text, Kit.TextSelected)
+      tint = Kit.TextSelected
     else
       self.round:SetFill(self.hovered and C.raised or Kit.BackdropColor)
       self.round:SetEdge(self.hovered and Kit.TextHighlight or Kit.BorderIdle, self.hovered and .5 or 1)
       Tint(self.text, self.hovered and Kit.TextHighlight or Kit.TextNormal)
+      tint = self.hovered and Kit.TextHighlight or Kit.TextSelected
     end
+    self.icon:SetVertexColor(tint[1], tint[2], tint[3])
   end
   function button:SetDisabled(disabled)
     self.disabled = disabled and true or false
@@ -166,36 +199,49 @@ end
 ---------------------------------------------------------------------
 -- Slider
 ---------------------------------------------------------------------
--- A pill track with a gold fill and a round knob. onChange(value, final) fires while
--- dragging (final false) and once on release (final true).
+-- The settings rows' slider in small: a pill rail with a one-pixel edge, the accent
+-- up to the value and a round knob with a hard pixel of shadow (Studio.Pill,
+-- Studio.Knob). onChange(value, final) fires while dragging (final false) and once
+-- on release (final true).
+local RAIL_H, KNOB = 6, 14
+
 function Studio.Slider(parent, width, lo, hi, step, onChange)
   local slider = CreateFrame("Frame", nil, parent)
   slider:SetSize(width, 16)
   slider.lo, slider.hi, slider.step = lo, hi, step
-  local track = slider:CreateTexture(nil, "BACKGROUND")
-  track:SetTexture(Studio.Media("round3-fill"))
-  if track.SetTextureSliceMargins then track:SetTextureSliceMargins(5, 5, 5, 5) end
-  track:SetHeight(6)
-  track:SetPoint("LEFT")
-  track:SetPoint("RIGHT")
-  slider.track = track
-  local fill = slider:CreateTexture(nil, "ARTWORK")
-  fill:SetTexture(Studio.Media("round3-fill"))
-  if fill.SetTextureSliceMargins then fill:SetTextureSliceMargins(5, 5, 5, 5) end
-  fill:SetHeight(6)
-  fill:SetPoint("LEFT")
-  slider.fill = fill
-  local knob = slider:CreateTexture(nil, "OVERLAY")
-  knob:SetSize(14, 14)
-  Studio.Circle(knob)
-  slider.knob = knob
 
+  local rail = CreateFrame("Frame", nil, slider)
+  rail:SetPoint("LEFT")
+  rail:SetPoint("RIGHT")
+  rail:SetHeight(RAIL_H)
+  slider.rail = rail
+  slider.track = Studio.Pill(rail, "BACKGROUND")
+
+  local fillFrame = CreateFrame("Frame", nil, rail)
+  fillFrame:SetPoint("TOPLEFT")
+  fillFrame:SetPoint("BOTTOMLEFT")
+  slider.fillFrame = fillFrame
+  slider.fill = Studio.Pill(fillFrame, "ARTWORK")
+
+  local knobHost = CreateFrame("Frame", nil, slider)
+  knobHost:SetAllPoints()
+  knobHost:SetFrameLevel(rail:GetFrameLevel() + 3)
+  slider.knob = Studio.Knob(knobHost)
+
+  -- The knob travels half its width in from each end, so it never hangs past the rail.
   local function Place(self)
+    local h, px = Studio.Snap(rail, RAIL_H, true)
+    local k = Studio.Snap(rail, KNOB, true)
+    rail:SetHeight(h)
+    self.track:Layout(h, px)
+    self.fill:Layout(h, px)
+    self.knob:Layout(k, px)
     local w = self:GetWidth() or width
-    local k = (self.value - self.lo) / math.max(1e-6, self.hi - self.lo)
-    self.fill:SetWidth(math.max(1, w * k))
-    self.knob:ClearAllPoints()
-    self.knob:SetPoint("CENTER", self, "LEFT", w * k, 0)
+    local at = k / 2 + (w - k) * (self.value - self.lo) / math.max(1e-6, self.hi - self.lo)
+    fillFrame:SetWidth(math.max(h, at))
+    self.fill:SetShown(self.value > self.lo)
+    self.knob.texture:ClearAllPoints()
+    self.knob.texture:SetPoint("CENTER", self, "LEFT", at, 0)
   end
   function slider:SetValue(value)
     value = min(self.hi, max(self.lo, tonumber(value) or self.lo))
@@ -204,10 +250,13 @@ function Studio.Slider(parent, width, lo, hi, step, onChange)
     Place(self)
   end
   function slider:Restyle()
-    self.track:SetVertexColor(unpack(Kit.TrackColor))
-    self.fill:SetVertexColor(unpack(Kit.TextSelected))
-    self.knob:SetVertexColor(unpack(Kit.TextHighlight))
+    Place(self)
+    self.track:SetColors(Kit.InsetColor, Kit.BorderIdle)
+    self.fill:SetColors(Kit.TextSelected)
+    self.knob:SetColor(Kit.TextHighlight)
+    self.knob:SetLip(true)
   end
+  slider:SetScript("OnSizeChanged", function(self) if self.value then Place(self) end end)
   local function FromCursor(self)
     local x = GetCursorPosition()
     local scale, left, w = self:GetEffectiveScale(), self:GetLeft(), self:GetWidth()
@@ -235,29 +284,25 @@ end
 ---------------------------------------------------------------------
 -- Switch
 ---------------------------------------------------------------------
+-- The same pill and knob as a settings row's toggle (Studio.SwitchArt).
 function Studio.Switch(parent, onToggle)
   local switch = CreateFrame("Button", nil, parent)
-  switch:SetSize(34, 18)
-  switch.round = Studio.Round(switch, 9, nil, nil, true)
-  switch.knob = switch:CreateTexture(nil, "OVERLAY")
-  switch.knob:SetSize(12, 12)
-  Studio.Circle(switch.knob)
-  function switch:SetOn(on)
+  local art = Studio.SwitchArt(switch)
+  switch.art = art
+  switch.knob = art.knob
+  function switch:SetOn(on, animate)
     self.on = on and true or false
-    self.knob:ClearAllPoints()
-    self.knob:SetPoint("CENTER", self, self.on and "RIGHT" or "LEFT", self.on and -9 or 9, 0)
-    self:Restyle()
+    art:SetOn(self.on, animate)
   end
-  function switch:Restyle()
-    local C = Studio.C
-    self.round:SetFill(self.on and C.goldDim or C.raised)
-    self.round:SetEdge(self.on and Kit.TextSelected or Kit.BorderIdle)
-    self.knob:SetVertexColor(unpack(self.on and Kit.TextSelected or Kit.TextDisabled))
-  end
+  function switch:Restyle() art:Restyle() end
   switch:SetScript("OnClick", function(self)
     PlaySound(self.on and 857 or 856)
-    onToggle(self, not self.on)
+    -- slides now; the page's redraw that follows sets the same value and leaves it be
+    self:SetOn(not self.on, true)
+    onToggle(self, self.on)
   end)
+  switch:SetScript("OnEnter", function() art.hovered = true; art:Restyle() end)
+  switch:SetScript("OnLeave", function() art.hovered = nil; art:Restyle() end)
   switch:SetOn(false)
   return switch
 end

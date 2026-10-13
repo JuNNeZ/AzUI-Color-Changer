@@ -172,6 +172,7 @@ local Bind = function(control, option, options, path, page)
 
 	if (kind == "execute") then
 		control:SetText(AsString(Config.GetName(option, options, path, APP), ""))
+		if (control.SetIcon) then control:SetIcon(Renderer.ButtonGlyph(path[#path])) end
 		control:SetCallback(function()
 			AskFirst(option, options, bound, nil, function()
 				Config.Execute(option, options, bound, APP)
@@ -278,6 +279,58 @@ local Bind = function(control, option, options, path, page)
 end
 
 --------------------------------------------------------------------------
+-- Section icons
+--------------------------------------------------------------------------
+-- A heading's icon, by its option key (labels are translated, keys are not):
+-- Media\Studio\glyph-*, drawn by Tools\MakeStudioArt.py. A heading not listed here
+-- simply has none. Kept here rather than in the option table, where AceConfig would
+-- reject a member it does not know.
+local SECTION_GLYPH = {
+	-- Health Bar
+	clsH1 = "section-class", effH = "section-effect", healthH = "page-health",
+	presH = "section-presets", packs = "section-packs", mainH = "section-maintenance",
+	-- More Bars
+	petH = "page-pets", powerH = "section-power", castH = "section-cast",
+	classPowerH = "section-classpower", overlaysH = "section-overlays", prdH = "section-prd",
+	-- Pet Families, Profiles
+	specs = "section-spec", specH = "section-spec", presetH = "section-presets",
+	-- Share
+	exportH = "section-export", chatH = "section-chat", importH = "section-import",
+	-- Window
+	look = "section-appearance", classicHead = "section-classic",
+}
+
+Renderer.SectionGlyph = function(key)
+	if (type(key) ~= "string") then return nil end
+	-- the pet families' groups, one per family group
+	if (key:match("^group%d+$")) then return "page-pets" end
+	return SECTION_GLYPH[key]
+end
+
+-- A button's icon, by its option key, the same way: beside its text, so the
+-- buttons on a page can be told apart at a glance.
+local BUTTON_GLYPH = {
+	-- Health Bar
+	classReset = "section-class", rand = "dice", renBtn = "pen", delBtn = "cross",
+	save = "section-presets", savePet = "page-pets", reset = "undo", reload = "reload",
+	-- Pet Families, Hunter Pets, Profiles
+	resetAll = "undo", family = "page-families",
+	-- Rules (the classic window's; the Studio page draws its own)
+	add = "plus", examples = "section-packs", try = "play", delete = "cross",
+	-- Share
+	exportBtn = "section-export", chatBtn = "section-chat", apply = "section-import",
+	-- Window
+	resetPosition = "undo", openClassic = "section-classic",
+}
+
+Renderer.ButtonGlyph = function(key)
+	if (type(key) ~= "string") then return nil end
+	-- a pet family's own Reset
+	if (key:match("^r%d+$")) then return "undo" end
+	return BUTTON_GLYPH[key]
+end
+
+--------------------------------------------------------------------------
 -- Rendering
 --------------------------------------------------------------------------
 -- Builds the flat list of things to draw for one page: descriptions and
@@ -306,7 +359,7 @@ Collect = function(group, options, path, out, depth)
 				if (onlyButtons and #buttons > 0) then
 					local label = AsString(Config.GetName(option, options, childPath, APP), "")
 					if (label ~= "") then
-						out[#out + 1] = { kind = "header", major = depth == 0, label = label }
+						out[#out + 1] = { kind = "header", major = depth == 0, label = label, key = key }
 					end
 					out[#out + 1] = { kind = "grid", buttons = buttons }
 					return
@@ -323,7 +376,8 @@ Collect = function(group, options, path, out, depth)
 				out[#out + 1] = {
 					kind = "header",
 					major = true,
-					label = AsString(Config.GetName(option, options, childPath, APP), key)
+					label = AsString(Config.GetName(option, options, childPath, APP), key),
+					key = key
 				}
 				Collect(option, options, childPath, out, depth + 1)
 			end
@@ -334,7 +388,7 @@ Collect = function(group, options, path, out, depth)
 			local label = AsString(Config.GetName(option, options, childPath, APP), "")
 			-- An empty header is a spacer in AceConfigDialog; here the row rule does that.
 			if (label ~= "") then
-				out[#out + 1] = { kind = "header", label = label }
+				out[#out + 1] = { kind = "header", label = label, key = key }
 			end
 			return
 		end
@@ -431,7 +485,10 @@ Renderer.CreatePage = function(self, content)
 		control:SetOnRevert(nil)
 		control:SetModified(false)
 
-		local key = control.segmented and "segmented" or control.kind
+		-- back into the pool Acquire takes it from: a multiline box filed under
+		-- "input" was never reused, so every refresh built a new, empty one and
+		-- dropped whatever had just been pasted
+		local key = control.segmented and "segmented" or (control.multiline and "multiline") or control.kind
 		page.pool[key] = page.pool[key] or {}
 		page.pool[key][#page.pool[key] + 1] = control
 	end
@@ -530,6 +587,7 @@ Renderer.CreatePage = function(self, content)
 			if (entry.kind == "header") then
 				control = Acquire("header")
 				control:SetLabel(entry.label)
+				control:SetIcon(Renderer.SectionGlyph(entry.key))
 				control.major = entry.major and true or false
 
 			elseif (entry.kind == "description") then

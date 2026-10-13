@@ -42,6 +42,8 @@ local FOOTER_H = 24
 local PAGE_HEAD_H = 54
 local RAIL_ROW_H = 30
 local RESULT_H = 40
+-- room right of the page for its scrollbar, and the bar's own width
+local SCROLLBAR_ROOM, SCROLLBAR_W, THUMB_MIN = 24, 6, 28
 
 local WINDOW_PAGE = "window"
 local PETS_PAGE = "pets"
@@ -49,6 +51,7 @@ local PETS_PAGE = "pets"
 local frame, page, rail, contentScroll, pageContent
 local resultsScroll, resultsContent
 local railRows, resultRows = {}, {}
+Panel.railRows = railRows -- for the tests
 
 local function Settings()
   local db = Core.GetDB()
@@ -152,9 +155,17 @@ local PAGE_DESC = {
   rules    = L["Colours that take over while something is true: in combat, mounted, in a dungeon."],
   pets     = L["Every pet you have tamed, with its own colour and effect."],
   families = L["The colour each pet family, and each specialization, shows by default."],
-  bars     = L["The pet frames, your power bar and your cast bar."],
+  bars     = L["The pet frames and your power bar, cast bar and class resources."],
   profiles = L["Keep different settings per character or per specialization."],
-  share    = L["Copy your setup as a line of text, or bring in someone else's."],
+  share    = L["Copy your setup as a line of text or a link in chat, or bring in someone else's."],
+}
+
+-- The rail's own icons (Media\Studio\glyph-page-*, drawn by Tools\MakeStudioArt.py):
+-- one line drawing per page, muted, gold when the page is open. The game's icons
+-- the option table names were each a different style and colour, and read as noise.
+local PAGE_GLYPH = {
+  general = "page-health", rules = "page-rules", pets = "page-pets", families = "page-families",
+  bars = "page-bars", profiles = "page-profiles", share = "page-share", [WINDOW_PAGE] = "page-window",
 }
 
 --------------------------------------------------------------------------
@@ -203,55 +214,44 @@ end
 --------------------------------------------------------------------------
 -- Rail
 --------------------------------------------------------------------------
+-- The open page is a key pressed up out of the rail, as AdvancedHotkeyOverlaySystem
+-- draws it: a keycap in the raised colour, its icon gold. Hovering lifts a page half
+-- way. The same in every look, where it used to be a gold edge outside Studio.
+local function Raised()
+  if Kit.ArtStyle == "studio" then return Kit.Studio.C.raised end
+  local b = Kit.BackdropColor
+  return { math.min(1, b[1] * 1.45 + .02), math.min(1, b[2] * 1.45 + .02), math.min(1, b[3] * 1.45 + .02), 1 }
+end
+
 local function StyleRailRow(row)
   local selected = Panel.selected == row.key
-  if row.round then
-    -- Studio: a rounded raised fill under the selected page, gold text
-    local C = Kit.Studio.C
-    row.round:SetFill((selected or row.hovered) and C.raised or nil, selected and 1 or .55)
-    row.round:SetEdge(nil)
-    row.edge:Hide()
-    row.highlight:Hide()
-    local colour = selected and Kit.TextSelected or row.hovered and Kit.TextHighlight or Kit.TextNormal
-    row.text:SetTextColor(colour[1], colour[2], colour[3])
-    return
+  if row.glyph then
+    local c = selected and Kit.TextSelected or row.hovered and Kit.TextHighlight or Kit.TextDisabled
+    row.icon:SetVertexColor(c[1], c[2], c[3])
+  else
+    row.icon:SetVertexColor(1, 1, 1)
   end
-  row.edge:SetShown(selected)
-  row.edge:SetVertexColor(unpack(Kit.TextSelected))
-  row.highlight:SetShown(selected or row.hovered)
-  row.highlight:SetVertexColor(1, 1, 1, selected and .06 or .03)
+  row.round:SetFill((selected or row.hovered) and Raised() or nil, selected and 1 or .5)
+  row.round:SetEdge(selected and Kit.BorderIdle or nil)
   local colour = selected and Kit.TextSelected or row.hovered and Kit.TextHighlight or Kit.TextNormal
   row.text:SetTextColor(colour[1], colour[2], colour[3])
-  if row.dot then row.dot:SetVertexColor(unpack(Kit.TextSelected)) end
+  row.dot:SetVertexColor(unpack(Kit.TextSelected))
 end
 
 local function CreateRailRow(index)
   local row = CreateFrame("Button", nil, rail)
   row:SetHeight(RAIL_ROW_H)
-
-  local highlight = row:CreateTexture(nil, "BACKGROUND")
-  highlight:SetTexture(Kit.GetMedia("plain"))
-  highlight:SetAllPoints()
-  row.highlight = highlight
-
-  if Kit.ArtStyle == "studio" then row.round = Kit.Studio.Round(row, 6) end
-
-  local edge = row:CreateTexture(nil, "ARTWORK")
-  edge:SetTexture(Kit.GetMedia("plain"))
-  edge:SetWidth(3)
-  edge:SetPoint("TOPLEFT")
-  edge:SetPoint("BOTTOMLEFT")
-  row.edge = edge
+  row.round = Kit.Studio.Round(row, 6, nil, nil, true, true)
 
   local icon = row:CreateTexture(nil, "ARTWORK")
   icon:SetSize(18, 18)
-  icon:SetPoint("LEFT", row, "LEFT", 12, 0)
+  icon:SetPoint("LEFT", row, "LEFT", 12, 1) -- centred on the keycap face, above its lip
   row.icon = icon
 
   -- a gem on a page holding settings that differ from their defaults
   local dot = row:CreateTexture(nil, "OVERLAY")
   dot:SetSize(8, 8)
-  dot:SetPoint("RIGHT", row, "RIGHT", -8, 0)
+  dot:SetPoint("RIGHT", row, "RIGHT", -8, 1)
   Kit.SetGlyph(dot, "gem")
   dot:Hide()
   row.dot = dot
@@ -285,14 +285,19 @@ function Panel:BuildRail()
     -- The window's own page sits apart from the addon's pages.
     if info.window and not gapDone then offset, gapDone = offset + 14, true end
     row:ClearAllPoints()
-    local pad = Kit.ArtStyle == "studio" and 8 or 0
+    local pad = Kit.ArtStyle == "studio" and 8 or 4
     row:SetPoint("TOPLEFT", rail, "TOPLEFT", pad, -offset - pad)
     row:SetPoint("RIGHT", rail, "RIGHT", -6 - pad, 0)
     row.key = info.key
     row.text:SetText(info.label)
-    row.icon:SetTexture(Resolve(info.icon) or Core.icon)
-    local coords = Resolve(info.iconCoords)
-    if type(coords) == "table" then row.icon:SetTexCoord(unpack(coords)) else row.icon:SetTexCoord(0, 1, 0, 1) end
+    row.glyph = PAGE_GLYPH[info.key]
+    if row.glyph then
+      Kit.Studio.Glyph(row.icon, row.glyph)
+    else
+      row.icon:SetTexture(Resolve(info.icon) or Core.icon)
+      local coords = Resolve(info.iconCoords)
+      if type(coords) == "table" then row.icon:SetTexCoord(unpack(coords)) else row.icon:SetTexCoord(0, 1, 0, 1) end
+    end
     StyleRailRow(row)
     row:Show()
     offset = offset + RAIL_ROW_H + 2
@@ -360,6 +365,7 @@ function Panel:SelectPage(key)
   end
   page:Restyle()
   if changed then contentScroll:SetVerticalScroll(0) end
+  contentScroll.scrollbar:Update()
 end
 
 -- Re-reads the open page, keeping its scroll position.
@@ -375,6 +381,7 @@ function Panel:Refresh()
   self:BuildRail()
   self:SelectPage(self.selected)
   contentScroll:SetVerticalScroll(min(scroll, contentScroll:GetVerticalScrollRange()))
+  contentScroll.scrollbar:Update()
 end
 
 -- Settings change in bursts (a pet summoned refreshes several things at once), so
@@ -448,6 +455,7 @@ function Panel:ShowResults(query)
   for index = #matches + 1, #resultRows do resultRows[index]:Hide() end
   resultsContent:SetHeight(max(1, #matches * RESULT_H))
   resultsScroll:SetVerticalScroll(0)
+  resultsScroll.scrollbar:Update()
 
   self.pageTitle:SetText(L["Search"])
   self.pageDesc:SetText(#matches == 0 and L["Nothing matches that."]
@@ -656,6 +664,145 @@ function Panel:OnKey(key)
 end
 
 --------------------------------------------------------------------------
+-- Scrollbar
+--------------------------------------------------------------------------
+-- Every page has one when it is longer than the window, so nobody takes the part
+-- they can see for all there is. A rounded track beside the page with a thumb
+-- sized to how much of it is in view, in the accent; drag the thumb, click the
+-- track to turn a page, or use the wheel as before. While there is more below, the
+-- page's foot fades out over a small chevron. A page that fits shows neither.
+Panel.scrollbars = {}
+
+local function StyleScrollbar(bar)
+  local accent = Kit.TextSelected
+  bar.track:SetFill(Kit.InsetColor)
+  bar.track:SetEdge(Kit.BorderIdle)
+  bar.thumbRound:SetFill(accent, (bar.hovered or bar.dragging) and 1 or .7)
+  bar.thumbRound:SetEdge(nil)
+  local solid = Kit.WindowColor
+  if CreateColor then
+    bar.fade:SetGradient("VERTICAL", CreateColor(solid[1], solid[2], solid[3], .95), CreateColor(solid[1], solid[2], solid[3], 0))
+  elseif bar.fade.SetGradientAlpha then
+    bar.fade:SetGradientAlpha("VERTICAL", solid[1], solid[2], solid[3], .95, solid[1], solid[2], solid[3], 0)
+  end
+  bar.more:SetVertexColor(accent[1], accent[2], accent[3])
+end
+
+local function Scrollbar(scroll)
+  local bar = CreateFrame("Button", nil, frame)
+  bar:SetPoint("TOPLEFT", scroll, "TOPRIGHT", 4, 0)
+  bar:SetPoint("BOTTOMLEFT", scroll, "BOTTOMRIGHT", 4, 0)
+  bar:SetWidth(SCROLLBAR_ROOM - 8)
+  bar.scroll = scroll
+  scroll.scrollbar = bar
+
+  local track = CreateFrame("Frame", nil, bar)
+  track:SetWidth(SCROLLBAR_W)
+  track:SetPoint("TOP", bar, "TOP", 0, -2)
+  track:SetPoint("BOTTOM", bar, "BOTTOM", 0, 2)
+  bar.trackFrame = track
+  bar.track = Kit.Studio.Round(track, 3, nil, nil, true)
+
+  local thumb = CreateFrame("Button", nil, track)
+  thumb:SetWidth(SCROLLBAR_W)
+  thumb:SetFrameLevel(track:GetFrameLevel() + 2)
+  bar.thumb = thumb
+  bar.thumbRound = Kit.Studio.Round(thumb, 3, nil, "ARTWORK", true)
+  -- a wider grip than the thumb is drawn
+  thumb:SetHitRectInsets(-5, -5, 0, 0)
+
+  -- the page's foot, fading out while there is more below
+  local fadeHost = CreateFrame("Frame", nil, frame)
+  fadeHost:SetPoint("BOTTOMLEFT", scroll, "BOTTOMLEFT", 0, 0)
+  fadeHost:SetPoint("BOTTOMRIGHT", scroll, "BOTTOMRIGHT", 0, 0)
+  fadeHost:SetHeight(30)
+  fadeHost:SetFrameLevel(scroll:GetFrameLevel() + 20)
+  fadeHost:EnableMouse(false)
+  local fade = fadeHost:CreateTexture(nil, "OVERLAY")
+  fade:SetTexture(Kit.GetMedia("plain"))
+  fade:SetAllPoints()
+  bar.fade, bar.fadeHost = fade, fadeHost
+  local more = fadeHost:CreateTexture(nil, "OVERLAY", nil, 1)
+  more:SetSize(14, 14)
+  more:SetPoint("BOTTOM", fadeHost, "BOTTOM", 0, 2)
+  Kit.SetGlyph(more, "chevron")
+  bar.more = more
+
+  function bar:Update()
+    local range = scroll:GetVerticalScrollRange() or 0
+    local height = scroll:GetHeight() or 0
+    if range < 1 or height <= 0 then
+      self:Hide()
+      fadeHost:Hide()
+      return
+    end
+    self:Show()
+    local trackH = track:GetHeight() or 0
+    if trackH <= 0 then trackH = height - 4 end
+    local thumbH = max(THUMB_MIN, trackH * height / (height + range))
+    local at = min(1, max(0, (scroll:GetVerticalScroll() or 0) / range))
+    self.range, self.travel = range, max(1, trackH - thumbH)
+    thumb:SetHeight(thumbH)
+    thumb:ClearAllPoints()
+    thumb:SetPoint("TOP", track, "TOP", 0, -at * (trackH - thumbH))
+    fadeHost:SetShown(at < .999)
+  end
+
+  -- dragging the thumb: the page follows the cursor, a track's height to a page's
+  local function CursorY() return select(2, GetCursorPosition()) / thumb:GetEffectiveScale() end
+  thumb:SetScript("OnMouseDown", function()
+    bar.dragging = { y = CursorY(), scroll = scroll:GetVerticalScroll() or 0 }
+    StyleScrollbar(bar)
+    thumb:SetScript("OnUpdate", function()
+      local drag = bar.dragging
+      if not drag then return end
+      local moved = drag.y - CursorY()
+      scroll:SetVerticalScroll(min(bar.range, max(0, drag.scroll + moved * bar.range / bar.travel)))
+    end)
+  end)
+  local function StopDrag()
+    bar.dragging = nil
+    thumb:SetScript("OnUpdate", nil)
+    StyleScrollbar(bar)
+  end
+  thumb:SetScript("OnMouseUp", StopDrag)
+  thumb:SetScript("OnHide", StopDrag)
+
+  -- a click on the track turns a page towards it
+  bar:SetScript("OnClick", function()
+    local range = scroll:GetVerticalScrollRange() or 0
+    if range <= 0 then return end
+    local top = thumb:GetTop()
+    local below = top and CursorY() < top
+    local step = (scroll:GetHeight() or 0) * .9
+    local now = scroll:GetVerticalScroll() or 0
+    scroll:SetVerticalScroll(min(range, max(0, now + (below and step or -step))))
+  end)
+  bar:EnableMouseWheel(true)
+  bar:SetScript("OnMouseWheel", function(_, delta)
+    local wheel = scroll:GetScript("OnMouseWheel")
+    if wheel then wheel(scroll, delta) end
+  end)
+
+  local function Hover(on) bar.hovered = on; StyleScrollbar(bar) end
+  for _, region in ipairs({ bar, thumb }) do
+    region:HookScript("OnEnter", function() Hover(true) end)
+    region:HookScript("OnLeave", function() Hover(false) end)
+  end
+
+  scroll:HookScript("OnVerticalScroll", function() bar:Update() end)
+  scroll:HookScript("OnScrollRangeChanged", function() bar:Update() end)
+  scroll:HookScript("OnSizeChanged", function() bar:Update() end)
+  scroll:HookScript("OnShow", function() bar:Update() end)
+  scroll:HookScript("OnHide", function() bar:Hide(); fadeHost:Hide() end)
+
+  Panel.scrollbars[#Panel.scrollbars + 1] = bar
+  StyleScrollbar(bar)
+  bar:Update()
+  return bar
+end
+
+--------------------------------------------------------------------------
 -- Theme, scale and position
 --------------------------------------------------------------------------
 function Panel:ApplyTheme()
@@ -689,6 +836,7 @@ function Panel:ApplyTheme()
   self.railEdge:SetShown(not self.windowRound) -- in Studio the rail is a card of its own
   self.headRule:SetVertexColor(border[1], border[2], border[3], .6)
   for _, row in ipairs(railRows) do StyleRailRow(row) end
+  for _, bar in ipairs(self.scrollbars) do StyleScrollbar(bar) end
   page:Restyle()
   if Kit.PetGallery then Kit.PetGallery:Restyle() end
   if Kit.StudioHealth then Kit.StudioHealth:Restyle() end
@@ -984,7 +1132,7 @@ local function Build()
   local function Scroller(step)
     local scroll = CreateFrame("ScrollFrame", nil, frame)
     scroll:SetPoint("TOPLEFT", pageHead, "BOTTOMLEFT", 0, -4)
-    scroll:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -16, FOOTER_H + 10)
+    scroll:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -SCROLLBAR_ROOM, FOOTER_H + 10)
     scroll:SetClipsChildren(true)
     local child = CreateFrame("Frame", nil, scroll)
     child:SetSize(600, 1)
@@ -995,6 +1143,7 @@ local function Build()
       if range <= 0 then return end
       self:SetVerticalScroll(min(range, max(0, self:GetVerticalScroll() - delta * step)))
     end)
+    Scrollbar(scroll)
     return scroll, child
   end
 

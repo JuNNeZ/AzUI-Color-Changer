@@ -10,6 +10,9 @@ local L = P.L
 local WIDTH, PAD = 336, 14
 local SWATCH_W, SWATCH_H, SWATCHES = 34, 24, 8
 local CHIP_W, CHIP_H = 72, 22
+-- the effect chips, four to a row, and the height of their rows
+local EFFECT_ROWS = math.ceil(#P.EFFECTS / 4)
+local EFFECTS_H = EFFECT_ROWS * CHIP_H + (EFFECT_ROWS - 1) * 6 + 12
 
 local palette
 
@@ -129,7 +132,7 @@ local function Build()
   noPresets:SetText(L["No presets yet. Save one from the AzUI window."])
   palette.noPresets = noPresets
 
-  -- effects, two rows of four
+  -- effects, four to a row
   local effectsLabel = Text(palette, 10, .6, .6, .6)
   effectsLabel:SetPoint("TOPLEFT", presetsLabel, "BOTTOMLEFT", 0, -(SWATCH_H + 18))
   effectsLabel:SetText(L["EFFECT"])
@@ -157,7 +160,7 @@ local function Build()
   -- pet colours
   local pets = CreateFrame("CheckButton", nil, palette, "UICheckButtonTemplate")
   pets:SetSize(24, 24)
-  pets:SetPoint("TOPLEFT", effectsLabel, "BOTTOMLEFT", -4, -(CHIP_H * 2 + 18))
+  pets:SetPoint("TOPLEFT", effectsLabel, "BOTTOMLEFT", -4, -EFFECTS_H)
   pets:SetScript("OnClick", function() P.HandleSlash("pets") end)
   local petsText = Text(palette, 12, 1, 1, 1)
   petsText:SetPoint("LEFT", pets, "RIGHT", 2, 0)
@@ -183,7 +186,7 @@ local function Build()
   hint:SetJustifyH("RIGHT")
   hint:SetText(L["Shift-click: next preset"])
 
-  palette:SetHeight(PAD + 36 + 14 + 12 + SWATCH_H + 18 + 12 + CHIP_H * 2 + 18 + 24 + 8 + 26 + PAD)
+  palette:SetHeight(PAD + 36 + 14 + 12 + SWATCH_H + 18 + 12 + EFFECTS_H + 24 + 8 + 26 + PAD)
 end
 
 function P.RefreshQuickPalette()

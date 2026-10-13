@@ -84,10 +84,26 @@ local function bandX() for _, point in ipairs(band.left.points) do if point[1] =
 local x1 = bandX()
 game.advance(0.4)
 check(bandX() > x1, "and moves left to right")
+local low = band.low
+game.advance(0.1)
+check(#band.left.points == 3 and band.low == low and near(band.left.gradient[2].a, band.right.gradient[1].a),
+  "each paint moves the band and refills its colours; nothing new is made")
 check(colourIs(player.Health.color, 0x6E / 255, 0x0F / 255, 0x0F / 255), "under it the bar is dimmed")
 P.SetEffect("static")
 game.advance(0.1)
 check(not band.shown, "another effect takes the band away")
+
+-- A bar you cannot see waits, and catches up as it shows
+P.SetEffect("pulse")
+pet.Health.shown = false
+local hiddenColour = pet.Health.color
+game.advance(0.3)
+check(pet.Health.color == hiddenColour, "the animator skips a hidden bar")
+pet.Health:Show()
+check(pet.Health.color ~= hiddenColour and colourIs(pet.Health.color, player.Health.color[1], player.Health.color[2], player.Health.color[3]),
+  "and paints it the moment it shows, in step with the others")
+P.SetEffect("static")
+game.advance(0.1)
 
 -- Flicker asks first, and No leaves the effect alone
 game.answer = false
@@ -502,7 +518,14 @@ p.presets["Fire"] = { 0.1, 0.1, 0.1, 1 }
 local added = P.AddPresetPack("elements")
 check(added == 5 and p.presets["Ice"] and p.presets["Fire"][1] == 0.1, "a pack adds what you lack and keeps your own Fire")
 check(P.AddPresetPack("elements") == 0, "adding it again adds nothing")
-for _, key in ipairs(P.PRESET_PACK_ORDER) do check(#P.PRESET_PACKS[key].presets >= 6, "pack " .. key) end
+for _, key in ipairs(P.PRESET_PACK_ORDER) do
+  if key ~= "classes" then check(#P.PRESET_PACKS[key].presets >= 6, "pack " .. key) end
+end
+-- the class colours pack has one preset per class the game knows, by its own name
+local classCount = 0
+for _ in pairs(env.RAID_CLASS_COLORS) do classCount = classCount + 1 end
+check(#P.PRESET_PACKS.classes.presets == classCount and P.PRESET_PACKS.classes.presets[1][1] == "Hunter",
+  "the class pack has every class, named as the game names it")
 
 -- Every page validates with the real AceConfigRegistry, rules included
 ---------------------------------------------------------------------------

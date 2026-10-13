@@ -23,6 +23,9 @@ jobs:
       - name: Accidental globals (luacheck)
         run: luacheck .
 
+      - name: Accidental globals (the local check, so it stays in step with luacheck)
+        run: lua5.1 Tools/CheckGlobals.lua
+
       - name: Hunter stable on Retail and Forever
         run: lua5.1 Tools/TestClients.lua
 
@@ -46,6 +49,18 @@ jobs:
 
       - name: AzUI Studio pages
         run: lua5.1 Tools/TestStudio.lua
+
+      - name: Unit frame addons, overlays, gradient and /ahui check
+        run: lua5.1 Tools/TestFrames.lua
+
+      - name: Rule conditions, threat and casting, sounds, rules on every bar, presets per specialization
+        run: lua5.1 Tools/TestRules.lua
+
+      - name: Repainting, frame scans, buff events, effects and pets long gone
+        run: lua5.1 Tools/TestEngine.lua
+
+      - name: Sharing a setup through a link in chat
+        run: lua5.1 Tools/TestChat.lua
 
       - name: Translations
         run: lua5.1 Tools/TestLocales.lua

@@ -13,9 +13,13 @@ local CHAOS_INTERVAL   = 0.1  -- Chaos picks a new colour this often
 local FLICKER_INTERVAL = 0.08 -- Flicker picks a new brightness this often
 
 -- Shown in this order wherever an effect is picked.
-P.EFFECTS = { "static", "pulse", "breathe", "heartbeat", "twotone", "flicker", "sweep", "rainbow" }
+P.EFFECTS = { "static", "gradient", "flow", "pulse", "breathe", "heartbeat", "twotone", "flicker", "sweep",
+  "rainbow", "rainbowgradient" }
 P.EFFECT_VALUES = {
   static    = L["None"],
+  gradient  = L["Gradient"],
+  flow      = L["Flow"],
+  rainbowgradient = L["Spectrum"],
   pulse     = L["Pulse"],
   breathe   = L["Breathe"],
   heartbeat = L["Heartbeat"],
@@ -26,6 +30,9 @@ P.EFFECT_VALUES = {
 }
 P.EFFECT_HELP = {
   static    = L["Your colour, as it is."],
+  gradient  = L["Runs from your colour at one end of the bar to the second colour at the other. It does not move."],
+  flow      = L["Your colour and the second colour slowly trade ends along the bar."],
+  rainbowgradient = L["Every colour along the bar at once, drifting slowly."],
   pulse     = L["Brightness dips to 30% and comes back."],
   breathe   = L["A slow, soft rise and fall; calmer than pulse."],
   heartbeat = L["Two quick beats and a rest."],
@@ -34,6 +41,20 @@ P.EFFECT_HELP = {
   sweep     = L["The bar dims and a bright band crosses it, left to right."],
   rainbow   = L["Cycles through every colour; ignores your colour but keeps its alpha."],
 }
+
+-- Rules can also be coloured by your health: from the rule's colour down to the
+-- low-health colour. It is not an effect of its own, so it is only offered on rules.
+P.RULE_EFFECTS = {}
+P.RULE_EFFECT_VALUES = { health = L["By health"] }
+for _, key in ipairs(P.EFFECTS) do
+  P.RULE_EFFECTS[#P.RULE_EFFECTS + 1] = key
+  P.RULE_EFFECT_VALUES[key] = P.EFFECT_VALUES[key]
+end
+P.RULE_EFFECTS[#P.RULE_EFFECTS + 1] = "health"
+
+function P.IsRuleEffect(value)
+  return value == "health" or P.IsEffect(value)
+end
 
 -- Flicker is uneven flashing, so picking it asks first.
 function P.EffectConfirm(value)
@@ -45,6 +66,20 @@ end
 function P.IsEffect(value)
   return type(value) == "string" and P.EFFECT_VALUES[value] ~= nil
 end
+
+-- Does it move? None, Gradient and a colour by health are drawn once and need no repaints.
+function P.IsAnimated(effect)
+  return effect ~= nil and effect ~= "static" and effect ~= "gradient" and effect ~= "health"
+end
+
+-- Effects that use the second colour (Two-tone's other colour, the gradients' far end).
+function P.UsesSecondColour(effect)
+  return effect == "twotone" or effect == "gradient" or effect == "flow"
+end
+
+-- How dark Pulse gets (its lowest brightness) and how long Sweep's band takes.
+local function PulseLow() return math.min(0.9, math.max(0.05, tonumber(P.DB.profile.pulseDepth) or 0.3)) end
+local function SweepPeriod() return math.min(8, math.max(0.8, tonumber(P.DB.profile.sweepPeriod) or 2.4)) end
 
 -- Animation state, shared by every bar so they stay in step.
 local phase = 0
@@ -103,14 +138,39 @@ end
 -- (#6E0F0F against #B31B1B) and a soft band crosses it left to right every 2.4 s. The
 -- band's peak is your colour with 0.24 added to each channel, which turns #B31B1B into
 -- #F05858, next to the preview's #F0604F.
-local SWEEP_BASE, SWEEP_LIFT, SWEEP_PERIOD = 0.615, 0.24, 2.4
+local SWEEP_BASE, SWEEP_LIFT = 0.615, 0.24
+local function Peak(v) return min(1, v + SWEEP_LIFT) end
 
 -- A colour with an effect applied: r, g, b, a. Sweep adds where its band is (0..1, the
 -- band's way across the bar) and the band's colour; the painter draws the band.
+-- Gradient adds no band (nil) but the colour at the bar's far end.
 function P.EffectColour(effect, c, second)
   c = c or P.DB.profile.color
   local a = c[4] or 1
-  if P.DB.profile.reduceMotion then effect = "static" end
+  if effect == "gradient" then
+    -- it does not move, so Reduce Motion leaves it alone
+    local o = second or P.DB.profile.secondColor
+    return c[1], c[2], c[3], a, nil, o[1], o[2], o[3]
+  end
+  if P.DB.profile.reduceMotion then
+    -- the moving gradients hold still as Gradient
+    if effect == "flow" then return P.EffectColour("gradient", c, second) end
+    effect = "static"
+  end
+  if effect == "flow" then
+    -- the two ends trade colours and back, about every 14 s at speed 1.0
+    local o = second or P.DB.profile.secondColor
+    local k = 0.5 - 0.5 * cos(phase * 1.5)
+    local r1, g1, b1 = c[1] + (o[1] - c[1]) * k, c[2] + (o[2] - c[2]) * k, c[3] + (o[3] - c[3]) * k
+    local r2, g2, b2 = o[1] + (c[1] - o[1]) * k, o[2] + (c[2] - o[2]) * k, o[3] + (c[3] - o[3]) * k
+    return r1, g1, b1, a, nil, r2, g2, b2
+  elseif effect == "rainbowgradient" then
+    -- a third of the spectrum apart, drifting with the phase
+    local h = (phase / TWO_PI) % 1
+    local r1, g1, b1 = HueToRGB(h)
+    local r2, g2, b2 = HueToRGB((h + 1 / 3) % 1)
+    return r1, g1, b1, a, nil, r2, g2, b2
+  end
   if effect == "rainbow" then
     local mode = P.DB.profile.rainbowMode
     if mode == "chaos" then
@@ -126,7 +186,8 @@ function P.EffectColour(effect, c, second)
            0.5 + 0.5 * sin(phase + TWO_PI / 3),
            0.5 + 0.5 * sin(phase + 2 * TWO_PI / 3), a
   elseif effect == "pulse" then
-    local s = 0.3 + 0.7 * abs(sin(phase))
+    local low = PulseLow()
+    local s = low + (1 - low) * abs(sin(phase))
     return c[1] * s, c[2] * s, c[3] * s, a
   elseif effect == "breathe" then
     -- slower than pulse (about 14 s at speed 1.0), eased at both ends
@@ -143,8 +204,7 @@ function P.EffectColour(effect, c, second)
   elseif effect == "flicker" then
     return c[1] * flicker, c[2] * flicker, c[3] * flicker, a
   elseif effect == "sweep" then
-    local at = (phase / PHASE_RATE / SWEEP_PERIOD) % 1
-    local function Peak(v) return min(1, v + SWEEP_LIFT) end
+    local at = (phase / PHASE_RATE / SweepPeriod()) % 1
     return c[1] * SWEEP_BASE, c[2] * SWEEP_BASE, c[3] * SWEEP_BASE, a, at, Peak(c[1]), Peak(c[2]), Peak(c[3])
   end
   return c[1], c[2], c[3], a

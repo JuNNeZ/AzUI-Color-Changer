@@ -151,6 +151,17 @@ function P.PetEffect(number)
   return settings and settings.effect or "static"
 end
 
+-- A pet's own second colour (Two-tone, Gradient, Flow), or nil for the shared one.
+function P.PetSecondColour(number)
+  local settings = number and P.DB.profile.pets[number]
+  return settings and settings.color2 or nil
+end
+
+function P.SetPetSecondColour(number, r, g, b)
+  P.EnsurePetSettings(number).color2 = { r, g, b, 1 }
+  P.ApplyPetColour()
+end
+
 function P.EnsurePetSettings(number)
   local pets = P.DB.profile.pets
   if not pets[number] then pets[number] = { mode = "family", effect = "static" } end
@@ -177,6 +188,10 @@ end
 ---------------------------------------------------------------------
 -- THE STABLE
 ---------------------------------------------------------------------
+-- A pet the stable has not shown for this long is forgotten, wherever you are.
+local FORGET_AFTER = 180 * 24 * 3600
+
+local function Now() return (time and time()) or os.time() end
 -- Keep what the stable told us about a pet, so the Hunter Pets page can list it later.
 -- Returns the pet's number and whether the list changed.
 function P.RememberPet(info, slot)
@@ -192,6 +207,7 @@ function P.RememberPet(info, slot)
     known[number] = pet
   end
   pet.name, pet.slot, pet.icon = info.name, slot, info.icon
+  pet.lastSeen = Now()
   pet.familyName, pet.specialization = info.familyName, info.specialization
   -- for the gallery's portraits and model; Forever's stable may leave these out
   pet.displayID, pet.uiModelSceneID = tonumber(info.displayID), tonumber(info.uiModelSceneID)
@@ -232,10 +248,23 @@ function P.RefreshKnownPets()
     remember(C_StableInfo.GetStabledPetList)
   end
   -- Only a stable master shows every pet, so only forget abandoned pets there
+  local known = P.DB.char.knownPets
   if complete and next(seen) and C_StableInfo.IsAtStableMaster and C_StableInfo.IsAtStableMaster() then
-    local known = P.DB.char.knownPets
     for number in pairs(known) do
       if not seen[number] then
+        known[number] = nil
+        changed = true
+      end
+    end
+  end
+  -- Elsewhere, a pet not shown for half a year is gone too. Pets saved before this
+  -- was kept start counting now. Its colour settings stay in the profile.
+  if complete and next(seen) then
+    local now = Now()
+    for number, pet in pairs(known) do
+      if not pet.lastSeen then
+        pet.lastSeen = now
+      elseif not seen[number] and now - pet.lastSeen > FORGET_AFTER then
         known[number] = nil
         changed = true
       end
@@ -293,7 +322,7 @@ local function ResolvePet()
   if not P.DB.profile.petColouring then return end
   local colour, effect = P.PetColour(number, name, familyID), P.PetEffect(number)
   if colour or (effect == "rainbow" and P.PetMode(number) ~= "off") then
-    P.activePet = { color = colour, effect = effect }
+    P.activePet = { color = colour, effect = effect, color2 = P.PetSecondColour(number) }
   end
 end
 

@@ -1,10 +1,11 @@
--- Paint.lua - the bars, the channels they belong to, the mixer that picks each
--- channel's colour, fades, and the painter that puts it on screen.
+-- Paint.lua - the channels bars belong to, the mixer that picks each channel's colour,
+-- fades, and the painter that puts it on screen. Frames.lua finds the bars.
 --
--- Channels: "player" (your health bar), "pet" (the pet frames) and "power" (your power
--- bar, only while that is switched on). For each channel the mixer takes, in order:
--- the first matching rule, the pet's colour, your health (if Colour by Health is on,
--- your health bar only), and finally your own colour and effect.
+-- Channels: "player" (your health bar), "pet" (the pet frames), "power", "cast" and
+-- "classpower" (your power bar, cast bar and class resources, while switched on or taken
+-- by a rule) and "absorb" (the heal and absorb overlays, while switched on). For each channel the mixer takes, in order: the
+-- first matching rule, the pet's colour, your health (if Colour by Health is on, your
+-- health bar only), and finally your own colour and effect.
 local _, ns = ...
 local P = ns.P
 local L = P.L
@@ -13,44 +14,18 @@ local min, max = math.min, math.max
 local pairs, pcall, type = pairs, pcall, type
 
 local FADE_TIME     = 0.3 -- seconds to blend into a new colour
-local SCAN_INTERVAL = 2   -- seconds between looks for late-created frames
 
--- AceAddon names of the AzeriteUI editions (JuNNeZ Edition also registers "AzeriteUI").
--- JuNNeZ Edition's themes (Hunter, Mage, Paladin, Legacy HUD) keep the native Health bar
--- and only add casings around it, so the same frames are coloured under every theme.
-local AZERITE_ADDONS  = { "AzeriteUI", "AzeriteUI6", "AzeriteUI5_JuNNeZ_Edition" }
--- Unit frame modules -> channel. 5.x and JuNNeZ Edition use PlayerFrame(+Alternate) and PetFrame,
--- AzeriteUI6 uses Player and Pet.
-local AZERITE_MODULES = {
-  PlayerFrame = "player", PlayerFrameAlternate = "player", PetFrame = "pet",
-  Player      = "player", Pet                  = "pet",
-}
--- Global frame names, used when the module lookup finds nothing
-local AZERITE_FRAMES  = {
-  AzeriteUnitFramePlayer     = "player", AzeriteUnitFramePlayerAlternate = "player", AzeriteUnitFramePet = "pet",
-  oUF_AzeriteUnitFramePlayer = "player", oUF_AzeriteUnitFramePet         = "pet",
-}
--- Other unit frame addons, by global frame name, and where each keeps its bars. ElvUI and
--- Unhalted Unit Frames are built on oUF; Shadowed Unit Frames names its bars itself.
-local OUF_PARTS = { health = "Health", power = "Power", cast = "Castbar" }
-local SUF_PARTS = { health = "healthBar", power = "powerBar",
-  cast = function(frame) return type(frame.castBar) == "table" and frame.castBar.bar or nil end }
-local OTHER_FRAMES = {
-  { parts = OUF_PARTS, frames = { ElvUF_Player = "player", ElvUF_Pet = "pet" } },              -- ElvUI
-  { parts = OUF_PARTS, frames = { UUF_Player = "player", UUF_Pet = "pet" } },                  -- Unhalted Unit Frames
-  { parts = SUF_PARTS, frames = { SUFUnitplayer = "player", SUFUnitpet = "pet" } },            -- Shadowed Unit Frames
-}
--- AzeriteUI 5.x tints the health preview at 90% on the player frame and 70% on the pet frame
-local PREVIEW_FACTOR  = { player = 0.9, pet = 0.7 }
-
+-- Which bars exist is Frames.lua's business; it hands them over with P.Painter.addTarget.
 local targets       = setmetatable({}, { __mode = "k" }) -- bar -> brightness factor
-local channels      = setmetatable({}, { __mode = "k" }) -- bar -> "player" | "pet" | "power"
+local channels      = setmetatable({}, { __mode = "k" }) -- bar -> "player" | "pet" | "power" | "cast" | "classpower" | "absorb"
 local blizzardBars  = setmetatable({}, { __mode = "k" }) -- bar -> how to hand it back to Blizzard
-local optionalBars  = setmetatable({}, { __mode = "k" }) -- bar -> "blizzardPet" | "petFrame" | "power" | "cast"
+local optionalBars  = setmetatable({}, { __mode = "k" }) -- bar -> the setting that can take it away (Frames.lua)
 local textureOwners = setmetatable({}, { __mode = "k" }) -- bar texture -> bar
+local labels        = setmetatable({}, { __mode = "k" }) -- bar -> where it comes from, for /ahui check
+local previews      = setmetatable({}, { __mode = "k" }) -- the addon's own preview bars
+local ownerColour   = setmetatable({}, { __mode = "k" }) -- overlay -> { r, g, b, a } its owner gave it
 local hooked        = setmetatable({}, { __mode = "k" })
 local painting      = setmetatable({}, { __mode = "k" })
-local knownFrames   = setmetatable({}, { __mode = "k" })
 
 ---------------------------------------------------------------------
 -- COLOUR BY HEALTH
@@ -59,7 +34,10 @@ local knownFrames   = setmetatable({}, { __mode = "k" })
 -- runs inside the game instead: UnitHealthPercent evaluates it and hands back a
 -- colour the bar can take as it is (SetStatusBarColor accepts secret values). The
 -- preview bar's 90% is baked into a curve of its own, as nothing may be multiplied.
-local curves = {}
+-- A curve runs from the low-health colour to a full-health colour: yours, or a rule's
+-- when the rule is coloured by health. Curves are kept per full-health colour and factor.
+local curves = setmetatable({}, { __mode = "k" }) -- colour -> { [factor] = curve }
+local healthHigh = {}                              -- channel -> its full-health colour this repaint
 
 function P.HealthColourAvailable()
   return C_CurveUtil and C_CurveUtil.CreateColorCurve and UnitHealthPercent and CreateColor and true or false
@@ -73,23 +51,26 @@ function P.ResetHealthCurves()
   for key in pairs(curves) do curves[key] = nil end
 end
 
-local function HealthCurve(factor)
-  local curve = curves[factor]
+local function HealthCurve(factor, high)
+  local byFactor = curves[high]
+  if not byFactor then byFactor = {}; curves[high] = byFactor end
+  local curve = byFactor[factor]
   if curve then return curve end
-  local p = P.DB.profile
-  local low, high = p.lowHealthColour, p.color
+  local low = P.DB.profile.lowHealthColour
   curve = C_CurveUtil.CreateColorCurve()
   curve:AddPoint(0, CreateColor(low[1] * factor, low[2] * factor, low[3] * factor, low[4] or 1))
   curve:AddPoint(1, CreateColor(high[1] * factor, high[2] * factor, high[3] * factor, high[4] or 1))
-  curves[factor] = curve
+  byFactor[factor] = curve
   return curve
 end
 
+local function UnpackColour(colour) return colour:GetRGBA() end
+
 -- The colour for your health right now, untouched, or nothing if the game would not say.
-local function HealthColour(factor)
-  local ok, colour = pcall(UnitHealthPercent, "player", true, HealthCurve(factor))
+local function HealthColour(factor, high)
+  local ok, colour = pcall(UnitHealthPercent, "player", true, HealthCurve(factor, high))
   if not ok or colour == nil then return end
-  local unpacked, r, g, b, a = pcall(function() return colour:GetRGBA() end)
+  local unpacked, r, g, b, a = pcall(UnpackColour, colour)
   if unpacked then return r, g, b, a end
 end
 
@@ -103,18 +84,40 @@ local function ShowsPetColour(channel)
   return target == "both" or target == channel
 end
 
--- Where a channel's colour comes from: colour, effect, and which source it is
--- ("rule", "pet", "health", "power" or "own"). Health has no colour of its own here.
+-- A rule's colour and effect. A rule coloured by health ("By health") runs from its
+-- colour down to the low-health colour, on every bar but the pet frame (whose health
+-- is not yours); there it shows its colour as it is.
+local function FromRule(rule, channel)
+  if rule.effect == "health" then
+    if channel ~= "pet" and P.HealthColourAvailable() then return rule.color, "static", "health" end
+    return rule.color, "static", "rule"
+  end
+  return rule.color, rule.effect, "rule", rule.color2
+end
+
+-- Where a channel's colour comes from: colour, effect, which source it is ("rule",
+-- "pet", "health", "power", "cast", "classpower" or "own") and the source's own second
+-- colour (nil: the shared one from the Health Bar page). For "health" the
+-- colour is the full-health end (a rule's), or nil for your own colour.
+-- The power and cast bars and the class resources take a rule of their own first, then
+-- their own colour, and otherwise follow your health bar. The heal and absorb overlays
+-- take a shade of it.
+local OWN_SETTING = { power = "power", cast = "cast", classpower = "classPower" }
+
 function P.ChannelSource(channel)
   local p = P.DB.profile
-  if channel == "power" or channel == "cast" then
-    local own = p[channel]
-    if own.mode == "custom" then return own.color, own.effect, channel end
-    channel = "player" -- Match health bar
+  if channel == "absorb" then channel = "player" end
+  local setting = OWN_SETTING[channel]
+  if setting then
+    local rule = P.ActiveRule(channel)
+    if rule then return FromRule(rule, channel) end
+    local own = p[setting]
+    if own.mode == "custom" then return own.color, own.effect, channel, own.color2 end
+    channel = "player" -- Match health bar (or off, while only a rule takes the bar)
   end
   local rule = P.ActiveRule(channel)
-  if rule then return rule.color, rule.effect, "rule" end
-  if ShowsPetColour(channel) then return P.activePet.color, P.activePet.effect, "pet" end
+  if rule then return FromRule(rule, channel) end
+  if ShowsPetColour(channel) then return P.activePet.color, P.activePet.effect, "pet", P.activePet.color2 end
   -- Colour by Health cannot carry an effect (the game works the colour out), so an
   -- effect you pick shows instead; None brings colouring by health back.
   if channel == "player" and P.HealthColourOn() and (p.effect or "static") == "static" then
@@ -133,7 +136,7 @@ end
 ---------------------------------------------------------------------
 -- When a colour's source changes (a pet is called, a preset loads, a rule starts),
 -- each channel blends from what it last showed to the new colour.
-local lastShown = { player = {}, pet = {}, power = {}, cast = {} }
+local lastShown = { player = {}, pet = {}, power = {}, cast = {}, classpower = {}, absorb = {} }
 local fadeFrom, fadeStart = {}, nil
 
 function P.StartFade()
@@ -160,14 +163,25 @@ function P.IsFading() return fadeStart ~= nil end
 
 -- The colour a channel shows this frame: r, g, b, a and, for Sweep, where its band
 -- is and the band's colour. Nothing when it is drawn from your health.
+-- How far the heal and absorb overlays are lifted towards white, so they stand out
+-- from the health bar under them.
+local OVERLAY_LIFT = 0.45
+
 function P.ChannelColour(channel, fade)
-  local colour, effect, kind = P.ChannelSource(channel)
+  local colour, effect, kind, second = P.ChannelSource(channel)
   local last = lastShown[channel]
+  if channel == "absorb" then
+    -- your health bar's colour and effect, lifted; no band and no gradient on a thin overlay
+    if kind == "health" then colour, effect = colour or P.DB.profile.color, "static" end
+    local r, g, b, a = P.EffectColour(effect, colour, second)
+    return r + (1 - r) * OVERLAY_LIFT, g + (1 - g) * OVERLAY_LIFT, b + (1 - b) * OVERLAY_LIFT, a
+  end
   if kind == "health" then
     last[1] = nil
+    healthHigh[channel] = colour
     return
   end
-  local r, g, b, a, at, pr, pg, pb = P.EffectColour(effect, colour)
+  local r, g, b, a, at, pr, pg, pb = P.EffectColour(effect, colour, second)
   local from = fadeFrom[channel]
   if fade and from then
     r, g, b, a = from[1] + (r - from[1]) * fade, from[2] + (g - from[2]) * fade,
@@ -265,6 +279,24 @@ local function HideBand(bar)
   if bands[bar] then bands[bar]:Hide() end
 end
 
+-- The band's sides and length only change with the bar's shape, so they are set again
+-- only then; each paint just moves the band along.
+local function LayoutBand(band, bar, vertical, edge)
+  if band.vertical == vertical and band.edge == edge then return end
+  band.vertical, band.edge = vertical, edge
+  local left, right = band.left, band.right
+  left:ClearAllPoints()
+  right:ClearAllPoints()
+  if vertical then
+    -- bottom to top: "left" is the lower half, "right" the upper
+    left:SetPoint("LEFT", bar, "LEFT");   left:SetPoint("RIGHT", bar, "RIGHT");   left:SetHeight(edge)
+    right:SetPoint("LEFT", bar, "LEFT");  right:SetPoint("RIGHT", bar, "RIGHT");  right:SetHeight(edge)
+  else
+    left:SetPoint("TOP", bar, "TOP");     left:SetPoint("BOTTOM", bar, "BOTTOM"); left:SetWidth(edge)
+    right:SetPoint("TOP", bar, "TOP");    right:SetPoint("BOTTOM", bar, "BOTTOM"); right:SetWidth(edge)
+  end
+end
+
 -- Draws the band; false when the bar has nothing to draw it on.
 local function ShowBand(bar, fill, at, r, g, b, a)
   if not (fill and CreateColor) then return false end
@@ -278,26 +310,21 @@ local function ShowBand(bar, fill, at, r, g, b, a)
   local centre = -edge + at * (length + 2 * edge)
   -- softer on a vertical bar such as the crystal, where the band covers more of it
   local strength = min(1, max(0.1, tonumber(P.DB.profile.sweepStrength) or 0.6)) * (vertical and 0.6 or 1)
-  local low, high = CreateColor(r, g, b, 0), CreateColor(r, g, b, (a or 1) * strength)
-  band.left:ClearAllPoints()
-  band.right:ClearAllPoints()
+  -- one pair of colours per band, refilled on every paint (SetGradient copies them)
+  local low, high = band.low, band.high
+  if not low then
+    low, high = CreateColor(r, g, b, 0), CreateColor(r, g, b, 1)
+    band.low, band.high = low, high
+  end
+  low.r, low.g, low.b, low.a = r, g, b, 0
+  high.r, high.g, high.b, high.a = r, g, b, (a or 1) * strength
+  LayoutBand(band, bar, vertical, edge)
   if vertical then
-    -- bottom to top: "left" is the lower half, "right" the upper
-    for _, half in ipairs({ band.left, band.right }) do
-      half:SetPoint("LEFT", bar, "LEFT")
-      half:SetPoint("RIGHT", bar, "RIGHT")
-      half:SetHeight(edge)
-    end
     band.left:SetPoint("BOTTOM", bar, "BOTTOM", 0, centre - edge)
     band.right:SetPoint("BOTTOM", bar, "BOTTOM", 0, centre)
     band.left:SetGradient("VERTICAL", low, high)
     band.right:SetGradient("VERTICAL", high, low)
   else
-    for _, half in ipairs({ band.left, band.right }) do
-      half:SetPoint("TOP", bar, "TOP")
-      half:SetPoint("BOTTOM", bar, "BOTTOM")
-      half:SetWidth(edge)
-    end
     band.left:SetPoint("LEFT", bar, "LEFT", centre - edge, 0)
     band.right:SetPoint("LEFT", bar, "LEFT", centre, 0)
     band.left:SetGradient("HORIZONTAL", low, high)
@@ -322,14 +349,39 @@ local function CastSaysSomething(bar)
   return not (bar.casting or bar.channeling or bar.empowering or bar.spellName) -- spellName: Shadowed Unit Frames
 end
 
+-- The texture that shows a bar's colour: a status bar's fill, PitBull 4's foreground,
+-- or the bar itself when it is a plain texture (AzeriteUI's heal prediction).
+local function FillTexture(bar)
+  if type(bar.GetStatusBarTexture) == "function" then return bar:GetStatusBarTexture() end
+  if type(bar.fg) == "table" and type(bar.fg.SetVertexColor) == "function" then return bar.fg end
+  if type(bar.SetVertexColor) == "function" then return bar end
+end
+
+-- Gradient's two ends, refilled on every paint (SetGradient copies them)
+local gradientFrom, gradientTo
+
+local function ShowGradient(bar, texture, r, g, b, a, er, eg, eb)
+  if not (texture and texture.SetGradient and CreateColor) then return end
+  if not gradientFrom then gradientFrom, gradientTo = CreateColor(r, g, b, a), CreateColor(er, eg, eb, a) end
+  gradientFrom.r, gradientFrom.g, gradientFrom.b, gradientFrom.a = r, g, b, a
+  gradientTo.r, gradientTo.g, gradientTo.b, gradientTo.a = er, eg, eb, a
+  -- left to right, or bottom to top on a vertical bar such as the crystal
+  texture:SetGradient(IsVertical(bar) and "VERTICAL" or "HORIZONTAL", gradientFrom, gradientTo)
+end
+
+-- `at` is where Sweep's band is; without it, `pr, pg, pb` is Gradient's far end.
 local function applyColour(bar, r, g, b, a, at, pr, pg, pb)
   if CastSaysSomething(bar) then return end
+  local gradient = not at and pr ~= nil
   local fill = at and VisibleFill(bar)
   if at and not (fill and CreateColor) then
     local k = Shimmer(at)
     r, g, b = r + (pr - r) * k, g + (pg - g) * k, b + (pb - b) * k
     at = nil
   end
+  -- an overlay keeps the alpha its owner gives it (hidden, or see-through)
+  local owner = ownerColour[bar]
+  if owner then a = owner[4] end
   if blizzardBars[bar] then
     -- The default bar art is coloured; desaturate it so the tint shows the real colour.
     -- Nothing is ever written onto Blizzard's frames (no lockColor): a value an addon
@@ -342,16 +394,57 @@ local function applyColour(bar, r, g, b, a, at, pr, pg, pb)
   if type(bar.SetStatusBarColor) == "function" then
     bar:SetStatusBarColor(r, g, b, a)
   end
-  local texture = type(bar.GetStatusBarTexture) == "function" and bar:GetStatusBarTexture()
+  local texture = FillTexture(bar)
   if texture and type(texture.SetVertexColor) == "function" then
     texture:SetVertexColor(r, g, b, a)
   end
+  if gradient then ShowGradient(bar, texture, r, g, b, a, pr, pg, pb) end
   if at then ShowBand(bar, fill, at, pr, pg, pb, a) else HideBand(bar) end
   -- JuNNeZ Edition draws its player power bar with a fill texture of its own.
   local fake = bar.FakeFill
   if type(fake) == "table" and type(fake.SetVertexColor) == "function" then
     fake:SetVertexColor(r, g, b, a)
+    if gradient then ShowGradient(bar, fake, r, g, b, a, pr, pg, pb) end
   end
+end
+
+---------------------------------------------------------------------
+-- COLOUR VISION PREVIEW
+---------------------------------------------------------------------
+-- The Studio preview can show your colours as they look with a common kind of colour
+-- blindness. Only the preview bars change. Machado, Oliveira & Fernandes (2009) at full
+-- strength, applied in linear light; monochrome is the eye's luminance.
+P.VISION_MODES = { "normal", "protanopia", "deuteranopia", "tritanopia", "achromatopsia" }
+P.VISION_VALUES = {
+  normal = L["Normal vision"], protanopia = L["Protanopia (no red)"], deuteranopia = L["Deuteranopia (no green)"],
+  tritanopia = L["Tritanopia (no blue)"], achromatopsia = L["Monochrome"],
+}
+local VISION = {
+  protanopia    = { 0.152286, 1.052583, -0.204868, 0.114503, 0.786281, 0.099216, -0.003882, -0.048116, 1.051998 },
+  deuteranopia  = { 0.367322, 0.860646, -0.227968, 0.280085, 0.672501, 0.047413, -0.011820, 0.042940, 0.968881 },
+  tritanopia    = { 1.255528, -0.076749, -0.178779, -0.078411, 0.930809, 0.147602, 0.004733, 0.691367, 0.303900 },
+  achromatopsia = { 0.2126, 0.7152, 0.0722, 0.2126, 0.7152, 0.0722, 0.2126, 0.7152, 0.0722 },
+}
+local vision -- the matrix the preview shows, or nil
+
+local function ToLinear(v) return v <= 0.04045 and v / 12.92 or ((v + 0.055) / 1.055) ^ 2.4 end
+local function ToScreen(v)
+  v = min(1, max(0, v))
+  return v <= 0.0031308 and v * 12.92 or 1.055 * v ^ (1 / 2.4) - 0.055
+end
+
+local function Seen(r, g, b)
+  local m = vision
+  r, g, b = ToLinear(r), ToLinear(g), ToLinear(b)
+  return ToScreen(m[1] * r + m[2] * g + m[3] * b), ToScreen(m[4] * r + m[5] * g + m[6] * b),
+         ToScreen(m[7] * r + m[8] * g + m[9] * b)
+end
+P.SimulateVision = function(mode, r, g, b)
+  local saved = vision
+  vision = VISION[mode]
+  if vision then r, g, b = Seen(r, g, b) end
+  vision = saved
+  return r, g, b
 end
 
 -- Paints one bar. `r` nil means "your health decides", for the player channel.
@@ -361,32 +454,61 @@ local function paintBar(bar, r, g, b, a, at, pr, pg, pb)
   painting[bar] = true
   local ok, err
   if r == nil then
-    local hr, hg, hb, ha = HealthColour(factor)
+    local c = healthHigh[channels[bar]] or P.DB.profile.color
+    local hr, hg, hb, ha = HealthColour(factor, c)
     if hr ~= nil then
       ok, err = pcall(applyColour, bar, hr, hg, hb, ha) -- secret: passed on, never touched
     else
-      local c = P.DB.profile.color
       ok, err = pcall(applyColour, bar, c[1] * factor, c[2] * factor, c[3] * factor, c[4] or 1)
     end
   else
-    ok, err = pcall(applyColour, bar, r * factor, g * factor, b * factor, a,
-      at, pr and pr * factor, pg and pg * factor, pb and pb * factor)
+    r, g, b = r * factor, g * factor, b * factor
+    if pr then pr, pg, pb = pr * factor, pg * factor, pb * factor end
+    if vision and previews[bar] then
+      r, g, b = Seen(r, g, b)
+      if pr then pr, pg, pb = Seen(pr, pg, pb) end
+    end
+    ok, err = pcall(applyColour, bar, r, g, b, a, at, pr, pg, pb)
   end
   painting[bar] = nil
   if not ok then P.Debug(err) end
 end
 
-function P.Repaint()
+-- Each channel's colour for one repaint, in tables kept from one repaint to the next
+-- (this runs up to 60 times a second, so it makes no garbage). Every channel is worked
+-- out, bars or not, so a bar that turns up mid-fade fades from what its channel showed.
+local CHANNELS = { "player", "pet", "power", "cast", "classpower", "absorb" }
+local frameColours = { player = {}, pet = {}, power = {}, cast = {}, classpower = {}, absorb = {} }
+
+-- Notes whether the channel shows anything new. A channel drawn from your health
+-- (r nil) always counts as new: its colour lives inside the game.
+local function Fill(out, r, g, b, a, at, pr, pg, pb)
+  out.changed = r == nil or out[1] ~= r or out[2] ~= g or out[3] ~= b or out[4] ~= a
+    or out[5] ~= at or out[6] ~= pr or out[7] ~= pg or out[8] ~= pb
+  out[1], out[2], out[3], out[4], out[5], out[6], out[7], out[8] = r, g, b, a, at, pr, pg, pb
+end
+
+-- `onlyChanged` (the animator) leaves bars alone whose channel shows what it showed:
+-- while the pet frame pulses, a still health bar is not painted 30 times a second.
+local function Repaint(onlyChanged)
   if not P.DB then return end
   local fade = FadeProgress()
-  local colours = {}
-  for _, channel in ipairs({ "player", "pet", "power", "cast" }) do
-    colours[channel] = { P.ChannelColour(channel, fade) }
+  for i = 1, #CHANNELS do
+    local channel = CHANNELS[i]
+    Fill(frameColours[channel], P.ChannelColour(channel, fade))
   end
   for bar, channel in pairs(channels) do
-    paintBar(bar, unpack(colours[channel]))
+    -- a bar you cannot see (a pet frame with no pet, a closed window's preview) waits:
+    -- it is painted as it shows (see addTarget)
+    local c = frameColours[channel]
+    if (not onlyChanged or c.changed) and (not bar.IsVisible or bar:IsVisible()) then
+      paintBar(bar, c[1], c[2], c[3], c[4], c[5], c[6], c[7], c[8])
+    end
   end
 end
+
+-- Paints every bar: after a setting changes, whatever it was.
+function P.Repaint() Repaint(false) end
 
 -- Another addon (or Blizzard) recoloured a bar: put ours back in the same frame.
 local function RepaintBar(bar)
@@ -395,16 +517,43 @@ local function RepaintBar(bar)
   end
 end
 
-local function onBarColour(bar) RepaintBar(bar) end
+-- An overlay's owner says how see-through it is, and its colour is what it gets back
+-- when overlays are switched off.
+local function NoteOwner(bar, r, g, b, a)
+  if channels[bar] ~= "absorb" or painting[bar] then return end
+  a = a or 1
+  if not (P.IsAccessible(r) and P.IsAccessible(g) and P.IsAccessible(b) and P.IsAccessible(a)) then return end
+  local owner = ownerColour[bar] or {}
+  owner[1], owner[2], owner[3], owner[4] = r, g, b, a
+  ownerColour[bar] = owner
+end
 
-local function onTextureColour(texture)
+local function onBarColour(bar, r, g, b, a)
+  NoteOwner(bar, r, g, b, a)
+  RepaintBar(bar)
+end
+
+local function onTextureColour(texture, r, g, b, a)
   local bar = textureOwners[texture]
-  if bar then RepaintBar(bar) end
+  if not bar then return end
+  if bar == texture then NoteOwner(bar, r, g, b, a) end
+  RepaintBar(bar)
+end
+
+-- The colour an overlay shows before it is taken.
+local function ReadOwner(bar)
+  local ok, r, g, b, a
+  if type(bar.GetStatusBarColor) == "function" then
+    ok, r, g, b, a = pcall(bar.GetStatusBarColor, bar)
+  elseif type(bar.GetVertexColor) == "function" then
+    ok, r, g, b, a = pcall(bar.GetVertexColor, bar)
+  end
+  if ok and r ~= nil then NoteOwner(bar, r, g, b, a) end
 end
 
 -- oUF in newer AzeriteUI builds colours the texture directly, so hook that as well
 local function hookTexture(bar)
-  local texture = type(bar.GetStatusBarTexture) == "function" and bar:GetStatusBarTexture()
+  local texture = FillTexture(bar)
   if type(texture) ~= "table" or textureOwners[texture] or type(texture.SetVertexColor) ~= "function" then return end
   if pcall(hooksecurefunc, texture, "SetVertexColor", onTextureColour) then
     textureOwners[texture] = bar
@@ -417,15 +566,28 @@ local function onBarTexture(bar)
   RepaintBar(bar)
 end
 
-local function addTarget(bar, factor, channel)
-  if type(bar) ~= "table" or targets[bar] then return end
-  if type(bar.SetStatusBarColor) ~= "function" and type(bar.GetStatusBarTexture) ~= "function" then return end
+-- Anything that shows a colour: a status bar, PitBull 4's bar, or a plain texture.
+local function CanPaint(bar)
+  return type(bar.SetStatusBarColor) == "function" or type(bar.GetStatusBarTexture) == "function"
+    or (type(bar.SetColor) == "function" and type(bar.fg) == "table")
+    or type(bar.SetVertexColor) == "function"
+end
+
+-- `label` names where the bar comes from, for /ahui check.
+local function addTarget(bar, factor, channel, label)
+  if type(bar) ~= "table" or targets[bar] or not CanPaint(bar) then return end
   targets[bar], channels[bar] = factor, channel
+  labels[bar] = label or labels[bar]
+  if channel == "absorb" then ReadOwner(bar) end
   -- Hooks cannot be removed, so a bar handed back keeps them; they do nothing without a target.
   if not hooked[bar] then
     hooked[bar] = true
     if type(bar.SetStatusBarColor) == "function" then pcall(hooksecurefunc, bar, "SetStatusBarColor", onBarColour) end
     if type(bar.SetStatusBarTexture) == "function" then pcall(hooksecurefunc, bar, "SetStatusBarTexture", onBarTexture) end
+    -- PitBull 4 colours its bars with SetColor
+    if type(bar.SetColor) == "function" and type(bar.fg) == "table" then pcall(hooksecurefunc, bar, "SetColor", onBarColour) end
+    -- Repaint skips hidden bars; this catches one up the moment it shows
+    if type(bar.HookScript) == "function" then pcall(bar.HookScript, bar, "OnShow", RepaintBar) end
   end
   hookTexture(bar)
   RepaintBar(bar)
@@ -435,177 +597,46 @@ end
 -- Stop colouring a bar and let its owner colour it again.
 local function removeTarget(bar)
   if not targets[bar] then return end
-  targets[bar], channels[bar], optionalBars[bar] = nil, nil, nil
+  local owner = ownerColour[bar]
+  targets[bar], channels[bar], optionalBars[bar], ownerColour[bar] = nil, nil, nil, nil
   local restore = blizzardBars[bar]
   blizzardBars[bar] = nil
   HideBand(bar)
   pcall(function()
     if type(restore) == "function" then restore(bar)
+    elseif owner then
+      -- an overlay gets back the colour its owner gave it
+      if type(bar.SetStatusBarColor) == "function" then bar:SetStatusBarColor(owner[1], owner[2], owner[3], owner[4]) end
+      local texture = FillTexture(bar)
+      if texture then texture:SetVertexColor(owner[1], owner[2], owner[3], owner[4]) end
     elseif bar.ForceUpdate then bar:ForceUpdate() end
   end)
 end
 
----------------------------------------------------------------------
--- FRAME DISCOVERY
----------------------------------------------------------------------
-local function GetBlizzardPlayerHealthBar()
-  if type(PlayerFrame_GetHealthBar) == "function" then
-    local ok, bar = pcall(PlayerFrame_GetHealthBar)
-    if ok and bar then return bar end
-  end
-  local main = PlayerFrame and PlayerFrame.PlayerFrameContent and PlayerFrame.PlayerFrameContent.PlayerFrameContentMain
-  local container = main and main.HealthBarsContainer
-  if container and container.HealthBar then return container.HealthBar end
-  return PlayerFrame and PlayerFrame.healthbar or _G.PlayerFrameHealthBar
-end
-
-local function GetBlizzardPlayerManaBar()
-  if type(PlayerFrame_GetManaBar) == "function" then
-    local ok, bar = pcall(PlayerFrame_GetManaBar)
-    if ok and bar then return bar end
-  end
-  return PlayerFrame and PlayerFrame.manabar or _G.PlayerFrameManaBar
-end
-
-local function GetBlizzardPetHealthBar()
-  return PetFrame and PetFrame.healthbar or _G.PetFrameHealthBar
-end
-
--- How each Blizzard bar gets its own colour back. Blizzard's update functions are
--- never called from here: run from an addon they compare secret values while
--- tainted and error. The bar is given its default colour, and Blizzard's next
--- update takes over from there.
-local function RestoreBlizzard(bar)
-  if bar.SetStatusBarDesaturated then bar:SetStatusBarDesaturated(false) end
-end
-
-local function RestoreBlizzardPet(bar)
-  RestoreBlizzard(bar)
-  bar:SetStatusBarColor(0, 1, 0)
-end
-
-local function RestoreBlizzardMana(bar)
-  RestoreBlizzard(bar)
-  local ok, kind = pcall(UnitPowerType, "player")
-  local colour = ok and P.IsAccessible(kind) and PowerBarColor and PowerBarColor[kind]
-  if colour then bar:SetStatusBarColor(colour.r, colour.g, colour.b) else bar:SetStatusBarColor(0, 0, 1) end
-end
-
-local function addBlizzardTarget(bar, channel, restore, optional)
-  if not bar or targets[bar] then return end
-  blizzardBars[bar] = restore
-  if addTarget(bar, 1, channel) then
-    optionalBars[bar] = optional
-  else
-    blizzardBars[bar] = nil
-  end
-end
-
-local function Part(frame, part)
-  if type(part) == "function" then return part(frame) end
-  return frame[part]
-end
-
--- `parts` says where the frame keeps its bars; AzeriteUI's own frames leave it out.
-local function registerUnitFrame(frame, channel, parts)
-  local health = type(frame) == "table" and Part(frame, (parts or OUF_PARTS).health)
-  if type(health) ~= "table" then return end
-  -- Pet frames can be left to their addon ("Show on: Pet frame" off)
-  local pet = channel == "pet"
-  if pet and not P.DB.profile.colourPetFrames then return end
-  if not targets[health] then
-    addTarget(health, 1, channel)
-    if pet then optionalBars[health] = "petFrame" end
-    if not parts and type(health.Preview) == "table" then
-      addTarget(health.Preview, PREVIEW_FACTOR[channel], channel)
-      if pet then optionalBars[health.Preview] = "petFrame" end
-    end
-    if not knownFrames[frame] then
-      knownFrames[frame] = true
-      P.Debug("Colouring unit frame " .. tostring(frame.GetName and frame:GetName() or "?"))
-    end
-  end
-  if channel ~= "player" then return end
-  -- Your power bar, while that is switched on
-  if P.DB.profile.power.mode ~= "off" then
-    -- the power bar or crystal, and JuNNeZ Edition's mana orb
-    local bars = parts and { Part(frame, parts.power) } or { frame.Power, frame.ManaOrb }
-    for _, bar in ipairs(bars) do
-      if type(bar) == "table" and addTarget(bar, 1, "power") then optionalBars[bar] = "power" end
-    end
-  end
-  -- Another addon's cast bar lives on its player frame (AzeriteUI's has a module of its own)
-  if parts and P.DB.profile.cast.mode ~= "off" then
-    local cast = Part(frame, parts.cast)
-    if type(cast) == "table" and addTarget(cast, 1, "cast") then optionalBars[cast] = "cast" end
-  end
-end
-
-function P.ScanFrames()
-  if not P.DB then return end
-  if P.AceAddon then
-    for i = 1, #AZERITE_ADDONS do
-      local aui = P.AceAddon:GetAddon(AZERITE_ADDONS[i], true)
-      if type(aui) == "table" and type(aui.GetModule) == "function" then
-        for moduleName, channel in pairs(AZERITE_MODULES) do
-          local module = aui:GetModule(moduleName, true)
-          if type(module) == "table" then registerUnitFrame(module.frame, channel) end
-        end
-      end
-    end
-  end
-  for frameName, channel in pairs(AZERITE_FRAMES) do
-    registerUnitFrame(_G[frameName], channel)
-  end
-  for _, addon in ipairs(OTHER_FRAMES) do
-    for frameName, channel in pairs(addon.frames) do
-      registerUnitFrame(_G[frameName], channel, addon.parts)
-    end
-  end
-  addBlizzardTarget(GetBlizzardPlayerHealthBar(), "player", RestoreBlizzard)
-  if P.DB.profile.blizzardPetFrame and P.DB.profile.colourPetFrames then
-    addBlizzardTarget(GetBlizzardPetHealthBar(), "pet", RestoreBlizzardPet, "blizzardPet")
-  end
-  if P.DB.profile.power.mode ~= "off" then
-    addBlizzardTarget(GetBlizzardPlayerManaBar(), "power", RestoreBlizzardMana, "power")
-  end
-  -- your cast bar: AzeriteUI 5.x's and JuNNeZ Edition's PlayerCastBarFrame module
-  if P.DB.profile.cast.mode ~= "off" and P.AceAddon then
-    for i = 1, #AZERITE_ADDONS do
-      local aui = P.AceAddon:GetAddon(AZERITE_ADDONS[i], true)
-      local module = type(aui) == "table" and type(aui.GetModule) == "function" and aui:GetModule("PlayerCastBarFrame", true)
-      local cast = type(module) == "table" and type(module.frame) == "table" and module.frame.Castbar
-      if type(cast) == "table" and addTarget(cast, 1, "cast") then optionalBars[cast] = "cast" end
-    end
-  end
-end
-
--- After the Blizzard pet frame or power bar settings change: let go of bars that are
--- switched off, pick up the ones switched on.
-function P.RefreshOptionalBars()
-  local p = P.DB.profile
-  for bar, kind in pairs(optionalBars) do
-    if (kind == "power" and p.power.mode == "off") or (kind == "cast" and p.cast.mode == "off")
-      or (kind == "blizzardPet" and not p.blizzardPetFrame)
-      or ((kind == "petFrame" or kind == "blizzardPet") and not p.colourPetFrames) then
-      removeTarget(bar)
-    end
-  end
-  P.ScanFrames()
-  P.UpdateAnimator()
-  P.Repaint()
-end
+-- What Frames.lua needs to find and hand over bars.
+P.Painter = {
+  targets = targets, channels = channels, optionalBars = optionalBars, blizzardBars = blizzardBars,
+  labels = labels, addTarget = addTarget, removeTarget = removeTarget,
+}
 
 -- For tests and the debug log.
 function P.GetTargets() return targets, channels end
 
 -- Bars of the addon's own (the Studio's live preview) that show a channel like the real ones.
 function P.AddPreviewTarget(bar, channel)
+  previews[bar] = true
   if targets[bar] then channels[bar] = channel; RepaintBar(bar); return end
   addTarget(bar, 1, channel)
 end
 function P.RemovePreviewTarget(bar) removeTarget(bar) end
+function P.IsPreviewTarget(bar) return previews[bar] == true end
 
+-- Shows the preview bars as they look with a kind of colour blindness ("normal" for none).
+function P.SetPreviewVision(mode)
+  vision = VISION[mode]
+  P.previewVision = vision and mode or "normal"
+  for bar in pairs(previews) do RepaintBar(bar) end
+end
 ---------------------------------------------------------------------
 -- ANIMATION
 ---------------------------------------------------------------------
@@ -613,12 +644,24 @@ local animator = CreateFrame("Frame")
 animator:Hide()
 local frameElapsed = 0
 
+-- Something moves on a channel that has a bar to show it.
 function P.NeedsAnimation()
   if P.DB.profile.reduceMotion then return false end
-  if P.ChannelEffect("player") ~= "static" or P.ChannelEffect("pet") ~= "static" then return true end
-  local p = P.DB.profile
-  return (p.power.mode ~= "off" and P.ChannelEffect("power") ~= "static")
-    or (p.cast.mode ~= "off" and P.ChannelEffect("cast") ~= "static")
+  local player, pet, power, cast, classpower, absorb
+  for _, channel in pairs(channels) do
+    if channel == "player" then player = true
+    elseif channel == "pet" then pet = true
+    elseif channel == "power" then power = true
+    elseif channel == "cast" then cast = true
+    elseif channel == "classpower" then classpower = true
+    else absorb = true end
+  end
+  local animated = P.IsAnimated
+  return ((player or absorb) and animated(P.ChannelEffect("player")))
+    or (pet and animated(P.ChannelEffect("pet")))
+    or (power and animated(P.ChannelEffect("power")))
+    or (cast and animated(P.ChannelEffect("cast")))
+    or (classpower and animated(P.ChannelEffect("classpower"))) or false
 end
 
 function P.UpdateAnimator()
@@ -632,7 +675,7 @@ animator:SetScript("OnUpdate", function(self, elapsed)
   local rate = tonumber(P.DB.profile.updateRate) or 30
   if frameElapsed >= 1 / max(1, rate) then
     frameElapsed = 0
-    P.Repaint()
+    Repaint(true)
     -- a finished fade with nothing else moving needs no more frames
     if not P.IsFading() and not P.NeedsAnimation() then self:Hide() end
   end
@@ -673,7 +716,7 @@ end
 
 -- Preset packs, added from the Presets section. High Contrast is the Okabe-Ito
 -- palette, chosen to stay distinct for every common kind of colour blindness.
-P.PRESET_PACK_ORDER = { "fantasy", "elements", "pastel", "contrast" }
+P.PRESET_PACK_ORDER = { "fantasy", "elements", "pastel", "contrast", "midnight", "classes" }
 P.PRESET_PACKS = {
   fantasy = { label = L["Class Fantasy"], presets = {
     { "Fel", 0.35, 0.85, 0.20 }, { "Frost", 0.40, 0.75, 1.00 }, { "Holy Light", 1.00, 0.85, 0.40 },
@@ -693,7 +736,23 @@ P.PRESET_PACKS = {
     { "HC Yellow", 0.94, 0.89, 0.26 }, { "HC Blue", 0.00, 0.45, 0.70 }, { "HC Vermillion", 0.84, 0.37, 0.00 },
     { "HC Reddish Purple", 0.80, 0.47, 0.65 }, { "HC White", 1.00, 1.00, 1.00 },
   } },
+  -- the places of Midnight
+  midnight = { label = L["Midnight"], presets = {
+    { "Silvermoon Gold", 1.00, 0.78, 0.30 }, { "Sunwell Light", 1.00, 0.95, 0.70 },
+    { "Eversong Crimson", 0.78, 0.12, 0.20 }, { "Void Purple", 0.42, 0.18, 0.70 },
+    { "Harandar Green", 0.36, 0.70, 0.32 }, { "Zul'Aman Teal", 0.10, 0.62, 0.58 },
+  } },
+  -- every class colour, named in the game's language (filled in below)
+  classes = { label = L["Class Colours"], presets = {} },
 }
+do
+  local classes = P.PRESET_PACKS.classes.presets
+  for class, colour in pairs(RAID_CLASS_COLORS or {}) do
+    local name = LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[class] or class
+    if type(colour) == "table" and colour.r then classes[#classes + 1] = { name, colour.r, colour.g, colour.b } end
+  end
+  table.sort(classes, function(a, b) return a[1] < b[1] end)
+end
 
 -- Adds a pack's presets. Names you already have are left as they are.
 -- Returns how many were added.
@@ -795,6 +854,11 @@ function P.RenamePreset(newName)
   for i, name in ipairs(P.DB.profile.presetOrder) do
     if name == selected then P.DB.profile.presetOrder[i] = newName end
   end
+  -- a specialization that loads it follows the new name
+  local specPresets = P.DB.char.specPresets
+  for spec, name in pairs(specPresets) do
+    if type(spec) == "number" and name == selected then specPresets[spec] = newName end
+  end
   P.selectedPreset = newName
   P.UpdatePetColour()
   return true
@@ -816,24 +880,15 @@ end
 ---------------------------------------------------------------------
 -- EVENTS
 ---------------------------------------------------------------------
+-- UNIT_HEALTH comes many times a second in combat; while the animator runs, its next
+-- repaint (a frame or two away) picks the new health up anyway.
 local function HealthChanged()
-  if P.DB and P.HealthColourOn() then P.Repaint() end
+  if P.DB and P.HealthColourOn() and not animator:IsShown() then P.Repaint() end
 end
 P.On("UNIT_HEALTH", HealthChanged, "player")
 P.On("UNIT_MAXHEALTH", HealthChanged, "player")
-P.On("PLAYER_ENTERING_WORLD", function() P.ScanFrames() end)
-
-P.OnInitialize(function()
-  if type(PlayerFrame_UpdateArt) == "function" then
-    hooksecurefunc("PlayerFrame_UpdateArt", function() P.ScanFrames(); P.Repaint() end)
-  end
-  -- AzeriteUI creates (and can later enable) its player frames after we load.
-  C_Timer.NewTicker(SCAN_INTERVAL, P.ScanFrames)
-  P.ScanFrames()
-end)
 
 P.OnProfileChanged(function()
   P.selectedPreset = nil
   P.ResetHealthCurves()
-  P.RefreshOptionalBars()
 end)

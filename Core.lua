@@ -4,7 +4,7 @@ Core.lua - AzUI Color Picker
 Custom colour, effects, rules, presets and hunter-pet colours for your own health bar
 on AzeriteUI (5.x, JuNNeZ Edition with every theme, AzeriteUI6), ElvUI, Shadowed and
 Unhalted Unit Frames and the default Blizzard player frame, plus the pet frames and,
-if you want, your power bar and cast bar.
+if you want, your power bar, cast bar and class resources.
 Runs on Retail and on Forever (Camelot).
 
 The addon is split the way the AzUI Feature Plan lays it out. Every file shares the
@@ -12,13 +12,21 @@ private table `P` (ns.P); load order is set by the TOC:
 
   Locales/       translations for the client's language, English where there are none
   Core.lua       saved variables, schema upgrades, events, helpers
-  Effects.lua    pulse, rainbow, breathe, heartbeat, two-tone, flicker, sweep
+  Effects.lua    gradient, flow, spectrum, pulse, breathe, heartbeat, two-tone, flicker,
+                 sweep, rainbow
   Pets.lua       the stable, the pet that is out, pet and family colours
-  Rules.lua      colour rules: combat, mounted, resting, stealth, spec, instance, dead, auras
-  Paint.lua      bars, channels, the mixer that picks a colour, fades, the painter
+  Spells.lua     buff and debuff names, as you type them, to spell IDs
+  Rules.lua      colour rules: combat, threat, casting, role, group, instance, Mythic+, delve,
+                 zone, mounted, flying, vehicle, resting, stealth, dead, pet, War Mode, time,
+                 spec, auras; one or two conditions each, each can be turned around (Not) or
+                 tried, and a rule can play a sound when it starts
+  Paint.lua      channels, the mixer that picks a colour, fades, the painter
+  Frames.lua     finds your bars in each unit frame addon and Blizzard's frames
   Share.lua      import and export strings
-  Profiles.lua   per-specialization profiles
-  Options.lua    the option table, slash commands, key bindings, launcher
+  ShareChat.lua  [AzUI: ...] links in chat, fetched from their owner with addon messages
+  Profiles.lua   per-specialization profiles and presets
+  Pages/         the option table, one file per page
+  Options.lua    windows, slash commands (/ahui check among them), key bindings, launcher
   QuickPalette.lua  the minimap button's right-click palette
 
 The saved colour (profile.color) only changes when you pick a colour. Effects, rules
@@ -63,11 +71,13 @@ P.defaults = {
   profile = {
     schema               = 0,       -- upgraded by Migrate; 0 means "not yet seen by this version"
     color                = { 0.7, 0.1, 0.1, 1 }, -- RGBA, only changed by the user
-    effect               = "static", -- static | pulse | breathe | heartbeat | twotone | flicker | sweep | rainbow
-    secondColor          = { 0.15, 0.35, 0.85, 1 }, -- the other colour of Two-tone
+    effect               = "static", -- static | gradient | pulse | breathe | heartbeat | twotone | flicker | sweep | rainbow
+    secondColor          = { 0.15, 0.35, 0.85, 1 }, -- the other colour of Two-tone, the far end of Gradient
     rainbowSpeed         = 1,       -- 0.1-5 speed multiplier shared by every effect
     rainbowMode          = "cycle", -- cycle | ping | chaos
     sweepStrength        = 0.6,     -- how bright Sweep's band is, 0.1-1
+    sweepPeriod          = 2.4,     -- seconds for Sweep's band to cross the bar at speed 1.0
+    pulseDepth           = 0.3,     -- Pulse's lowest brightness, 0.05-0.9
     fade                 = true,    -- blend for 0.3 s when the colour's source changes
     reduceMotion         = false,   -- show every effect as its static colour
     updateRate           = 30,      -- repaints per second while something animates
@@ -88,17 +98,22 @@ P.defaults = {
     exampleRulesSeeded   = false,   -- the five example rules were offered once
     colourPetFrames      = true,    -- colour the pet frames at all ("Show on: Pet frame")
     blizzardPetFrame     = true,    -- colour Blizzard's pet frame like AzeriteUI's
+    overlays             = false,   -- colour the heal and absorb overlays in a shade of your health bar
+    personalResource     = false,   -- colour Blizzard's personal resource display too
     power                = { mode = "off", color = { 0.2, 0.45, 1, 1 }, effect = "static" }, -- off | health | custom
     cast                 = { mode = "off", color = { 1, 0.82, 0.2, 1 }, effect = "static" }, -- your cast bar, the same way
+    classPower           = { mode = "off", color = { 1, 0.85, 0.3, 1 }, effect = "static" }, -- combo points, runes and the like
   },
   char = {
     knownPets    = {},              -- [petNumber] = { name, icon, displayID, familyName, familyID, specialization, specID, slot }
     specProfiles = { enabled = false }, -- [specIndex] = profile name
+    specPresets  = { enabled = false }, -- [specIndex] = preset name, loaded when you change to it
   },
   global = {
     minimap   = { hide = false, showInCompartment = true },
     familyIDs = {},                 -- [family name in the client language] = family ID
     panel     = { theme = "studio", opacity = 1, scale = 1, classic = false }, -- the options window
+    chatShares = {},                -- setups you offered in chat, newest first: { name, text, time }
   },
 }
 
@@ -129,6 +144,33 @@ function P.Accessible(value)
 end
 
 function P.CopyColour(c) return { c[1], c[2], c[3], c[4] or 1 } end
+
+-- Lower case for names typed in any game language. string.lower only knows A-Z, so
+-- "ЖАЖДА крови" or "Écran" would not match the game's "Жажда крови" and "écran". This
+-- also lowers the accented Latin capitals (U+00C0-U+00DE) and Cyrillic (U+0400-U+042F);
+-- Korean and Chinese have no case.
+local function LowerTwoByte(lead, trail)
+  local b1, b2 = lead:byte(), trail:byte()
+  if b1 == 0xC3 and b2 >= 0x80 and b2 <= 0x9E and b2 ~= 0x97 then -- À-Þ, not ×
+    return string.char(0xC3, b2 + 0x20)
+  elseif b1 == 0xD0 and b2 >= 0x90 and b2 <= 0x9F then -- А-П
+    return string.char(0xD0, b2 + 0x20)
+  elseif b1 == 0xD0 and b2 >= 0xA0 and b2 <= 0xAF then -- Р-Я
+    return string.char(0xD1, b2 - 0x20)
+  elseif b1 == 0xD0 and b2 >= 0x80 and b2 <= 0x8F then -- Ѐ-Џ (Ё among them)
+    return string.char(0xD1, b2 + 0x10)
+  end
+end
+
+function P.Lower(text)
+  text = tostring(text or ""):lower()
+  return (text:gsub("([\195\208])([\128-\191])", function(lead, trail) return LowerTwoByte(lead, trail) end))
+end
+
+-- Chinese and Japanese commas and semicolons, as the plain ones, for lists typed in.
+function P.PlainSeparators(text)
+  return (tostring(text or ""):gsub("\239\188\140", ","):gsub("\227\128\129", ","):gsub("\239\188\155", ";"))
+end
 
 -- A colour as #RRGGBB
 function P.Hex(c)

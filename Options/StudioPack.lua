@@ -9,7 +9,10 @@
 --                                                  mirrored for the other three
 --   conditions  condition-<key>.tga       64x64    one per rule condition: combat,
 --                                                  mounted, resting, stealth, dead,
---                                                  spec, instance
+--                                                  spec, instance from the brief;
+--                                                  the rest, and role-tank, -healer
+--                                                  and -damager, drawn by
+--                                                  Tools\MakeConditionIcons.py
 --   emptyRules  empty-rules.tga           256x128  shown when there are no rules
 --   emptyPets   empty-pets.tga            256x128  shown when no pets are known
 --

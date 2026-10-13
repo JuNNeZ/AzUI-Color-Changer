@@ -73,6 +73,8 @@ local HELP_LINE = 13
 local MIN_TEXT_WIDTH = 120
 
 local TRACK_HEIGHT = 18
+local HEADER_ICON = 14
+local BUTTON_ICON = 14
 local SOUND_ON, SOUND_OFF, SOUND_CLICK = 856, 857, 852
 
 --------------------------------------------------------------------------
@@ -406,12 +408,32 @@ Controls.CreateHeader = function(parent)
 	frame:SetHeight(30)
 	control.frame = frame
 
+	-- The section's own icon, when it has one (Renderer.SectionGlyph).
+	local icon = frame:CreateTexture(nil, "OVERLAY")
+	icon:SetSize(HEADER_ICON, HEADER_ICON)
+	icon:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", PAD_LEFT, 7)
+	icon:Hide()
+	control.icon = icon
+
 	local label = frame:CreateFontString(nil, "OVERLAY")
 	label:SetFontObject(GetFont(12, true))
 	label:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", PAD_LEFT, 8)
 	label:SetJustifyH("LEFT")
 	label:SetWordWrap(false)
 	control.label = label
+
+	control.SetIcon = function(self, glyph)
+		self.glyph = glyph
+		label:ClearAllPoints()
+		if (glyph) then
+			Kit.Studio.Glyph(icon, glyph)
+			icon:Show()
+			label:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", PAD_LEFT + HEADER_ICON + 7, 8)
+		else
+			icon:Hide()
+			label:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", PAD_LEFT, 8)
+		end
+	end
 
 	local rule = frame:CreateTexture(nil, "ARTWORK")
 	rule:SetTexture(GetMedia("bar-small"))
@@ -441,6 +463,7 @@ Controls.CreateHeader = function(parent)
 	control.Restyle = function(self)
 		local accent = Kit.TextSelected
 		SetTextColor(self.label, accent)
+		self.icon:SetVertexColor(accent[1], accent[2], accent[3])
 		self.rule:SetVertexColor(accent[1], accent[2], accent[3], .35)
 	end
 
@@ -451,70 +474,25 @@ end
 --------------------------------------------------------------------------
 -- Toggle
 --------------------------------------------------------------------------
--- A switch, per the artifact: the cast bar in miniature. A three-sliced
--- cast_back trough, a three-sliced cast_bar fill that appears when on, and
--- point_diamond as the knob sliding between the two ends.
+-- A switch, borrowed from AdvancedHotkeyOverlaySystem: a pill track and a round
+-- knob that slides, every size a whole physical pixel (Studio.SwitchArt). It used
+-- to be the cast bar in miniature, a sliced trough with a diamond knob, which at a
+-- UI scale below 1 put its edges between pixels and read as a solid gold block.
 Controls.CreateToggle = function(parent)
 	local control = CreateRow(parent, "toggle")
 
-	-- The artifact's switch at its own size: 54 by 24, a knob a quarter
-	-- larger than the track, and its centre 6px in from either end.
-	local SWITCH_W, SWITCH_H = 54, 24
-	local KNOB_INSET = 6
-	local fillH, fillTop, fillBottom = Kit.FillMetrics(SWITCH_H)
-
 	local box = CreateFrame("Button", nil, control.area)
-	box:SetSize(SWITCH_W, SWITCH_H)
 	box:SetPoint("RIGHT", control.area, "RIGHT", 0, 0)
 	control.box = box
 
-	local trough = Kit.CreateSliceBar(box, "BACKGROUND", Kit.Trough, SWITCH_H)
-	control.trough = trough
+	local art = Kit.Studio.SwitchArt(box)
+	control.art = art
+	control.knob = art.knob
+	control.knobHost = art.knobHost
 
-	-- Between the trough's chamfered caps, lapping a pixel over each.
-	local fillInset = Kit.FillInset(SWITCH_H)
-
-	local fillHost = CreateFrame("Frame", nil, box)
-	fillHost:SetPoint("TOPLEFT", box, "TOPLEFT", fillInset, -fillTop)
-	fillHost:SetPoint("BOTTOMRIGHT", box, "BOTTOMRIGHT", -fillInset, fillBottom)
-	local fill = Kit.CreateSliceBar(fillHost, "ARTWORK", Kit.Fill, fillH)
-	control.fill = fill
-
-	-- The knob needs a frame of its own, above the fill's. A child frame
-	-- draws above its parent's regions whatever draw layer they are on, so a
-	-- knob put straight on the box sat behind the fill below it.
-	local knobHost = CreateFrame("Frame", nil, box)
-	knobHost:SetAllPoints(box)
-	knobHost:SetFrameLevel(fillHost:GetFrameLevel() + 2)
-	control.knobHost = knobHost
-
-	local knob = knobHost:CreateTexture(nil, "OVERLAY")
-	knob:SetTexture(GetMedia("point_diamond"))
-	local knobDraw = Kit.DrawSize(SWITCH_H * 1.25, "point_diamond")
-	knob:SetSize(knobDraw, knobDraw)
-	control.knob = knob
-
-	local gem = knobHost:CreateTexture(nil, "OVERLAY", nil, 2)
-	gem:SetTexture(GetMedia("point_crystal"))
-	gem:SetSize(8, 8)
-	gem:SetPoint("CENTER", knob, "CENTER", 0, 0)
-	gem:Hide()
-	control.gemOn = gem
-
-	local Reposition = function(self)
-		self.knob:ClearAllPoints()
-		if (self.value) then
-			self.knob:SetPoint("CENTER", self.box, "RIGHT", -KNOB_INSET, 0)
-		else
-			self.knob:SetPoint("CENTER", self.box, "LEFT", KNOB_INSET, 0)
-		end
-		self.fill:SetShown(self.value and true or false)
-		self.gemOn:SetShown(self.value and true or false)
-	end
-
-	control.SetValue = function(self, value)
+	control.SetValue = function(self, value, animate)
 		self.value = value and true or false
-		Reposition(self)
+		art:SetOn(self.value, animate)
 		self:Restyle()
 	end
 
@@ -531,25 +509,27 @@ Controls.CreateToggle = function(parent)
 	local baseRestyle = control.Restyle
 	control.Restyle = function(self)
 		baseRestyle(self)
-
-		self.trough:SetColor(Kit.TrackColor)
-
-		local fillColor = self.disabled and Kit.TextDisabled or Kit.TextSelected
-		self.fill:SetVertexColor(fillColor[1], fillColor[2], fillColor[3], Kit.FillAlpha)
-
-		self.knob:SetVertexColor(unpack(self.disabled and Kit.TextDisabled or Kit.TextHighlight))
-		self.gemOn:SetVertexColor(unpack(self.disabled and Kit.TextDisabled or Kit.TextSelected))
+		art.disabled = self.disabled
+		art:Restyle()
 	end
 
 	control.press = box
 	box:SetScript("OnClick", function()
 		if (control.disabled) then return end
-		control:SetValue(not control.value)
+		control:SetValue(not control.value, true)
 		PlaySound(control.value and SOUND_ON or SOUND_OFF)
 		control:Fire(control.value)
 	end)
-	box:SetScript("OnEnter", function() control.hover:Show() end)
-	box:SetScript("OnLeave", function() control.hover:Hide() end)
+	box:SetScript("OnEnter", function()
+		control.hover:Show()
+		art.hovered = true
+		control:Restyle()
+	end)
+	box:SetScript("OnLeave", function()
+		control.hover:Hide()
+		art.hovered = nil
+		control:Restyle()
+	end)
 
 	control:SetValue(false)
 	return control
@@ -558,11 +538,11 @@ end
 --------------------------------------------------------------------------
 -- Slider
 --------------------------------------------------------------------------
--- The trough is three-sliced, and so is the fill. A StatusBar still drives the
--- geometry, because the engine keeps its texture sized correctly and never
--- hands back a zero width mid-refresh, but its own texture is invisible: the
--- visible fill is three textures anchored to it, so the chamfered ends keep
--- their shape at every value instead of stretching with the bar.
+-- A rail and a knob drawn like the switch (Studio.Pill, Studio.Knob), as
+-- AdvancedHotkeyOverlaySystem draws them. A StatusBar still drives the geometry,
+-- because the engine keeps its texture sized correctly and never hands back a zero
+-- width mid-refresh, but its own texture is invisible: the fill and the knob are
+-- anchored to it.
 Controls.CreateSlider = function(parent)
 	local control = CreateRow(parent, "range")
 
@@ -584,20 +564,26 @@ Controls.CreateSlider = function(parent)
 	track:SetPoint("CENTER", control.area, "CENTER", 0, 0)
 	control.track = track
 
-	local trough = Kit.CreateSliceBar(track, "BACKGROUND", Kit.Trough, TRACK_HEIGHT)
+	-- The rail and the knob are the switch's: a pill with a one-pixel edge, the
+	-- part up to the value filled with the accent, and a round knob with a hard
+	-- pixel of shadow, every size a whole physical pixel (Studio.Snap).
+	local Studio = Kit.Studio
+	local RAIL_H, KNOB = 6, 14
+	local knobHalf = KNOB / 2
+
+	local rail = CreateFrame("Frame", nil, track)
+	rail:SetPoint("LEFT", track, "LEFT", 0, 0)
+	rail:SetPoint("RIGHT", track, "RIGHT", 0, 0)
+	rail:SetHeight(RAIL_H)
+	control.rail = rail
+	local trough = Studio.Pill(rail, "BACKGROUND")
 	control.trough = trough
 
-	-- The fill lives between the trough's chamfered caps, lapping a pixel over
-	-- each. Spanning the whole track instead put the fill's chamfer on top of
-	-- the trough's at full value, which is what read as clipping.
-	local fillH, fillTop, fillBottom = Kit.FillMetrics(TRACK_HEIGHT)
-	local fillInset = Kit.FillInset(TRACK_HEIGHT)
-
-	-- A StatusBar is kept purely to size the fill: the engine keeps its texture
-	-- correct at every value and never hands back a zero width mid-refresh.
+	-- A StatusBar is kept purely to size the fill. It spans the knob's travel, half
+	-- a knob in from each end, so the knob never hangs past the rail.
 	local driverHost = CreateFrame("StatusBar", nil, track)
-	driverHost:SetPoint("TOPLEFT", track, "TOPLEFT", fillInset, -fillTop)
-	driverHost:SetPoint("BOTTOMRIGHT", track, "BOTTOMRIGHT", -fillInset, fillBottom)
+	driverHost:SetPoint("TOPLEFT", track, "TOPLEFT", knobHalf, 0)
+	driverHost:SetPoint("BOTTOMRIGHT", track, "BOTTOMRIGHT", -knobHalf, 0)
 	driverHost:SetStatusBarTexture(GetMedia("plain"))
 	driverHost:SetMinMaxValues(0, 100)
 	driverHost:SetValue(0)
@@ -606,45 +592,53 @@ Controls.CreateSlider = function(parent)
 	local driver = driverHost:GetStatusBarTexture()
 	driver:SetAlpha(0)
 
-	local fill = Kit.CreateSliceBar(driverHost, "ARTWORK", Kit.Fill, fillH, driver)
+	-- the filled part: from the rail's left end to the knob's centre
+	local fillFrame = CreateFrame("Frame", nil, rail)
+	fillFrame:SetPoint("TOPLEFT", rail, "TOPLEFT", 0, 0)
+	fillFrame:SetPoint("BOTTOM", rail, "BOTTOM", 0, 0)
+	fillFrame:SetPoint("RIGHT", driver, "RIGHT", 0, 0)
+	local fill = Studio.Pill(fillFrame, "ARTWORK")
 	control.fill = fill
 
-	-- The knob has to sit on a frame of its own, above the fill's. A child frame
-	-- draws above its parent's regions whatever draw layer they are on, so a knob
-	-- put straight on the track disappeared behind the fill that lives on the
-	-- status bar below it.
+	-- The knob on a frame of its own, above the fill. A child frame draws above
+	-- its parent's regions whatever draw layer they are on.
 	local knobHost = CreateFrame("Frame", nil, track)
 	knobHost:SetAllPoints(track)
 	knobHost:SetFrameLevel(driverHost:GetFrameLevel() + 2)
 	control.knobHost = knobHost
 
-	-- Anchored to the leading edge of the fill, which is what the artifact does
-	-- with `left: calc(var(--p) * 100%)`. At the minimum the fill has no width,
-	-- so the knob sits exactly where the fill begins.
-	local knob = knobHost:CreateTexture(nil, "OVERLAY")
-	knob:SetTexture(GetMedia("point_diamond"))
-	local knobDraw = Kit.DrawSize(TRACK_HEIGHT * 1.35, "point_diamond")
-	knob:SetSize(knobDraw, knobDraw)
-	knob:SetPoint("CENTER", driver, "RIGHT", 0, 0)
+	-- Centred on the fill's leading edge: at the minimum the fill has no width,
+	-- so the knob sits where the travel begins.
+	local knob = Studio.Knob(knobHost)
+	knob.texture:SetPoint("CENTER", driver, "RIGHT", 0, 0)
 	control.knob = knob
+
+	control.Layout = function(self)
+		local h, px = Studio.Snap(rail, RAIL_H, true)
+		local k = Studio.Snap(rail, KNOB, true)
+		rail:SetHeight(h)
+		trough:Layout(h, px)
+		fill:Layout(h, px)
+		knob:Layout(k, px)
+		knob.texture:ClearAllPoints()
+		knob.texture:SetPoint("CENTER", driver, "RIGHT", 0, 0)
+	end
 
 	-- Input only. There is deliberately no WoW Slider here any more.
 	--
 	-- A Slider insets its thumb by half the thumb texture's width at each end,
-	-- and point_diamond is a 54px texture for a 24px diamond, so the knob could
-	-- never reach either end. Worse, a Slider re-fires OnValueChanged when it is
-	-- resized, remapping the old thumb position into the new width: a slider laid
-	-- out at zero width had its thumb at the far right, so the first real layout
-	-- reported the maximum and overwrote the value. That is why a slider set to
-	-- 97 kept reading 100, and why guarding the handler did not hold - the bogus
-	-- change arrived before anything could re-assert.
+	-- so the knob could never reach either end. Worse, a Slider re-fires
+	-- OnValueChanged when it is resized, remapping the old thumb position into the
+	-- new width: a slider laid out at zero width had its thumb at the far right, so
+	-- the first real layout reported the maximum and overwrote the value. That is
+	-- why a slider set to 97 kept reading 100.
 	--
 	-- The value is ours now, start to finish.
 	local input = CreateFrame("Frame", nil, track)
-	input:SetPoint("TOPLEFT", track, "TOPLEFT", fillInset, 0)
-	input:SetPoint("BOTTOMRIGHT", track, "BOTTOMRIGHT", -fillInset, 0)
+	input:SetPoint("TOPLEFT", track, "TOPLEFT", knobHalf, 0)
+	input:SetPoint("BOTTOMRIGHT", track, "BOTTOMRIGHT", -knobHalf, 0)
 	input:SetFrameLevel(knobHost:GetFrameLevel() + 1)
-	input:SetHitRectInsets(-fillInset, -fillInset, -8, -8)
+	input:SetHitRectInsets(-knobHalf, -knobHalf, -8, -8)
 	input:EnableMouse(true)
 	input:EnableMouseWheel(true)
 	control.input = input
@@ -727,12 +721,11 @@ Controls.CreateSlider = function(parent)
 	control.Restyle = function(self)
 		baseRestyle(self)
 
-		self.trough:SetColor(Kit.TrackColor)
-
-		local fillColor = self.disabled and Kit.TextDisabled or Kit.TextSelected
-		self.fill:SetVertexColor(fillColor[1], fillColor[2], fillColor[3], Kit.FillAlpha)
-
-		self.knob:SetVertexColor(unpack(self.disabled and Kit.TextDisabled or Kit.TextHighlight))
+		self:Layout()
+		self.trough:SetColors(Kit.InsetColor, Kit.BorderIdle)
+		self.fill:SetColors(self.disabled and Kit.TextDisabled or Kit.TextSelected)
+		self.knob:SetColor(self.disabled and Kit.TextDisabled or Kit.TextHighlight)
+		self.knob:SetLip(not self.disabled)
 		self.valuebox:SetTextColor(unpack(self.disabled and Kit.TextDisabled or Kit.TextHighlight))
 	end
 
@@ -823,7 +816,7 @@ Controls.IsDropdownOpen = function()
 	return pullout and pullout:IsShown()
 end
 
-local ROW_H, MAX_ROWS = 20, 16
+local ROW_H, MAX_ROWS = 20, 24
 
 local CreatePullout = function()
 	local frame = CreateFrame("Frame", nil, UIParent, ns.BackdropTemplate)
@@ -858,11 +851,32 @@ local CreatePullout = function()
 	child:SetSize(1, 1)
 	scroll:SetScrollChild(child)
 
+	-- A list longer than the pullout shows a thumb on its right edge, so the rows
+	-- below the last one are not a secret.
+	local thumb = frame:CreateTexture(nil, "OVERLAY")
+	thumb:SetTexture(GetMedia("plain"))
+	thumb:SetWidth(3)
+	thumb:Hide()
+	frame.thumb = thumb
+
+	frame.UpdateThumb = function(self)
+		local total, visible = (self.count or 0) * ROW_H, (self.shown or 0) * ROW_H
+		if (total <= visible or visible <= 0) then thumb:Hide(); return end
+		local height = max(16, visible * visible / total)
+		local at = (scroll:GetVerticalScroll() or 0) / (total - visible)
+		thumb:ClearAllPoints()
+		thumb:SetPoint("TOPRIGHT", self, "TOPRIGHT", -2, -6 - at * (visible - height))
+		thumb:SetHeight(height)
+		thumb:Show()
+	end
+
 	scroll:EnableMouseWheel(true)
 	scroll:SetScript("OnMouseWheel", function(self, delta)
-		local range = self:GetVerticalScrollRange()
+		local total, visible = (frame.count or 0) * ROW_H, (frame.shown or 0) * ROW_H
+		local range = max(self:GetVerticalScrollRange() or 0, total - visible)
 		if (range <= 0) then return end
 		self:SetVerticalScroll(min(range, max(0, self:GetVerticalScroll() - delta * ROW_H * 2)))
+		frame:UpdateThumb()
 	end)
 
 	frame.scroll, frame.child = scroll, child
@@ -961,8 +975,15 @@ local OpenPullout = function(control)
 	local width = max(control.box:GetWidth(), 150)
 
 	pullout.child:SetSize(width - 12, max(1, count * ROW_H))
-	pullout.scroll:SetVerticalScroll(0)
+	-- open with the chosen row in view
+	local selected = 0
+	for i, key in ipairs(order) do if (key == control.value) then selected = i end end
+	local top = max(0, min(count - shown, selected - math.floor(shown / 2)))
+	pullout.scroll:SetVerticalScroll(top * ROW_H)
+	pullout.count, pullout.shown = count, shown
 	pullout:SetSize(width, shown * ROW_H + 12)
+	pullout.thumb:SetVertexColor(Kit.TextSelected[1], Kit.TextSelected[2], Kit.TextSelected[3], .6)
+	pullout:UpdateThumb()
 	pullout:ClearAllPoints()
 	pullout:SetPoint("TOPRIGHT", control.box, "BOTTOMRIGHT", 0, -2)
 	pullout:Show()
@@ -1309,6 +1330,24 @@ Controls.CreateButton = function(parent)
 		self.text:SetText(value or "")
 	end
 
+	-- An icon at the button's left end (Renderer.ButtonGlyph), the text still
+	-- centred: as far in from the right as the icon takes on the left.
+	local icon = box:CreateTexture(nil, "OVERLAY")
+	icon:SetSize(BUTTON_ICON, BUTTON_ICON)
+	icon:SetPoint("LEFT", box, "LEFT", 9, 0)
+	icon:Hide()
+	control.icon = icon
+
+	control.SetIcon = function(self, glyph)
+		self.glyph = glyph
+		local inset = glyph and (9 + BUTTON_ICON + 4) or 10
+		text:ClearAllPoints()
+		text:SetPoint("LEFT", box, "LEFT", inset, 0)
+		text:SetPoint("RIGHT", box, "RIGHT", -inset, 0)
+		if (glyph) then Kit.Studio.Glyph(icon, glyph) end
+		icon:SetShown(glyph and true or false)
+	end
+
 	control.SetDisabled = function(self, disabled)
 		self.disabled = disabled and true or false
 		if (self.disabled) then box:Disable() else box:Enable() end
@@ -1322,6 +1361,7 @@ Controls.CreateButton = function(parent)
 		self.backdrop:SetBackdropColor(unpack(Kit.BackdropColor))
 		Kit.SetBorderColor(self.backdrop, Kit.BorderIdle)
 		SetTextColor(self.text, self.disabled and Kit.TextDisabled or Kit.TextNormal)
+		self.icon:SetVertexColor(unpack(self.disabled and Kit.TextDisabled or Kit.TextSelected))
 	end
 
 	control.press = box
@@ -1501,6 +1541,12 @@ Controls.CreateMultiline = function(parent)
 	end
 
 	control.SetValue = function(self, text)
+		-- A refresh while you are in the box with text not yet taken keeps
+		-- your text; it is taken a moment later, or when you leave the box.
+		if (edit:HasFocus() and edit:GetText() ~= (self.committed or "")) then
+			self.committed = text or ""
+			return
+		end
 		self.committed = text or ""
 		edit:SetText(self.committed)
 		edit:SetCursorPosition(0)
@@ -1547,13 +1593,31 @@ Controls.CreateMultiline = function(parent)
 		self:ClearFocus()
 		accept:Hide()
 	end)
+	-- A pasted share string is taken as soon as the typing stops: waiting for the
+	-- small check in the corner left Import with nothing to import. The check
+	-- stays for those who look for it, and leaving the field takes the text too.
+	local pending
+	local CommitIfChanged = function()
+		pending = nil
+		if (not control.disabled and control.callback and edit:GetText() ~= (control.committed or "")) then
+			control.committed = edit:GetText()
+			accept:Hide()
+			control:Fire(control.committed)
+		end
+	end
 	edit:SetScript("OnTextChanged", function(self, userInput)
 		if (userInput) then
 			accept:SetShown(self:GetText() ~= (control.committed or ""))
+			local token = {}
+			pending = token
+			C_Timer.After(0.4, function() if (pending == token) then CommitIfChanged() end end)
 		end
 	end)
 	edit:SetScript("OnEditFocusGained", function() control:Restyle() end)
-	edit:SetScript("OnEditFocusLost", function() control:Restyle() end)
+	edit:SetScript("OnEditFocusLost", function()
+		control:Restyle()
+		CommitIfChanged()
+	end)
 
 	control:SetNumLines(4)
 	control:SetValue("")

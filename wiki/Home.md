@@ -2,7 +2,7 @@
 
 **AzUI Healthbar Color Changer** is a lightweight, self-contained World of Warcraft addon that lets you fully customize the appearance of your player health bar. Set a static color, run animated rainbow or pulse effects, save unlimited presets, and automatically apply unique colors for your hunter pets — all from one clean options panel.
 
-> **Current version:** 6.0.0 | **Interface:** 120100, 120105 (Midnight, patch 12.1) and 16001 (WoW Forever)
+> **Current version:** 7.0.0 | **Interface:** 120100, 120105 (Midnight, patch 12.1) and 16001 (WoW Forever)
 
 ---
 
@@ -16,6 +16,9 @@
 | **[Presets](Presets)** | Save, load, rename, and delete color presets |
 | **[Hunter Pet Coloring](Hunter-Pet-Coloring)** | Per-pet colors and effects, family colors |
 | **[FAQ](FAQ)** | Frequently asked questions and troubleshooting |
+| **[Rules Cookbook](Rules-Cookbook)** | Rules to copy: reminders, raids, Mythic+, buffs, looks |
+| **[Supported Frames](Supported-Frames)** | Every addon and bar coloured, and what `/ahui check` tells you |
+| **[Translating](Translating)** | How to correct or add a translation |
 | **[Changelog](Changelog)** | Version history |
 
 ---
@@ -49,9 +52,13 @@ A draggable minimap button (LibDataBroker + LibDBIcon) gives quick access to the
 | **AzeriteUI for Midnight** (`AzeriteUI6`) | Player and pet frames |
 | **AzeriteUI5 – JuNNeZ Edition** | Player, alternate player and pet frames |
 | **AzeriteUI 5.x** | Player, alternate player and pet frames |
+| **ElvUI**, **Shadowed Unit Frames**, **Unhalted Unit Frames** | Player and pet frames: health, power and cast bar |
+| **Z-Perl**, **PitBull 4** | Player and pet frames: health and power bar |
+| **Any oUF layout** | Layouts on the shared oUF: player and pet frames |
 | **Blizzard default player frame** | Bar art desaturated so your color shows true |
+| **Personal resource display** | Blizzard's bars under your character, when switched on under More Bars |
 
-Other unit frame addons (ElvUI, oUF layouts, ShadowedUF, …) are not colored.
+Type `/ahui check` to see which bars were found and what each shows.
 
 All libraries are bundled — no external downloads required.
 
@@ -72,6 +79,7 @@ All libraries are bundled — no external downloads required.
 | Command | Effect |
 |---------|--------|
 | `/ahui` | Open / close the options panel |
+| `/ahui check` | List the bars found and what each shows, for a bug report |
 
 ---
 

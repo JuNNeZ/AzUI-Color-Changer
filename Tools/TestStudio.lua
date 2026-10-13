@@ -29,6 +29,9 @@ for name in all:gmatch('Glyph%([^,]+, "([%w%-]+)"%)') do
   -- the gem is drawn as a circle, not a file
   check(name == "gem" or exists("Media/Studio/glyph-" .. name .. ".tga"), "glyph " .. name)
 end
+for name in all:gmatch('GlyphButton%("([%w%-]+)"') do
+  check(exists("Media/Studio/glyph-" .. name .. ".tga"), "glyph button " .. name)
+end
 for _, r in ipairs({ 3, 4, 6, 8, 9, 10, 12 }) do
   for _, part in ipairs({ "fill", "edge", "edge2" }) do
     check(exists("Media/Studio/round" .. r .. "-" .. part .. ".tga"), "round" .. r .. "-" .. part)
@@ -184,6 +187,9 @@ H.frame.scripts.OnUpdate(H.frame, 0.5)
 check(cards.pulse.bar.fill.vertex, "the cards play their effects")
 H.frame.scripts.OnUpdate(H.frame, 0.5)
 check(cards.sweep.bar.left.shown, "Sweep's card shows its band")
+local drawn = cards.pulse.bar.fill.vertex
+H.frame.scripts.OnUpdate(H.frame, 0.001)
+check(cards.pulse.bar.fill.vertex == drawn, "the cards keep to the Update Rate, not every frame")
 
 -- Show on
 local petChip, powerChip = H.chips[2], H.chips[3]

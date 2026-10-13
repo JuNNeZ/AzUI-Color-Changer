@@ -106,6 +106,8 @@ Tick the parts to include (your color and effect, presets, pet colors, family an
 
 To import, paste a string: the page lists what it would change, for example *3 presets (1 replaces yours: Tank Red)*. **Import** asks first, then adds the presets, pet and family colors, and replaces your rules. Share strings start with `!AZUI1!`.
 
+**Share in Chat** puts `[AzUI: name]` in your chat box (the name is under **Link Name**, your character's by default). Send it anywhere a player can see it: say, party, raid, guild or a whisper. Players with the addon see a link; clicking it asks your addon for the parts you ticked and opens them in their import preview, marked with your name. Your last five links keep working after you log out, whenever you are online to answer. In instances in combat and during encounters the game restricts addon messages, so a click there says so instead of waiting.
+
 ---
 
 ## Quick Palette, Slash Commands and Key Bindings

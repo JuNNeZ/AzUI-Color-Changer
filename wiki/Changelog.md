@@ -5,6 +5,28 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ---
 
+## [7.0.0] – 2026-10-13
+
+### Added
+- **Class resources:** combo points, holy power, chi, arcane charges, soul shards, essence and runes take your colour or their own (More Bars, off by default).
+- **Heal and absorb overlays** and the **personal resource display** take your health bar's colour (More Bars, off by default).
+- **More unit frame addons:** Z-Perl, PitBull 4 and any layout on the shared oUF.
+- **Rules:** two conditions on one rule, Not to turn a condition around, Try to see a rule for five seconds, a sound when a rule starts, rules on the power bar, cast bar or every bar, and ready-made rules to pick from.
+- **New conditions:** threat, casting, role, group, pet, zone, Mythic+, delve, flying, War Mode, vehicle and time of day. A buff rule can watch several spells.
+- **Share in Chat:** a link in chat that anyone with the addon can click to import your setup.
+- **Effects:** Flow and Spectrum, and Gradient as a style. Pulse Depth and Sweep Time.
+- **Preset packs** Midnight and Class Colours, and a preset per specialization.
+- **Colour vision preview** in the Studio, and **`/ahui check`** for bug reports.
+
+### Changed
+- The AzUI window has new switches and sliders, its own icons for pages, headings and buttons, the open page raised as a key, and a scrollbar on every long page.
+- Lighter on the game: only what changed is repainted, hidden bars are skipped, and frames are looked for less often.
+- Translations come from CurseForge's localization.
+
+### Fixed
+- Buffs typed by name in a rule are found even when your character does not know the spell, in every game language.
+- Lists in the window show up to 24 entries with a thumb for more; a pasted share string is taken without clicking the check.
+
 ## [6.0.0] – 2026-10-10
 
 ### Added

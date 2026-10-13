@@ -40,6 +40,117 @@ local function rowsOf(kind)
   return found
 end
 
+-- every page has its own line drawing in the rail, muted, gold while it is open
+do
+  local open = Panel.selected
+  local glyphs, tinted = 0, true
+  for index = 1, #Panel.pages do
+    local row = Panel.railRows[index]
+    if row.glyph and row.icon.texture == "Interface\\AddOns\\AzUI_Color_Picker\\Media\\Studio\\glyph-" .. row.glyph .. ".tga" then
+      glyphs = glyphs + 1
+      local want = row.key == open and Kit.TextSelected or Kit.TextDisabled
+      tinted = tinted and row.icon.vertex[1] == want[1] and row.icon.vertex[3] == want[3]
+    end
+  end
+  check(glyphs == #Panel.pages, "every page in the rail has its own icon")
+  check(tinted, "the open page's icon is gold, the rest muted")
+end
+
+-- The switch, from AdvancedHotkeyOverlaySystem: sized in whole screen pixels, a
+-- knob that slides, the accent when on and a sunk inset when off. A 1080p screen
+-- at UI scale 1: one physical pixel is 768/1080 of a unit.
+do
+  local saved = env.GetPhysicalScreenSize
+  env.GetPhysicalScreenSize = function() return 1920, 1080 end
+  local px = 768 / 1080
+  local function whole(v) return math.abs(v / px - math.floor(v / px + .5)) < 1e-6 end
+  local function knobX(art) return art.knob.texture.points[1][4] end
+  Panel:SelectPage("general")
+  local switch
+  for _, c in ipairs(rowsOf("toggle")) do if not c.disabled then switch = c break end end
+  check(switch and switch.art and switch.art.track and switch.knob, "a toggle is a pill track and a round knob")
+  local art = switch.art
+  switch:Restyle()
+  check(whole(art.w) and whole(art.h) and whole(art.knobSize), "its sizes are whole screen pixels")
+  check(math.floor(art.h / px + .5) % 2 == 0 and math.floor(art.knobSize / px + .5) % 2 == 0, "with even heights, so the knob is centred")
+  local was = switch.value
+  switch:SetValue(false)
+  check(math.abs(knobX(art) - (art.h - art.knobSize) / 2) < 1e-6, "off, the knob rests as far from the left end as from top and bottom")
+  check(not art.knob.lip.shown, "and casts no shadow")
+  check(art.track.outer[2].vertex[1] == Kit.BorderIdle[1] and art.track.inner[2].vertex[1] == Kit.InsetColor[1], "off, a sunk inset with a one-pixel edge")
+  switch.box.scripts.OnClick(switch.box)
+  check(switch.value and art.knobHost.scripts.OnUpdate, "a click slides the knob over")
+  art.knobHost.scripts.OnUpdate(art.knobHost, 1)
+  check(math.abs(knobX(art) - (art.w - (art.h - art.knobSize) / 2 - art.knobSize)) < 1e-6 and not art.knobHost.scripts.OnUpdate,
+    "and it stops at the right end, the same distance in")
+  check(art.knob.lip.shown and art.track.inner[2].vertex[1] == Kit.TextSelected[1], "on, the track is the accent and the knob has a lip")
+  switch:SetDisabled(true)
+  check(switch.box.alpha < 1, "a switch that cannot be used is faded")
+  switch:SetDisabled(false)
+  if switch.value ~= was then switch.box.scripts.OnClick(switch.box) end
+
+  -- the slider is drawn the same way: a pill rail, the accent up to the value
+  local slider = rowsOf("range")[1]
+  check(slider and slider.trough and slider.trough.outer and slider.knob and slider.knob.lip, "a slider is a pill rail and the switch's knob")
+  slider:Restyle()
+  check(whole(slider.rail.height), "its rail is whole screen pixels high")
+  check(slider.trough.outer[2].vertex[1] == Kit.BorderIdle[1] and slider.fill.inner[2].vertex[1] == Kit.TextSelected[1],
+    "an inset rail, filled with the accent")
+  env.GetPhysicalScreenSize = saved
+end
+
+-- headings and buttons inside a page carry their own icons, picked by option key
+do
+  local function iconOf(region) return region.shown and region.texture end
+  Panel:SelectPage("share")
+  local headers, buttons = {}, {}
+  for _, c in ipairs(rowsOf("header")) do headers[#headers + 1] = iconOf(c.icon) or false end
+  for _, c in ipairs(rowsOf("execute")) do buttons[#buttons + 1] = iconOf(c.icon) or false end
+  check(#headers > 0 and headers[1] and headers[1]:find("glyph%-section%-export"), "Export's heading has its icon")
+  local all = #buttons > 0
+  for _, icon in ipairs(buttons) do all = all and icon and icon:find("glyph%-") ~= nil end
+  check(all, "every button on the Share page has an icon")
+  check(Kit.Renderer.SectionGlyph("nothing") == nil and Kit.Renderer.ButtonGlyph("r12") == "undo",
+    "a heading not listed has none; a family's Reset is the undo arrow")
+end
+
+-- every page longer than the window has a scrollbar, and a fade while there is more
+do
+  check(#Panel.scrollbars == 2, "the page and the search results each have a scrollbar")
+  local bar = Panel.scrollbars[1]
+  local scroll = bar.scroll
+  -- a page 600 taller than the 400 that shows
+  local at, range = 0, 600
+  scroll.GetVerticalScrollRange = function() return range end
+  scroll.GetVerticalScroll = function() return at end
+  scroll.SetVerticalScroll = function(self, v) at = v; if self.scripts.OnVerticalScroll then self.scripts.OnVerticalScroll(self, v) end end
+  scroll.height, bar.trackFrame.height = 400, 396
+  bar:Update()
+  check(bar.shown and bar.fadeHost.shown, "a long page shows its scrollbar, and fades out at the foot")
+  check(math.abs(bar.thumb.height - 396 * 400 / 1000) < 1e-6, "the thumb is as long as the part in view")
+  bar.thumb.GetTop = function() return 100 end
+  bar.scripts.OnClick(bar)
+  check(math.abs(at - 360) < 1e-6, "a click on the track below the thumb turns a page down")
+  scroll:SetVerticalScroll(600)
+  check(not bar.fadeHost.shown and math.abs(bar.thumb.points[1][5] + (396 - bar.thumb.height)) < 1e-6,
+    "at the end the thumb is at the bottom and the fade is gone")
+  range = 0
+  bar:Update()
+  check(not bar.shown and not bar.fadeHost.shown, "a page that fits has neither")
+  for _, key in ipairs({ "GetVerticalScrollRange", "GetVerticalScroll", "SetVerticalScroll" }) do scroll[key] = nil end
+  bar.thumb.GetTop = nil
+end
+
+-- the open page is a raised key: a face over a darker lip
+do
+  Panel:SelectPage("rules")
+  local open
+  for _, row in ipairs(Panel.railRows) do if row.key == "rules" then open = row end end
+  local round = open.round
+  check(round.face and round.face.shown and round.fill.shown, "the open page is a keycap")
+  check(round.fill.vertex[1] < round.face.vertex[1], "with a lip darker than its face")
+end
+
 Panel:SelectPage("general")
 local labels = {}
 for _, control in ipairs(rowsOf("color")) do labels[control.labelText] = true end

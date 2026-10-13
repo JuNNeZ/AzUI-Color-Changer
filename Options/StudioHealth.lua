@@ -204,6 +204,19 @@ local function BuildPreview(control)
 
   P.AddPreviewTarget(health, "player")
   P.AddPreviewTarget(petBar, "pet")
+
+  -- How the preview looks with a common kind of colour blindness; only the preview
+  -- changes, and it is back to normal when the window opens again.
+  local vision = Studio.Dropdown(card, 190, function(key) P.SetPreviewVision(key) end)
+  vision:SetList(P.VISION_VALUES, P.VISION_MODES)
+  vision:SetValue(P.previewVision or "normal")
+  vision:SetPoint("TOPRIGHT", -PAD, -8)
+  Studio.Tooltip(vision, L["Colour vision"],
+    L["Shows the preview as it looks with a common kind of colour blindness, to check that your colours, rules and pet colours stay apart. Only the preview changes."])
+  card.vision = vision
+  card:HookScript("OnHide", function()
+    if P.previewVision and P.previewVision ~= "normal" then P.SetPreviewVision("normal"); vision:SetValue("normal") end
+  end)
 end
 
 local function Header(parent, text)
@@ -515,25 +528,37 @@ function Health:StyleCard(card)
   card.text:SetTextColor(unpack(selected and Kit.TextSelected or Kit.TextNormal))
 end
 
--- Each card plays its effect on your colour, at the page's own pace.
-local previewPhase = 0
+-- Each card plays its effect on your colour, at the page's own pace and at the bars'
+-- Update Rate rather than every frame.
+local previewPhase, sinceDrawn = 0, 0
+local bandLow, bandHigh -- Sweep's band and Gradient's ends, refilled on every draw (SetGradient copies them)
 local function AnimateCards(control, elapsed)
   local p = Profile()
   previewPhase = previewPhase + elapsed * min(5, max(.1, p.rainbowSpeed or 1)) * 0.3
+  sinceDrawn = sinceDrawn + elapsed
+  if sinceDrawn < 1 / max(1, tonumber(p.updateRate) or 30) then return end
+  sinceDrawn = 0
   for _, card in ipairs(control.cards) do
     local r, g, b, a, at, pr, pg, pb = P.EffectColourAt(previewPhase, card.effect, p.color, p.secondColor)
     local bar = card.bar
     bar.fill:SetVertexColor(r, g, b, 1)
+    if CreateColor and not bandLow then bandLow, bandHigh = CreateColor(0, 0, 0, 0), CreateColor(0, 0, 0, 0) end
+    if not at and pr and bandLow then
+      -- Gradient: your colour to the second colour, across the card's bar
+      bandLow.r, bandLow.g, bandLow.b, bandLow.a = r, g, b, 1
+      bandHigh.r, bandHigh.g, bandHigh.b, bandHigh.a = pr, pg, pb, 1
+      bar.fill:SetGradient("HORIZONTAL", bandLow, bandHigh)
+    end
     if at and CreateColor then
       local w, edge = bar:GetWidth(), bar:GetWidth() * .375
       local centre = -edge + at * (w + 2 * edge)
       bar.left:SetWidth(edge); bar.right:SetWidth(edge)
-      bar.left:ClearAllPoints(); bar.right:ClearAllPoints()
       bar.left:SetPoint("LEFT", bar, "LEFT", centre - edge, 0)
       bar.right:SetPoint("LEFT", bar, "LEFT", centre, 0)
-      local k = min(1, max(.1, p.sweepStrength or .6))
-      bar.left:SetGradient("HORIZONTAL", CreateColor(pr, pg, pb, 0), CreateColor(pr, pg, pb, k))
-      bar.right:SetGradient("HORIZONTAL", CreateColor(pr, pg, pb, k), CreateColor(pr, pg, pb, 0))
+      bandLow.r, bandLow.g, bandLow.b, bandLow.a = pr, pg, pb, 0
+      bandHigh.r, bandHigh.g, bandHigh.b, bandHigh.a = pr, pg, pb, min(1, max(.1, p.sweepStrength or .6))
+      bar.left:SetGradient("HORIZONTAL", bandLow, bandHigh)
+      bar.right:SetGradient("HORIZONTAL", bandHigh, bandLow)
       bar.left:Show(); bar.right:Show()
     else
       bar.left:Hide(); bar.right:Hide()
@@ -625,9 +650,11 @@ local function BuildFooter(control)
   Studio.Tooltip(powerChip, L["Power bar"], L["Your power bar matches your health bar. Its own colour is on the More Bars page."])
   control.chips = { healthChip, petChip, powerChip, castChip }
 
-  local done = Studio.Button(bar, 80, 28, L["Done"], function() if Kit.Panel then Kit.Panel:Close() end end, "gold")
+  local done = Studio.Button(bar, 92, 28, L["Done"], function() if Kit.Panel then Kit.Panel:Close() end end, "gold")
+  done:SetIcon("check")
   done:SetPoint("RIGHT", 0, -4)
-  local back = Studio.Button(bar, 74, 28, L["Undo"], function() Undo() end)
+  local back = Studio.Button(bar, 88, 28, L["Undo"], function() Undo() end)
+  back:SetIcon("undo")
   back:SetPoint("RIGHT", done, "LEFT", -10, 0)
   Studio.Tooltip(back, L["Undo"], L["Step back through the changes made on this page since the window opened."])
   control.undo, control.done = back, done
@@ -808,6 +835,7 @@ function Health:Restyle()
   for _, c in ipairs(control.cards) do self:StyleCard(c) end
   control.footerRule:SetVertexColor(C.line[1], C.line[2], C.line[3], 1)
   control.hex:Restyle()
+  if control.preview.vision then control.preview.vision:Restyle() end
   for _, box in ipairs(control.rgb) do box:Restyle() end
   control.alpha:Restyle()
   control.speed:Restyle()

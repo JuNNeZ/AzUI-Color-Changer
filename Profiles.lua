@@ -43,6 +43,31 @@ function P.ApplySpecProfile()
   return true
 end
 
-P.On("PLAYER_SPECIALIZATION_CHANGED", function() P.ApplySpecProfile() end, "player")
-P.On("ACTIVE_TALENT_GROUP_CHANGED", function() P.ApplySpecProfile() end)
-P.On("PLAYER_ENTERING_WORLD", function() P.ApplySpecProfile() end)
+-- A lighter choice than a profile: changing specialization loads the preset picked
+-- for it. Only a real change does, so logging in keeps the colour you left with.
+local lastSpec
+function P.ApplySpecPreset()
+  local spec = P.Specialization()
+  local changed = lastSpec ~= nil and spec ~= lastSpec
+  lastSpec = spec or lastSpec
+  local presets = P.DB and P.DB.char.specPresets
+  if not (changed and presets and presets.enabled) then return false end
+  local name = spec and presets[spec]
+  if not (name and P.DB.profile.presets[name]) then return false end
+  P.LoadPreset(name)
+  P.Print(L["Loaded preset"] .. " " .. name)
+  return true
+end
+
+-- The profile first, so the preset is looked up in the profile you end up in.
+local function SpecChanged()
+  P.ApplySpecProfile()
+  P.ApplySpecPreset()
+end
+P.On("PLAYER_SPECIALIZATION_CHANGED", SpecChanged, "player")
+P.On("ACTIVE_TALENT_GROUP_CHANGED", SpecChanged)
+P.On("PLAYER_ENTERING_WORLD", function()
+  P.ApplySpecProfile()
+  lastSpec = lastSpec or P.Specialization()
+end)
+P.OnInitialize(function() lastSpec = P.Specialization() end)

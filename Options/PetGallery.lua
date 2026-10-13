@@ -29,7 +29,7 @@ Kit.PetGallery = Gallery
 local CARD_W, CARD_H, GAP = 136, 156, 10
 local PORTRAIT = 60
 local FILTER_H = 34
-local DETAIL_H = 214
+local DETAIL_H = 248
 local MODEL_W = 200
 local PAD = 14
 
@@ -332,7 +332,15 @@ local function BuildDetail(parent)
       Core.SetPetEffect(number, value)
     end
   end)
-  detail.rows = { mode, colour, effect }
+  -- the other colour of Two-tone, Gradient and Flow, used while the pet's effect has one
+  local second = Controls.Create(column, "color")
+  second:SetLabel(L["Second Colour"])
+  second.hasAlpha = false
+  second:SetCallback(function(_, r, g, b)
+    Core.SetPetSecondColour(Gallery.selected, r, g, b)
+    Gallery.dirty = true
+  end)
+  detail.rows = { mode, colour, effect, second }
   local top = 58
   for _, row in ipairs(detail.rows) do
     row.frame:SetPoint("TOPLEFT", column, "TOPLEFT", 0, -top)
@@ -401,6 +409,11 @@ local function FillDetail(detail, entry)
   rows[3]:SetList(Core.effectValues, Core.effectSorting)
   rows[3]:SetValue(Core.PetEffect(number))
   rows[3]:SetDisabled(off)
+  if not (Controls.IsColorOpen and Controls.IsColorOpen()) then
+    local second = Core.PetSecondColour(number)
+    rows[4]:SetValue(second[1], second[2], second[3], 1)
+  end
+  rows[4]:SetDisabled(off or not Core.UsesSecondColour(Core.PetEffect(number)))
 
   local familyName = Core.FamilyName(pet)
   detail.family.text:SetText(L["Use for all"] .. " " .. (familyName or L["of this family"]))

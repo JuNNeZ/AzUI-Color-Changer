@@ -32,6 +32,10 @@ function Mock.New(opts)
     IsVisible = function(self) return self.shown end,
     SetScript = function(self, k, f) self.scripts[k] = f end,
     GetScript = function(self, k) return self.scripts[k] end,
+    HookScript = function(self, k, f)
+      local original = self.scripts[k]
+      self.scripts[k] = function(...) if original then original(...) end; f(...) end
+    end,
     SetText = function(self, t) self.text = t end,
     GetText = function(self) return self.text end,
     GetStringHeight = function() return 13 end,
@@ -66,12 +70,23 @@ function Mock.New(opts)
     SetStatusBarColor = function(self, r, g, b, a) self.color = { r, g, b, a } end,
     GetStatusBarColor = function(self) local c = self.color or {}; return c[1], c[2], c[3], c[4] end,
     SetVertexColor = function(self, r, g, b, a) self.vertex = { r, g, b, a }; self.gradient = nil end,
+    GetVertexColor = function(self) local c = self.vertex or {}; return c[1], c[2], c[3], c[4] end,
     SetBlendMode = function(self, mode) self.blend = mode end,
     SetAlpha = function(self, a) self.alpha = a end,
-    SetGradient = function(self, orientation, left, right) self.gradient = { left, right, orientation = orientation } end,
+    -- as in the game, the colours are copied, so one colour object can be refilled for the next
+    SetGradient = function(self, orientation, left, right)
+      local function Copy(c) return { r = c.r, g = c.g, b = c.b, a = c.a } end
+      self.gradient = { Copy(left), Copy(right), orientation = orientation }
+    end,
     SetChecked = function(self, v) self.checked = v end,
     GetChecked = function(self) return self.checked end,
-    SetPoint = function(self, ...) self.points[#self.points + 1] = { ... } end,
+    -- as in the game, setting a point the widget already has moves that point
+    SetPoint = function(self, point, ...)
+      for i, existing in ipairs(self.points) do
+        if existing[1] == point then self.points[i] = { point, ... }; return end
+      end
+      self.points[#self.points + 1] = { point, ... }
+    end,
     ClearAllPoints = function(self) self.points = {} end,
     SetDisplayInfo = function(self, id) self.displayID = id end,
     SetTexture = function(self, file) self.texture = file end,
@@ -130,9 +145,15 @@ function Mock.New(opts)
     return true
   end
   env.SlashCmdList = {}
-  env.PlaySound = function() end
+  -- sounds played, as { kit, channel }
+  game.sounds = {}
+  env.PlaySound = function(kit, channel) table.insert(game.sounds, { kit, channel }) end
   env.GetCursorPosition = function() return 0, 0 end
   env.GetTime = function() return game.time end
+  -- the realm's clock (state.hour) and the calendar (game.now, seconds)
+  env.GetGameTime = function() return state.hour or 12, 0 end
+  env.time = function() return game.now or 1790000000 end
+  env.debugprofilestop = function() return os.clock() * 1000 end
   env.InCombatLockdown = function() return game.lockdown and true or false end
   env.GetLocale = function() return opts.locale or "enUS" end
   -- Blizzard's Settings: ESC > Options > AddOns (opts.noSettings: a client without it)
@@ -167,6 +188,17 @@ function Mock.New(opts)
   env.IsResting = function() return state.resting end
   env.IsStealthed = function() return state.stealth end
   env.IsInInstance = function() return state.instance ~= nil, state.instance or "none" end
+  -- groups and roles: state.group = "party" | "raid", state.groupSize, state.role (assigned)
+  env.IsInGroup = function() return state.group ~= nil end
+  env.IsInRaid = function() return state.group == "raid" end
+  env.GetNumGroupMembers = function() return state.group and (state.groupSize or 5) or 0 end
+  env.UnitGroupRolesAssigned = function() return state.role or "NONE" end
+  env.GetSpecializationRole = function(index) return state.specRoles and state.specRoles[index] or "DAMAGER" end
+  -- where you are: state.zone and state.subzone
+  state.zone, state.subzone = "Elwynn Forest", "Goldshire"
+  env.GetRealZoneText = function() return state.zone end
+  env.GetZoneText = function() return state.zone end
+  env.GetSubZoneText = function() return state.subzone or "" end
   env.C_SpecializationInfo = {
     GetSpecialization = function() return state.spec end,
     GetNumSpecializationsForClassID = function() return 3 end,
@@ -176,7 +208,83 @@ function Mock.New(opts)
   env.C_Timer = {
     After = function(_, f) table.insert(game.timers, f) end,
     NewTicker = function() return {} end,
+    -- a cancelled timer's function does nothing when the timers are flushed
+    NewTimer = function(_, f)
+      local timer = { cancelled = false }
+      function timer:Cancel() self.cancelled = true end
+      table.insert(game.timers, function() if not timer.cancelled then f() end end)
+      return timer
+    end,
   }
+  -- Mythic+, delves, flying, war mode and vehicles: state.mythicplus, state.delve,
+  -- state.flying, state.warmode, state.vehicle
+  env.C_ChallengeMode = { IsChallengeModeActive = function() return state.mythicplus == true end }
+  env.C_PartyInfo = { IsDelveInProgress = function() return state.delve == true end }
+  env.IsFlying = function() return state.flying == true end
+  env.C_PvP = { IsWarModeDesired = function() return state.warmode == true end }
+  env.UnitHasVehicleUI = function() return state.vehicle == true end
+  -- threat (state.threat: nil or 0-3) and casting (state.casting, state.channeling: a
+  -- spell name); state.threatSecret and state.castSecret hide them as Midnight does
+  env.UnitThreatSituation = function()
+    if state.threatSecret then return { secret = true } end
+    return state.threat
+  end
+  env.UnitCastingInfo = function()
+    if state.castSecret then return { secret = true } end
+    return state.casting
+  end
+  env.UnitChannelInfo = function()
+    if state.castSecret then return { secret = true } end
+    return state.channeling
+  end
+
+  -- Chat: addon messages go to game.addonSent (game.addonResult answers each send, as a
+  -- number or a function of the message); chat filters and links as Blizzard's chat has them
+  game.addonSent, game.chatFilters, game.chatBox, game.prefixes = {}, {}, {}, {}
+  env.C_ChatInfo = {
+    RegisterAddonMessagePrefix = function(prefix) game.prefixes[prefix] = true; return 0 end,
+    SendAddonMessage = function(prefix, message, channel, target)
+      local result = game.addonResult
+      if type(result) == "function" then result = result(message) end
+      if (result or 0) == 0 then table.insert(game.addonSent, { prefix = prefix, message = message, channel = channel, target = target }) end
+      return result or 0
+    end,
+    InChatMessagingLockdown = function() return game.chatLockdown and true or false end,
+  }
+  env.Ambiguate = function(name, kind)
+    if kind == "none" then return (name:gsub("%-MockRealm$", "")) end
+    return name
+  end
+  env.GetNormalizedRealmName = function() return "MockRealm" end
+  env.ChatFrameUtil = {
+    AddMessageEventFilter = function(event, filter)
+      game.chatFilters[event] = game.chatFilters[event] or {}
+      table.insert(game.chatFilters[event], filter)
+    end,
+    -- false: no chat box is open to insert into
+    InsertLink = function(text) if game.chatOpen then table.insert(game.chatBox, text); return true end return false end,
+    OpenChat = function(text) game.chatOpen = true; table.insert(game.chatBox, text) end,
+  }
+  local registry = {}
+  env.EventRegistry = {
+    RegisterCallback = function(_, event, fn, owner)
+      registry[event] = registry[event] or {}
+      table.insert(registry[event], { fn, owner })
+    end,
+  }
+  -- what a chat line shows after every filter, or nil when one dropped it
+  function game.chat(event, message, author)
+    for _, filter in ipairs(game.chatFilters[event] or {}) do
+      local discard, newMessage, newAuthor = filter(nil, event, message, author)
+      if discard then return nil end
+      if newMessage then message, author = newMessage, newAuthor end
+    end
+    return message
+  end
+  -- a click on a link in chat
+  function game.clickLink(link)
+    for _, entry in ipairs(registry.SetItemRef or {}) do entry[1](entry[2], link, link, "LeftButton") end
+  end
   env.C_AddOns = {
     GetAddOnMetadata = function(_, key)
       if key == "Version" then return "5.2.0" end
@@ -198,9 +306,12 @@ function Mock.New(opts)
   env.C_UnitAuras = {
     GetPlayerAuraBySpellID = function(id)
       if game.state.aurasSecret then return { secret = true } end
-      return game.state.auras and game.state.auras[id] and { spellId = id } or nil
+      return game.state.auras and game.state.auras[id] and { spellId = id, auraInstanceID = 100000 + id } or nil
     end,
   }
+  -- what the game hides from addons, by spell: game.secrecy[id] = 0 | 1 | 2
+  game.secrecy = {}
+  env.C_Secrets = { GetSpellAuraSecrecy = function(id) return game.secrecy[id] or 0 end }
   -- hooksecurefunc on a table really hooks, so another addon's recolour can be tested
   env.hooksecurefunc = function(target, method, hook)
     if type(target) ~= "table" then return end
@@ -293,6 +404,11 @@ function Mock.New(opts)
   env.PlayerFrame.manabar = Guard(NewWidget("StatusBar", "PlayerFrameManaBar"))
   env.PetFrame = NewWidget("Frame", "PetFrame")
   env.PetFrame.healthbar = Guard(NewWidget("StatusBar", "PetFrameHealthBar"))
+  -- the personal resource display under your character (Retail)
+  env.PersonalResourceDisplayFrame = NewWidget("Frame", "PersonalResourceDisplayFrame")
+  env.PersonalResourceDisplayFrame.HealthBarsContainer = NewWidget("Frame")
+  env.PersonalResourceDisplayFrame.HealthBarsContainer.healthBar = Guard(NewWidget("StatusBar", "PRDHealthBar"))
+  env.PersonalResourceDisplayFrame.PowerBar = Guard(NewWidget("StatusBar", "PRDPowerBar"))
   -- an AzeriteUI player frame with a JuNNeZ-style power bar, and its pet frame
   local function UnitFrame(name)
     local frame = NewWidget("Frame", name)

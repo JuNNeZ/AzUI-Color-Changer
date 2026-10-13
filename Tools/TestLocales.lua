@@ -2,8 +2,9 @@
 -- Checks every translation in Locales/: each key must still be a text the code shows
 -- (a key that is not is a typo, or a text that changed, and would never show), and
 -- each translation must keep the key's %d, %s and %.1f, its colour codes and the
--- share string prefix. Missing translations are listed, not failed: they show in
--- English.
+-- share string prefix, and each file must carry the packager's markers, so a release
+-- takes CurseForge's translations. Missing translations are listed, not failed: they
+-- show in English.
 local Keys = dofile("Tools/LocaleKeys.lua")
 
 local checks, failures = 0, {}
@@ -42,6 +43,12 @@ local function CheckLocale(locale)
     check(not seen[key], locale .. ": written twice: " .. key)
     seen[key] = true
   end
+  -- the packager puts CurseForge's translations in place of the copy kept here
+  local marker = '--@localization(locale="' .. locale .. '", format="lua_additive_table", table-name="T"'
+  check(source:find(marker, 1, true), locale .. ": no --@localization@ marker for this language")
+  local open, close = source:find("--@do-not-package@", 1, true), source:find("--@end-do-not-package@", 1, true)
+  check(open and close and open < close and select(2, source:gsub("\nT%[", "")) > 0
+    and not source:sub(1, open):find("\nT%["), locale .. ": the translations must sit between the do-not-package markers")
   chunk("AzUI_Color_Picker", ns)
   local count = 0
   for key, text in pairs(ns.LocaleStrings) do

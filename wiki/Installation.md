@@ -37,8 +37,10 @@ AzUI_Color_Picker\
 ├── AzUI_Color_Picker.toc
 ├── AzUI_Color_Picker_Camelot.toc
 ├── Bindings.xml
-├── Core.lua, Effects.lua, Pets.lua, Rules.lua, Paint.lua,
+├── Core.lua, Effects.lua, Pets.lua, Rules.lua, Paint.lua, Frames.lua,
 │   Share.lua, Profiles.lua, Options.lua, QuickPalette.lua
+├── Pages\            (the option pages)
+├── Locales\          (translations)
 ├── icon.tga
 ├── Options\          (the AzUI window)
 └── Libs\

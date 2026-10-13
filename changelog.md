@@ -4,6 +4,81 @@ Format inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ----------------------------------------------------------------------
 # Changelog
 
+## [7.0.0] - 2026-10-13
+
+More unit frame addons, rules with two conditions and on every bar, rules you can try and turn around, new conditions and effects, heal and absorb overlays, a colour vision preview and `/ahui check`, on a lighter engine. Then the rest of your UI: class resources, threat and casting rules, a sound when a rule starts, setups shared through a link in chat, and translations on CurseForge.
+
+### Added
+
+- Class resources (More Bars, off by default): combo points, holy power, chi, arcane charges, soul shards, essence and runes take your health bar's colour or their own colour and effect, on AzeriteUI (5.x, JuNNeZ Edition, AzeriteUI6), ElvUI, Unhalted Unit Frames and oUF layouts. Points that are not filled stay as faint as their addon draws them; Monk stagger keeps its own colour, as it says how heavy the stagger is. A rule can show on them too ("Show on: Class resources"), and Every bar includes them.
+- Threat rules: "Threat: I have aggro", "Losing aggro" (tanking, with someone close behind) and "About to pull aggro" (above the tank without tanking). Casting rules: while you cast, channel, or either. Midnight can hide both answers in some content; the rule then waits rather than guess, turned around or not. Their events are only looked at while such a rule exists.
+- A sound when a rule starts showing: raid warning, ready check, alarm clock, boss whisper, whisper, friend online or quest complete, on the Master channel so it is heard with sound effects off. Picked with the speaker on the rule's row (the classic window has a Sound list); picking one plays it, and Try plays it too. Logging in or changing profile shows rules without a sound.
+- Two more ready-made rules: about to pull aggro when you are not the tank (orange heartbeat, raid warning sound) and a tank losing aggro (red pulse, alarm).
+- Share in Chat (Share page): puts `[AzUI: name]` in your chat box for you to send. Anyone with the addon sees it as a link; clicking it fetches the parts you ticked from you with addon messages and opens them in the import preview, which says who they came from. Nothing changes until Import. Your last five links keep working after a log out, whenever you are online to answer. Where the game restricts addon messages (instances in combat, encounters) the click says so instead of waiting, and a request that gets no answer gives up after twelve seconds.
+
+- Try a rule: Try on a rule's row shows it on its bars for five seconds, whether or not it would match now, even switched off. Raid, Mythic+ and death rules can be set up in town.
+- Not: click "When" (or "and") on a rule's row to turn that condition around, as in "When not in a group". The classic window has a Not box. A condition whose answer the game hides still waits, turned around or not.
+- A buff rule can watch several spells, typed with commas ("Bloodlust, Heroism, 80353"); any one of them on you matches.
+- New rule conditions: in a Mythic+ run, in a delve, flying, in War Mode, in a vehicle, and the time of day (dawn, day, dusk, night on the realm's clock). Flying and the time have no events of their own, so a rule using them is looked at twice a second or every half minute, and only while such a rule exists.
+- A rule coloured by health ("By health" in its effect list): it runs from the rule's colour down to your low-health colour, as Colour by Health does with yours. On the pet frame it shows its colour as it is.
+- Ready-made rules, picked from a list on the Rules page and added switched off: a pet reminder, healing a raid, Mythic+, delves, Bloodlust and the like, War Mode and night.
+- Two effects: Flow, where your colour and the second colour slowly trade ends along the bar, and Spectrum, every colour along the bar at once, drifting. Reduce Motion holds Flow still as Gradient.
+- Pulse Depth and Sweep Time on the Health Bar page: how dark Pulse gets, and how long Sweep's band takes.
+- Preset packs Midnight (Silvermoon Gold, Sunwell Light, Eversong Crimson, Void Purple, Harandar Green, Zul'Aman Teal) and Class Colours (every class, by the game's own name).
+- `/ahui check` says how long one repaint of every bar takes on your machine.
+- Wiki pages: a rules cookbook and the supported frames, with how to read `/ahui check`.
+
+- More unit frame addons: Z-Perl and PitBull 4 (player and pet health and power bars), and any layout on the shared oUF, found by the unit its frames show. ElvUI and Unhalted Unit Frames are still found by name, as they keep their oUF private.
+- Heal and absorb overlays (More Bars, off by default): the incoming heal and the absorb shields drawn over your health bar take a lighter shade of its colour, and keep how see-through their addon makes them, so a hidden one stays hidden. Switched off, each gets back the colour its addon last gave it. AzeriteUI, ElvUI, Shadowed and Unhalted Unit Frames and oUF layouts.
+- Personal resource display (More Bars, off by default): the bars Blizzard draws under your character take your health bar's colour, and its power bar follows the Power Bar setting.
+- Gradient, a style next to the effects: your colour at one end of the bar, the second colour at the other, across horizontal bars and up vertical ones. It does not move, so it costs nothing to keep on screen.
+- Rule conditions: your role (the one your group gave you, or your specialization's), your group (solo, any group, a party, a raid, a raid of 20 or more), your pet (out, or not out as a reminder to call it) and a zone or a place in one, by its name. The Studio shows each with the game's own icon.
+- Rules with two conditions, such as "in a raid and in combat": + on a rule's row adds a second condition on a line of its own, ✕ takes it away. The classic window has an And list.
+- Rules on more bars: a rule can show on the power bar, the cast bar or every bar. A rule on the power or cast bar takes that bar while it shows, even when the bar is otherwise left alone, and hands it back after.
+- A preset per specialization (Profiles): lighter than a profile, changing specialization loads the preset picked for it. Only a real change does, so logging in keeps the colour you left with, and a renamed preset stays picked.
+- Colour vision in the Studio's live preview: see your bars as they look with protanopia, deuteranopia, tritanopia or in monochrome, to check that your colours, rules and pet colours stay apart. Only the preview changes, and it is back to normal when the window opens again.
+- `/ahui check`: what each bar shows and why (your colour, a rule, your pet), and every bar found with the addon it comes from, ready to paste in a bug report. Without a health bar it says which addons are supported.
+- ESC > Options > AddOns shows your health bar as it is now, colour and effect included.
+- A guide to correcting translations in the wiki.
+
+### Changed
+
+- New switches and sliders in the AzUI window, on every settings row and on the Studio pages: a round pill and a knob, sized in whole screen pixels so they stay sharp at any UI scale. The switch's knob slides. The old cast bar switch read as a solid gold block when small.
+- The page list down the left side has its own icons, one line drawing per page, muted, and gold for the page you are on. The game's spell icons it used were each a different style and colour. The open page stands up out of the list as a raised key, in every look.
+- Every page longer than the window has a scrollbar beside it, so nothing on it goes unseen: drag it, click above or below it to turn a page, or use the mouse wheel as before. While there is more below, the foot of the page fades out over a small arrow. The search results have one too.
+- Headings inside a page have icons too (Effect, Presets, Cast Bar, Export, Import and the rest), and so do the buttons: Reset is an arrow back, Random Colour a die, Rename a pen. Try on a rule's row is a play button.
+- Lighter on the game while an effect plays: repainting the bars no longer makes new tables or colours each time, and Sweep only re-anchors its band when the bar changes size. In the test client Sweep costs about a third less time per repaint and less than half the garbage.
+- Bars you cannot see (a pet frame with no pet, a closed window's preview) are left out of repaints, and painted the moment they show.
+- The effect cards on the Health Bar page follow your Update Rate instead of redrawing every frame while the window is open.
+- With Colour by Health on and an effect playing on another bar, a health change no longer repaints every bar at once; the next animated repaint picks it up.
+- The animator only runs for effects on bars that exist: a moving pet colour no longer keeps it running while the pet frames are left to their addon.
+
+- Repaints only what changed: while one bar animates, bars whose colour holds still are not painted again on every tick. A setting change still repaints everything.
+- Frames are looked for when an addon loads (once for several loading together) and a few times after login, then every 15 seconds instead of every 2.
+- Buff rules read `UNIT_AURA`'s own list: the rules are only checked again when one of their spells comes, or an aura they matched goes. Anything the game hides, or a full update, checks them all as before.
+- A pet the stable has not shown for half a year is forgotten, wherever you are; its colour settings stay in the profile.
+
+- A second colour of its own for the power bar, the cast bar and the class resources (More Bars), for each rule and for each pet: the other colour of Two-tone and the far end of Gradient and Flow. It shows while the effect uses one; until you pick it, the Second Colour on the Health Bar page is used, as before. On a rule's row in the AzUI window it is a small swatch beside the rule's colour.
+- Every rule condition has its own picture in the AzUI window, drawn for the addon like the first seven: threat, casting, role (one each for tank, healer and damage), group, Mythic+, delve, zone, flying, vehicle, pet, War Mode and time of day. A buff rule shows its buff's own icon, which says which buff it is. The speaker for a rule's sound is the window's own too.
+
+### Fixed
+
+- A buff or debuff typed by name into a rule vanished unless it was a spell your own character knows, as the game only looks those up: Bloodlust on a hunter came back empty. Names are now found in a table of the buffs and debuffs rules are made of (Bloodlust and the drums, Sated, raid buffs, external and own defensives and cooldowns, forms, heals over time, Forbearance and the like), by their name in your game's language or in English, and among the buffs and debuffs on you right now. A name that stands for several spells, such as Exhaustion, brings all of them, and the start of a name is enough when only one fits. In the AzUI window, names to pick from come up as you type. A name that cannot be found keeps what the rule had and says so. When the game hides a chosen buff from addons (always, or in boss encounters, Mythic+ and other restricted combat), the rule says so as you pick it, rather than waiting there without a word. It works in every game language: names are matched in any case, accented and Cyrillic letters included, and the Chinese comma separates names like the plain one.
+- A zone rule typed in another case than the game writes the zone matched only for the letters A to Z; Russian and accented zone names now match in any case too.
+- The lists in the AzUI window showed 16 entries and hid the rest without a sign, so War Mode, Time of day, Specialization and Buff or debuff could not be found among the conditions. A list now shows up to 24, has a thumb when there are more, and opens at the entry that is picked.
+- The AzUI window's Share page took a pasted share string only after a click on the small check in the corner of the box, and a redraw of the page in between (a rule starting, a pet called) emptied the box, so Import had nothing to import. The string is now taken a moment after you paste it, or when you leave the box, and a redraw keeps it.
+
+### For developers
+
+- `Spells.lua` holds the table of buff and debuff names, stamped with the client, release and season it was last checked against (`P.KNOWN_SPELLS_REVIEWED`). `Tools/TestRules.lua` fails when the TOC's Interface or Version moves past the stamp, so every patch and release gets a look for the new season's buffs and debuffs.
+- Translations move to CurseForge's localization: each locale file carries the packager's `@localization@` marker, and the copy in `Locales/` sits between `do-not-package` markers for development and the tests. `Tools/ExportLocales.lua` writes the import files for CurseForge (enUS phrases and each language). Import them before the next release, or it ships in English (see wiki/Translating.md).
+- `Tools/TestChat.lua` runs two mock clients against each other to test sharing through chat; threat, casting, sounds and class resources are in `Tools/TestRules.lua` and `Tools/TestFrames.lua`.
+- `Tools/RunTests.lua` runs every check CI runs and prints one line per run and a total. `Tools/TestEngine.lua` is a new suite for the engine and the 6.2 effects.
+
+- The option table is split into one file per page in `Pages/`, and finding bars moved from `Paint.lua` to `Frames.lua`, one adapter table per unit frame addon.
+- `Tools/CheckGlobals.lua` finds accidental globals with `luac`, the check CI runs with luacheck, with nothing to install. CI runs it too, with two new suites: `Tools/TestFrames.lua` and `Tools/TestRules.lua`.
+- The mock client moves a point that is set again and copies gradient colours, as the game does.
+
 ## [6.0.0] - 2026-10-10
 
 Other unit frame addons, a cast bar, buff and debuff rules, preset packs, a count of changed settings, keyboard navigation and nine translations.
