@@ -83,7 +83,7 @@ end
 -- which must not be read as "unchanged": no binding means no gem.
 local MarkModified = function(control, options, path, current)
 	-- An option can say for itself whether it differs from its default, and how
-	-- to put it back. AzUI's family and specialization colours do.
+	-- to put it back. ABCS's family and specialization colours do.
 	local meta = Meta(path and Config.GetGroup(options, path))
 	if (meta and type(meta.modified) == "function") then
 		local ok, modified = pcall(meta.modified)

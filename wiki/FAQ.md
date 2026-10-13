@@ -54,7 +54,7 @@ If you use a minimap addon like SexyMap, it may be repositioning or hiding the i
 ## Color & Animation
 
 ### My health bar reverts to its original color when I take damage or zone in.
-The addon hooks the health bar and puts your color back in the same frame whenever something else recolors it. If it still reverts, enable **Enable Debug** in the options panel, `/reload`, and check the chat for which frames the addon found. Report the issue on the [GitHub issue tracker](https://github.com/JuNNeZ/AzUI-Color-Changer/issues).
+The addon hooks the health bar and puts your color back in the same frame whenever something else recolors it. If it still reverts, enable **Enable Debug** in the options panel, `/reload`, and check the chat for which frames the addon found. Report the issue on the [GitHub issue tracker](https://github.com/JuNNeZ/ABCS-Advanced-Bar-Coloring-System/issues).
 
 ### The color doesn't apply to my AzeriteUI health bar.
 Make sure you are running one of the supported AzeriteUI editions and that it loaded correctly. Frames are picked up automatically within about 2 seconds, including frames AzeriteUI enables later. With debug enabled, the chat shows `Colouring AzeriteUI frame …` when a frame is found.
@@ -94,7 +94,7 @@ Yes. The addon uses a single **Default** profile, so presets, colors and setting
 Pets in your call-pet slots are added when you log in or summon a pet. If a stabled pet is missing, visit a stable master once.
 
 ### My pet's family isn't in the list.
-The list covers the hunter pet families available in patch 12.1. Until a new family is added to the addon, give the pet its own color on the **Hunter Pets** page, and please open an [issue](https://github.com/JuNNeZ/AzUI-Color-Changer/issues) with the family name so we can add it.
+The list covers the hunter pet families available in patch 12.1. Until a new family is added to the addon, give the pet its own color on the **Hunter Pets** page, and please open an [issue](https://github.com/JuNNeZ/ABCS-Advanced-Bar-Coloring-System/issues) with the family name so we can add it.
 
 ### Can my pet pulse or show a rainbow?
 Yes. Set **Effect** to **Pulse** or **Rainbow** on the pet's entry. It uses the **Animation Speed** and **Rainbow Pattern** from the Health Bar page.
@@ -108,7 +108,7 @@ Simply leave **Use Pet Colours** disabled (the default). Without a pet the featu
 
 ### I see a Lua error mentioning `AzUI_Color_Picker`.
 1. Note the exact error message (screenshot or copy the text).
-2. Check the [known issues](https://github.com/JuNNeZ/AzUI-Color-Changer/issues) list.
+2. Check the [known issues](https://github.com/JuNNeZ/ABCS-Advanced-Bar-Coloring-System/issues) list.
 3. If it's not listed, open a new issue and include:
    - The full error text.
    - Your WoW version and Interface number.
@@ -130,6 +130,6 @@ WTF\Account\<account>\SavedVariables\AzUI_Color_PickerDB.lua
 
 ## Contributing & Reporting Bugs
 
-- **Bug reports / feature requests:** [GitHub Issues](https://github.com/JuNNeZ/AzUI-Color-Changer/issues)
+- **Bug reports / feature requests:** [GitHub Issues](https://github.com/JuNNeZ/ABCS-Advanced-Bar-Coloring-System/issues)
 - **CurseForge page:** [Project 1286164](https://www.curseforge.com/wow/addons/azui-color-changer)
 - **Author:** JuNNeZ

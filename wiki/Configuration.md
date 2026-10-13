@@ -1,6 +1,6 @@
 # Configuration
 
-This page describes every option available in the AzUI Healthbar Color Changer options panel. Open the panel with `/ahui` or by clicking the minimap icon.
+This page describes every option available in the ABCS – Advanced Bar Coloring System options panel. Open the panel with `/ahui` or by clicking the minimap icon.
 
 The pages, listed on the left: **Health Bar** (your colour, effects and presets), **Rules**, **Hunter Pets**, **Pet Families**, **More Bars**, **Profiles** and **Share**. **Window** sets the window's theme, opacity and scale.
 
@@ -106,16 +106,16 @@ Tick the parts to include (your color and effect, presets, pet colors, family an
 
 To import, paste a string: the page lists what it would change, for example *3 presets (1 replaces yours: Tank Red)*. **Import** asks first, then adds the presets, pet and family colors, and replaces your rules. Share strings start with `!AZUI1!`.
 
-**Share in Chat** puts `[AzUI: name]` in your chat box (the name is under **Link Name**, your character's by default). Send it anywhere a player can see it: say, party, raid, guild or a whisper. Players with the addon see a link; clicking it asks your addon for the parts you ticked and opens them in their import preview, marked with your name. Your last five links keep working after you log out, whenever you are online to answer. In instances in combat and during encounters the game restricts addon messages, so a click there says so instead of waiting.
+**Share in Chat** puts `[ABCS: name]` in your chat box (the name is under **Link Name**, your character's by default). Send it anywhere a player can see it: say, party, raid, guild or a whisper. Players with the addon see a link; clicking it asks your addon for the parts you ticked and opens them in their import preview, marked with your name. Your last five links keep working after you log out, whenever you are online to answer. In instances in combat and during encounters the game restricts addon messages, so a click there says so instead of waiting.
 
 ---
 
 ## Quick Palette, Slash Commands and Key Bindings
 
-- **Minimap button:** left-click opens the AzUI window, right-click the quick palette, Shift-click loads your next preset.
-- **Quick palette:** your color, up to eight presets as swatches, every effect, pet colors on or off, and *Open the AzUI window…*.
+- **Minimap button:** left-click opens the ABCS window, right-click the quick palette, Shift-click loads your next preset.
+- **Quick palette:** your color, up to eight presets as swatches, every effect, pet colors on or off, and *Open the ABCS window…*.
 - **Slash commands:** `/ahui`, `/ahui classic`, `/ahui color #ff8800`, `/ahui preset <name>`, `/ahui next`, `/ahui effect <name>|off`, `/ahui pets on|off`, `/ahui share`, `/ahui help`.
-- **Key bindings** (Key Bindings → AddOns): open the AzUI window, toggle rainbow, toggle pulse, next preset, toggle pet colors.
+- **Key bindings** (Key Bindings → AddOns): open the ABCS window, toggle rainbow, toggle pulse, next preset, toggle pet colors.
 
 ---
 
@@ -191,7 +191,7 @@ Permanently removes the currently selected preset. Disabled when no preset is se
 
 ### Show Minimap Icon toggle
 **Type:** Toggle  
-Shows or hides the AzUI icon on your minimap. When hidden, use `/ahui` or the AddOn Compartment to open the options panel instead. Compatible with Titan Panel.
+Shows or hides the ABCS icon on your minimap. When hidden, use `/ahui` or the AddOn Compartment to open the options panel instead. Compatible with Titan Panel.
 
 ---
 
@@ -210,7 +210,7 @@ Runs `/reload`. All settings are saved automatically, and a running rainbow or p
 ## Debug Mode
 
 ### Enable Debug toggle
-When enabled, the addon prints diagnostic messages to your chat window prefixed with `[AzUI Color Picker]`, such as which AzeriteUI frames it found. Useful for troubleshooting frame detection issues.
+When enabled, the addon prints diagnostic messages to your chat window prefixed with `[ABCS]`, such as which AzeriteUI frames it found. Useful for troubleshooting frame detection issues.
 
 ---
 
@@ -248,4 +248,4 @@ The file uses AceDB-3.0. Characters share the **Default** profile unless you pic
 | `defaultPresetsSeeded` | boolean | Whether the colorblind presets were added |
 | `debug` | boolean | Debug mode enabled |
 
-The minimap icon settings (`minimap.hide`, `minimap.showInCompartment`) and the family names the addon has learned (`familyIDs`) are stored in the account-wide `global` section. The list of your pets (`knownPets`: name, icon, display, family, specialization and slot) and the per-specialization profiles (`specProfiles`) are stored per character in the `char` section. The AzUI window's own settings are in `global.panel`.
+The minimap icon settings (`minimap.hide`, `minimap.showInCompartment`) and the family names the addon has learned (`familyIDs`) are stored in the account-wide `global` section. The list of your pets (`knownPets`: name, icon, display, family, specialization and slot) and the per-specialization profiles (`specProfiles`) are stored per character in the `char` section. The ABCS window's own settings are in `global.panel`.

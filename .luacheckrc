@@ -24,6 +24,7 @@ ignore = {
 -- The globals this addon sets on purpose.
 globals = {
   "SLASH_AZCOLORPICKER1",
+  "SLASH_AZCOLORPICKER2",
   "SlashCmdList",
   "StaticPopupDialogs",
   "UISpecialFrames",

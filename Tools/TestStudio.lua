@@ -1,5 +1,5 @@
 -- Run from the addon directory: lua Tools/TestStudio.lua (Lua 5.1).
--- The AzUI Studio look and its Health Bar and Rules pages, against Tools/Mock.lua.
+-- The ABCS Studio look and its Health Bar and Rules pages, against Tools/Mock.lua.
 local Mock = dofile("Tools/Mock.lua")
 local checks = 0
 local function check(value, message)
@@ -104,7 +104,7 @@ ns.OpenPanel("general")
 local Panel = Kit.Panel
 check(Kit.ArtStyle == "studio" and Kit.GetTheme() == "studio", "Studio is the default theme and art")
 check(Panel.windowRound and Panel.railRound, "the window and rail are rounded surfaces")
-check(Panel.title.text == "AzUI Studio", "the title reads AzUI Studio")
+check(Panel.title.text == "ABCS Studio", "the title reads ABCS Studio")
 
 -- changing to a theme with other art asks for a reload; No keeps Studio
 game.answer = false
@@ -304,7 +304,7 @@ do
 end
 
 ---------------------------------------------------------------------------
--- AzUI Azerite follows JuNNeZ Edition's active theme
+-- ABCS Azerite follows JuNNeZ Edition's active theme
 ---------------------------------------------------------------------------
 for _, which in ipairs({ "HunterTheme", "LegacyHUD" }) do
   local themed = Mock.New({ art = true, noLogin = true })
@@ -327,9 +327,9 @@ for _, which in ipairs({ "HunterTheme", "LegacyHUD" }) do
   local K = themed.ns.OptionsKit
   local health = K.StudioHealth.control.preview.health
   if which == "HunterTheme" then
-    check(K.GetMedia("hp_cap_case") == "THEMED:hp_cap_case", "AzUI Azerite asks the active theme for its art")
+    check(K.GetMedia("hp_cap_case") == "THEMED:hp_cap_case", "ABCS Azerite asks the active theme for its art")
     check(styled, "the theme styles the preview's health bar with its own StyleHealth")
-    check(health.case.alpha == 0, "and hides AzUI's case where it draws its own")
+    check(health.case.alpha == 0, "and hides ABCS's case where it draws its own")
   else
     check(not health.case and not styled, "the Legacy HUD preview is a flat bar with no case")
   end

@@ -1,6 +1,6 @@
 # Animations
 
-AzUI Healthbar Color Changer supports two animation effects: **Rainbow** and **Pulse**. Both are controlled from the options panel (`/ahui`).
+ABCS – Advanced Bar Coloring System supports two animation effects: **Rainbow** and **Pulse**. Both are controlled from the options panel (`/ahui`).
 
 ---
 

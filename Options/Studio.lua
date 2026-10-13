@@ -1,4 +1,4 @@
--- Studio.lua - the AzUI Studio look, from the AzUI Feature Plan's mock-ups.
+-- Studio.lua - the ABCS Studio look, from the AzUI Feature Plan's mock-ups.
 --
 -- A flat, dark interface with rounded surfaces, a bronze window edge and gold for
 -- what is selected, set in Marcellus and Source Sans 3 (both under the SIL Open Font
@@ -46,7 +46,7 @@ Kit.AddTheme("studio", {
   backdrop = { C.surface[1], C.surface[2], C.surface[3], 1 },
   inset = { C.inset[1], C.inset[2], C.inset[3], 1 },
   track = { C.line2[1], C.line2[2], C.line2[3], 1 },
-}, L["AzUI Studio"])
+}, L["ABCS Studio"])
 
 ---------------------------------------------------------------------
 -- Fonts
@@ -512,10 +512,10 @@ function Kit.PrepareArt(theme)
   return Kit.ArtStyle
 end
 
--- The two looks AzUI has: its own (Studio) and AzUI with Azerite.
+-- The two looks ABCS has: its own (Studio) and ABCS with Azerite.
 function Studio.WindowTitle()
-  if Kit.ArtStyle == "azerite" then return "|cffFFD100AzUI|r  |cff4488bbAzerite|r" end
-  return L["AzUI Studio"]
+  if Kit.ArtStyle == "azerite" then return "|cffFFD100ABCS|r  |cff4488bbAzerite|r" end
+  return L["ABCS Studio"]
 end
 
 -- The art a theme would draw with, to know whether changing to it needs a /reload.

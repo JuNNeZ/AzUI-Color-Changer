@@ -1,12 +1,12 @@
 # Translating
 
-AzUI Color Picker follows your game client's language. Deutsch, Français, Español (España and México), Português (Brasil), Italiano, Русский, 한국어, 简体中文 and 繁體中文 are in, and every text the addon shows is translated. They are first versions: if a line reads oddly to a native speaker, a correction is very welcome.
+ABCS follows your game client's language. Deutsch, Français, Español (España and México), Português (Brasil), Italiano, Русский, 한국어, 简体中文 and 繁體中文 are in, and every text the addon shows is translated. They are first versions: if a line reads oddly to a native speaker, a correction is very welcome.
 
 ## Translating on CurseForge
 
 The translations live on the addon's CurseForge project, under **Localization**. Pick your language, find the English phrase and type or correct its translation there; no account on GitHub is needed. The next release picks your work up by itself.
 
-Keep these as they are, in the same number: `%d`, `%s` and `%.1f` (numbers and names the addon fills in), colour codes such as `|cff999999` and `|r`, `!AZUI1!`, and `[AzUI: ` in the Share in Chat help, which is what the addon looks for in chat.
+Keep these as they are, in the same number: `%d`, `%s` and `%.1f` (numbers and names the addon fills in), colour codes such as `|cff999999` and `|r`, `!AZUI1!`, and `[ABCS: ` in the Share in Chat help, which is what the addon looks for in chat.
 
 A phrase with no translation shows in English, so a language can be partial and nothing breaks.
 

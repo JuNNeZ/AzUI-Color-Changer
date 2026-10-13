@@ -1,4 +1,4 @@
--- The AzUI window.
+-- The ABCS window.
 --
 -- Laid out the way AzeriteUI's own options window is (Options/Kit/Panel.lua in the
 -- JuNNeZ Edition): a sculpted casing around a plain fill, a header with the addon's
@@ -977,7 +977,7 @@ local function Build()
   title:SetJustifyH("LEFT")
   title:SetWordWrap(false)
   if studio then
-    title:SetText(L["AzUI Studio"])
+    title:SetText(L["ABCS Studio"])
     logo:SetSize(24, 24)
     local pack = Kit.Studio.Pack or {}
     if pack.logo then
@@ -1001,8 +1001,8 @@ local function Build()
       end
     end
   else
-    title:SetText(Kit.Studio and Kit.Studio.WindowTitle() or "AzUI")
-    -- AzUI's own mark beside "AzUI Azerite" too, from the Studio art pack
+    title:SetText(Kit.Studio and Kit.Studio.WindowTitle() or "ABCS")
+    -- ABCS's own mark beside "ABCS Azerite" too, from the Studio art pack
     if Kit.Studio and Kit.Studio.Pack and Kit.Studio.Pack.logo then
       logo:SetTexture(Kit.Studio.PackMedia("logo"))
       logo:SetTexCoord(0, 1, 0, 1)
@@ -1228,7 +1228,7 @@ function Panel:Open(key)
     local ok, err = pcall(Build)
     if not ok then
       frame = nil
-      Core.Print(L["The AzUI window could not be built, so the classic window opened instead:"] .. " " .. tostring(err))
+      Core.Print(L["The ABCS window could not be built, so the classic window opened instead:"] .. " " .. tostring(err))
       return false
     end
   end

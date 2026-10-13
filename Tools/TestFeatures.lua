@@ -315,7 +315,7 @@ local data = P.Decode(text)
 check(data and data.presets["Tank Red"] and data.families[1] and #data.rules == 1, "and reads back")
 local lines = table.concat(P.DescribeImport(data), "\n")
 check(lines:find("replace yours: ") and lines:find("Tank Red") and lines:find("1 rule"), "the preview says what changes: " .. lines)
-check(select(2, P.Decode("hello")):find("not an AzUI share string"), "other text is refused")
+check(select(2, P.Decode("hello")):find("not an ABCS share string"), "other text is refused")
 check(select(2, P.Decode("!AZUI1!zz")):find("damaged"), "a damaged string is refused")
 
 -- a hostile payload: only clean data survives
@@ -412,7 +412,7 @@ launcher.OnClick(game.NewWidget("Button"), "LeftButton")
 game.shift = false
 check(P.selectedPreset ~= before, "Shift-click loads the next preset")
 launcher.OnClick(game.NewWidget("Button"), "LeftButton")
-check(Panel:IsShown(), "left-click opens the AzUI window")
+check(Panel:IsShown(), "left-click opens the ABCS window")
 Panel:Close()
 
 ---------------------------------------------------------------------------
@@ -545,7 +545,7 @@ local registry = realEnv.LibStub("AceConfigRegistry-3.0")
 local ok, err = pcall(registry.ValidateOptionsTable, registry, P.options, "AzUI_Color_Picker")
 check(ok, "AceConfigRegistry accepts every page: " .. tostring(err))
 
--- every page of the AzUI window draws without a control it cannot draw
+-- every page of the ABCS window draws without a control it cannot draw
 ns.OpenPanel()
 for _, info in ipairs(Panel.pages) do
   Panel:SelectPage(info.key)

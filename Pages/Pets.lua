@@ -131,7 +131,7 @@ local function PetGroup(number, pet, order)
         disabled = function() return isOff() or not pet.familyID end,
       },
     },
-  }, { hidden = true }) -- the AzUI window draws pets in its gallery
+  }, { hidden = true }) -- the ABCS window draws pets in its gallery
 end
 
 function P.SetPetMode(number, mode)

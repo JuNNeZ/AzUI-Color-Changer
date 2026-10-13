@@ -1,6 +1,6 @@
-# AzUI Healthbar Color Changer – Wiki Home
+# ABCS – Advanced Bar Coloring System – Wiki Home
 
-**AzUI Healthbar Color Changer** is a lightweight, self-contained World of Warcraft addon that lets you fully customize the appearance of your player health bar. Set a static color, run animated rainbow or pulse effects, save unlimited presets, and automatically apply unique colors for your hunter pets — all from one clean options panel.
+**ABCS – Advanced Bar Coloring System** is a lightweight, self-contained World of Warcraft addon that lets you fully customize the appearance of your player health bar. Set a static color, run animated rainbow or pulse effects, save unlimited presets, and automatically apply unique colors for your hunter pets — all from one clean options panel.
 
 > **Current version:** 7.0.0 | **Interface:** 120100, 120105 (Midnight, patch 12.1) and 16001 (WoW Forever)
 

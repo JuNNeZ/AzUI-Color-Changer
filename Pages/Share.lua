@@ -65,7 +65,7 @@ local shareArgs = {
   chatH = { type = "header", name = L["Share in Chat"], order = 25 },
   chatHelp = {
     type = "description", order = 26,
-    name = L["Puts [AzUI: name] in your chat box for you to send. Anyone with AzUI Color Picker sees it as a link; clicking it fetches the parts ticked above from you and shows what they would change before anything is imported. Your last five links keep working after you log out, whenever you are online to answer."],
+    name = L["Puts [ABCS: name] in your chat box for you to send. Anyone with ABCS sees it as a link; clicking it fetches the parts ticked above from you and shows what they would change before anything is imported. Your last five links keep working after you log out, whenever you are online to answer."],
   },
   chatName = {
     type = "input", name = L["Link Name"], order = 27,

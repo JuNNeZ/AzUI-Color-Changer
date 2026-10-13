@@ -81,7 +81,7 @@ for groupIndex, group in ipairs(P.FAMILY_GROUPS) do
       func = function() DB().profile.familyColours[id] = nil; P.UpdatePetColour() end,
       hidden = function() return not DB().profile.familyColours[id] end,
     }
-    -- the AzUI window puts a reset arrow on the colour itself instead
+    -- the ABCS window puts a reset arrow on the colour itself instead
     panelMeta[args["f" .. id]] = {
       modified = function() return DB().profile.familyColours[id] ~= nil end,
       reset = function() DB().profile.familyColours[id] = nil; P.UpdatePetColour() end,

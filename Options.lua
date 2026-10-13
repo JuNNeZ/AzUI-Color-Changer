@@ -59,7 +59,7 @@ function P.ParseColour(text)
 end
 
 local HELP = {
-  "/ahui - " .. L["open or close the AzUI window"],
+  "/abcs, /ahui - " .. L["open or close the ABCS window"],
   "/ahui classic - " .. L["the previous Ace3 window"],
   "/ahui color #ff8800 - " .. L["set your colour (also 1 0.5 0 or 255 128 0)"],
   "/ahui preset <name> - " .. L["load a preset"],
@@ -122,13 +122,14 @@ function P.HandleSlash(input)
 end
 
 SLASH_AZCOLORPICKER1 = "/ahui"
+SLASH_AZCOLORPICKER2 = "/abcs"
 SlashCmdList["AZCOLORPICKER"] = P.HandleSlash
 
 ---------------------------------------------------------------------
 -- KEY BINDINGS (Bindings.xml)
 ---------------------------------------------------------------------
-BINDING_HEADER_AZUICOLORPICKER    = "AzUI Color Picker"
-BINDING_NAME_AZUICOLORPICKER_OPEN    = L["Open the AzUI window"]
+BINDING_HEADER_AZUICOLORPICKER    = "ABCS"
+BINDING_NAME_AZUICOLORPICKER_OPEN    = L["Open the ABCS window"]
 BINDING_NAME_AZUICOLORPICKER_RAINBOW = L["Toggle rainbow"]
 BINDING_NAME_AZUICOLORPICKER_PULSE   = L["Toggle pulse"]
 BINDING_NAME_AZUICOLORPICKER_NEXT    = L["Next preset"]
@@ -153,7 +154,7 @@ local function Swatch(c)
 end
 
 local function LauncherTooltip(tooltip)
-  tooltip:AddLine("AzUI Color Picker")
+  tooltip:AddLine("ABCS")
   local colour, effect, source = P.ChannelSource("player")
   if source == "health" then
     tooltip:AddLine(L["Health bar:"] .. " " .. L["coloured by your health"], 1, 1, 1)
@@ -167,7 +168,7 @@ local function LauncherTooltip(tooltip)
     tooltip:AddLine(L["Pet out:"] .. " " .. P.currentPet.name, .8, .8, .8)
   end
   tooltip:AddLine(" ")
-  tooltip:AddLine(L["Left-click: open the AzUI window"], .6, .8, 1)
+  tooltip:AddLine(L["Left-click: open the ABCS window"], .6, .8, 1)
   tooltip:AddLine(L["Right-click: quick palette"], .6, .8, 1)
   tooltip:AddLine(L["Shift-click: next preset"], .6, .8, 1)
 end
@@ -202,7 +203,7 @@ end
 
 function P.CheckReport()
   local lines = {}
-  lines[1] = "AzUI Color Picker " .. P.VERSION .. " · " .. (P.IS_FOREVER and "Forever" or "Retail")
+  lines[1] = "ABCS " .. P.VERSION .. " · " .. (P.IS_FOREVER and "Forever" or "Retail")
     .. " · " .. L["Profile"] .. ": " .. DB():GetCurrentProfile()
   for _, channel in ipairs({ "player", "pet", "power", "cast", "classpower" }) do
     lines[#lines + 1] = CHANNEL_NAMES[channel] .. ": " .. DescribeChannel(channel)
@@ -286,7 +287,7 @@ ns.Core = {
 -- ESC > OPTIONS > ADDONS
 ---------------------------------------------------------------------
 -- As AzeriteUI does it: Blizzard's Settings get a landing page with the logo, the
--- version and a button into the AzUI window, rather than the whole option list.
+-- version and a button into the ABCS window, rather than the whole option list.
 -- A client without the canvas Settings API gets the Ace3 page as before.
 local function FontObject(...)
   for i = 1, select("#", ...) do
@@ -311,7 +312,7 @@ end
 function P.RegisterSettingsPage()
   if ns.settingsCategory then return end
   if not (Settings and Settings.RegisterCanvasLayoutCategory and Settings.RegisterAddOnCategory) then
-    ns.optionsFrame, ns.optionsCategoryID = P.AceConfigDialog:AddToBlizOptions(addonName, "AzUI Color Picker")
+    ns.optionsFrame, ns.optionsCategoryID = P.AceConfigDialog:AddToBlizOptions(addonName, "ABCS")
     return
   end
 
@@ -334,7 +335,7 @@ function P.RegisterSettingsPage()
   local about = page:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
   about:SetPoint("TOP", version, "BOTTOM", 0, -18)
   about:SetWidth(520)
-  about:SetText(L["Open the AzUI window with /ahui or the button below."])
+  about:SetText(L["Open the ABCS window with /ahui or the button below."])
 
   local function Button(text, scale, onClick)
     local button = CreateFrame("Button", nil, page, "UIPanelButtonTemplate")
@@ -363,7 +364,7 @@ function P.RegisterSettingsPage()
   P.AddPreviewTarget(preview, "player")
   page.preview = preview
 
-  local open = Button(L["Open the AzUI window"], 1.6, function() P.OpenFromSettings() end)
+  local open = Button(L["Open the ABCS window"], 1.6, function() P.OpenFromSettings() end)
   open:SetPoint("TOP", preview, "BOTTOM", 0, -16)
   local classic = Button(L["Open the Classic Window"], 1, function() P.OpenFromSettings(true) end)
   classic:SetPoint("TOP", open, "BOTTOM", 0, -14)
@@ -375,15 +376,15 @@ function P.RegisterSettingsPage()
   credits:SetPoint("TOP", creditsHead, "BOTTOM", 0, -4)
   credits:SetWidth(520)
   credits:SetText("|cffD1FF00JuNNeZ|r|cff999999 - " .. L["Author"] .. "|r\n"
-    .. "|cffffcc00Goldpaw|r|cff999999 & |r|cffffcc00Blakmane|r|cff999999 - " .. L["AzeriteUI, whose art AzUI Azerite borrows with their blessing"] .. "|r")
+    .. "|cffffcc00Goldpaw|r|cff999999 & |r|cffffcc00Blakmane|r|cff999999 - " .. L["AzeriteUI, whose art ABCS Azerite borrows with their blessing"] .. "|r")
 
   -- Settings asks a canvas page for these
   page.OnCommit = function() end
   page.OnDefault = function() end
   page.OnRefresh = function() end
 
-  local category = Settings.RegisterCanvasLayoutCategory(page, "AzUI Color Picker")
-  category.ID = "AzUI Color Picker"
+  local category = Settings.RegisterCanvasLayoutCategory(page, "ABCS")
+  category.ID = "ABCS"
   Settings.RegisterAddOnCategory(category)
   page.open, page.classic = open, classic
   ns.settingsCategory, ns.optionsFrame, ns.optionsCategoryID = category, page, category.ID
@@ -405,8 +406,8 @@ P.OnInitialize(function()
     ns.dataObj = P.LDB:NewDataObject(addonName, {
       type  = "launcher",
       icon  = P.ADDON_ICON,
-      text  = "AzUI",
-      label = "AzUI Colour",
+      text  = "ABCS",
+      label = "ABCS",
       OnClick = function(frame, button) P.LauncherClick(frame, button) end,
       OnTooltipShow = LauncherTooltip,
     })

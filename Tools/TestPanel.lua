@@ -1,6 +1,6 @@
 -- Run from the addon directory: lua Tools/TestPanel.lua (Lua 5.1).
 -- Loads every file the TOC lists against a mock client, logs in as a hunter with
--- four pets, and drives the AzUI window: every page, the search, the pet gallery's
+-- four pets, and drives the ABCS window: every page, the search, the pet gallery's
 -- filters, cards and detail controls, and the window's own settings.
 local checks = 0
 local function check(value, message)
@@ -29,7 +29,7 @@ check(db.char.knownPets[77].specID == 81, "the stable's specID is remembered")
 ---------------------------------------------------------------------------
 local Kit, Panel, Gallery = ns.OptionsKit, ns.OptionsKit.Panel, ns.OptionsKit.PetGallery
 env.SlashCmdList.AZCOLORPICKER("")
-check(Panel:IsShown(), "/ahui opens the AzUI window")
+check(Panel:IsShown(), "/ahui opens the ABCS window")
 check(#Panel.pages == 8, "rail: Health Bar, Rules, Hunter Pets, Pet Families, More Bars, Profiles, Share, Window")
 
 local function rowsOf(kind)
@@ -169,17 +169,17 @@ if editions[mode] then
   check(border:find(folder, 1, true) and (mode ~= "aui6" or border:find("border-aura", 1, true)),
     "cards use its border (AzeriteUI6 lends its aura border)")
   check(not Kit.GetMedia("options-glyphs"):find(folder, 1, true), "the glyph sheet only JuNNeZ Edition has comes from Blizzard")
-  check(Panel.title.text:find("Azerite"), "the title reads AzUI Azerite")
+  check(Panel.title.text:find("Azerite"), "the title reads ABCS Azerite")
 end
 if mode == "art" then
-  -- AzUI with Azerite: AzeriteUI's own health bar and case, referenced from its folder
+  -- ABCS with Azerite: AzeriteUI's own health bar and case, referenced from its folder
   local preview = Kit.StudioHealth.control.preview
-  check(Panel.title.text:find("Azerite"), "the title reads AzUI Azerite")
+  check(Panel.title.text:find("Azerite"), "the title reads ABCS Azerite")
   local logo
   for _, w in ipairs(frames) do
     if type(w.texture) == "string" and w.texture:find("StudioPack", 1, true) and w.texture:find("logo", 1, true) then logo = w end
   end
-  check(logo, "AzUI's logo from the art pack stands beside it")
+  check(logo, "ABCS's logo from the art pack stands beside it")
   check(preview.health.case and preview.health.case.texture:find("AzeriteUI5_JuNNeZ_Edition", 1, true)
     and preview.health.case.texture:find("hp_cap_case", 1, true), "the preview wears AzeriteUI's hp_cap_case")
 end
@@ -362,14 +362,14 @@ check(ok, "AceConfigRegistry accepts the option table: " .. tostring(err))
 ---------------------------------------------------------------------------
 do
   local page = game.settingsPage
-  check(page and game.settingsCategory and game.settingsCategory.name == "AzUI Color Picker",
-    "the AddOns list in Blizzard's Settings has an AzUI Color Picker page")
+  check(page and game.settingsCategory and game.settingsCategory.name == "ABCS",
+    "the AddOns list in Blizzard's Settings has an ABCS page")
   env.SettingsPanel = game.NewWidget("Frame", "SettingsPanel")
   env.SettingsPanel:Show()
   env.HideUIPanel = function(frame) frame:Hide() end
   Panel:Close()
   page.open.scripts.OnClick(page.open)
-  check(Panel:IsShown() and not env.SettingsPanel.shown, "its button closes Settings and opens the AzUI window")
+  check(Panel:IsShown() and not env.SettingsPanel.shown, "its button closes Settings and opens the ABCS window")
   page.open.scripts.OnClick(page.open)
   check(Panel:IsShown(), "and a second click leaves it open")
   page.classic.scripts.OnClick(page.classic)

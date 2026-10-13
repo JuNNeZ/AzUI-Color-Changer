@@ -7,6 +7,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ## [7.0.0] – 2026-10-13
 
+**AzUI Color Picker is now ABCS – Advanced Bar Coloring System.** Your settings, profiles and share strings carry over; `/ahui` still works next to the new `/abcs`.
+
 ### Added
 - **Class resources:** combo points, holy power, chi, arcane charges, soul shards, essence and runes take your colour or their own (More Bars, off by default).
 - **Heal and absorb overlays** and the **personal resource display** take your health bar's colour (More Bars, off by default).
@@ -19,7 +21,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 - **Colour vision preview** in the Studio, and **`/ahui check`** for bug reports.
 
 ### Changed
-- The AzUI window has new switches and sliders, its own icons for pages, headings and buttons, the open page raised as a key, and a scrollbar on every long page.
+- The ABCS window has new switches and sliders, its own icons for pages, headings and buttons, the open page raised as a key, and a scrollbar on every long page.
 - Lighter on the game: only what changed is repainted, hidden bars are skipped, and frames are looked for less often.
 - Translations come from CurseForge's localization.
 

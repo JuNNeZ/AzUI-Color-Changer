@@ -1,6 +1,6 @@
 # Supported Frames
 
-AzUI Color Picker colours your own bars in these addons. Frames that appear after login are found when their addon loads, a few times after login and every 15 seconds after that.
+ABCS colours your own bars in these addons. Frames that appear after login are found when their addon loads, a few times after login and every 15 seconds after that.
 
 | Addon | Health bar | Pet frame | Power bar | Cast bar | Class resources | Heal and absorb overlays |
 |-------|:---:|:---:|:---:|:---:|:---:|:---:|

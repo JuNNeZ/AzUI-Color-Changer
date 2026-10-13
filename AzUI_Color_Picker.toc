@@ -1,7 +1,7 @@
 ## Interface: 120100, 120105
 
-## Title: |cff00ff00Az|cffFFD100UI|cffff7d0a Healthbar Color Picker|r
-## Notes: |cffFFFFFFCustom colours, rainbow, pulse, presets & hunter-pet colours for your health bar on AzeriteUI, ElvUI, Shadowed or Unhalted Unit Frames, or the Blizzard player frame.|r
+## Title: |cffFFD100ABCS|r |cffff7d0aAdvanced Bar Coloring System|r
+## Notes: |cffFFFFFFYour own colours, effects, rules and hunter-pet colours for your health, power and cast bars and class resources, on AzeriteUI, ElvUI, Shadowed or Unhalted Unit Frames, Z-Perl, PitBull 4, oUF layouts or the Blizzard frames. Formerly AzUI Color Picker.|r
 ## Notes-deDE: |cffFFFFFFEigene Farben, Regenbogen, Pulsieren, Vorlagen und Jägerbegleiter-Farben für deine Gesundheitsleiste auf AzeriteUI, ElvUI, Shadowed oder Unhalted Unit Frames oder Blizzards Spielerfenster.|r
 ## Notes-frFR: |cffFFFFFFCouleurs personnalisées, arc-en-ciel, pulsation, préréglages et couleurs de familier pour votre barre de vie sur AzeriteUI, ElvUI, Shadowed ou Unhalted Unit Frames, ou le cadre de joueur de Blizzard.|r
 ## Notes-esES: |cffFFFFFFColores propios, arcoíris, pulso, predefinidos y colores de mascota de cazador para tu barra de salud en AzeriteUI, ElvUI, Shadowed o Unhalted Unit Frames, o el marco de jugador de Blizzard.|r
@@ -77,7 +77,7 @@ Options.lua
 QuickPalette.lua
 
 # -------------------------------------------------------------------
-#  The AzUI window (/ahui), after the main file whose settings it draws
+#  The ABCS window (/ahui), after the main file whose settings it draws
 #  Ported from AzeriteUI JuNNeZ Edition's options panel; see Options\LICENSE
 # -------------------------------------------------------------------
 Options\Bootstrap.lua

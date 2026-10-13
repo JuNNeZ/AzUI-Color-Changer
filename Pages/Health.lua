@@ -214,7 +214,7 @@ general.args.save = {
   desc = L["Save the current colour as a new preset."], order = 2.5,
   func = function() StaticPopup_Show("AZUI_NAME_PRESET") end,
 }
--- preset packs: one button each, shown as a grid in the AzUI window
+-- preset packs: one button each, shown as a grid in the ABCS window
 general.args.packs = { type = "group", inline = true, name = L["Preset Packs"], order = 2.7, args = {} }
 for index, key in ipairs(P.PRESET_PACK_ORDER) do
   local pack = P.PRESET_PACKS[key]
@@ -252,14 +252,14 @@ general.args.reload = {
 }
 general.args.minimapToggle = {
   type = "toggle", name = L["Show Minimap Icon"], order = 3.25,
-  desc = L["Toggle the minimap launcher button. Left-click opens the AzUI window, right-click the quick palette, Shift-click loads your next preset."],
+  desc = L["Toggle the minimap launcher button. Left-click opens the ABCS window, right-click the quick palette, Shift-click loads your next preset."],
   get = function() return DB() and not DB().global.minimap.hide end,
   set = function(_, v)
     DB().global.minimap.hide = not v
     if P.DBIcon then if v then P.DBIcon:Show(addonName) else P.DBIcon:Hide(addonName) end end
   end,
 }
--- The AzUI window's Studio Health Bar page draws these itself.
+-- The ABCS window's Studio Health Bar page draws these itself.
 for _, key in ipairs({ "col", "effH", "effect", "speed", "sel", "renBox", "renBtn", "delBtn", "save" }) do
   panelMeta[general.args[key]] = { hidden = true, studio = true } -- still found by the window's search
 end

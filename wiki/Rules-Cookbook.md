@@ -1,6 +1,6 @@
 # Rules Cookbook
 
-Rules show a colour and effect while something is true. Each recipe below says what to set on the **Rules** page of the AzUI window (`/ahui`, then Rules). Many are also in the **Add a ready-made rule…** list at the top of that page; they are added switched off, so press **Try** on the row to see the rule on your bars for five seconds, then switch it on.
+Rules show a colour and effect while something is true. Each recipe below says what to set on the **Rules** page of the ABCS window (`/ahui`, then Rules). Many are also in the **Add a ready-made rule…** list at the top of that page; they are added switched off, so press **Try** on the row to see the rule on your bars for five seconds, then switch it on.
 
 The first rule that matches wins for each bar, so put the rules you care about most at the top (drag a row by its handle).
 
@@ -70,4 +70,4 @@ Health is hidden from addons in Midnight, so a rule cannot say "below 35%". Inst
 
 On the **Share** page, tick only **Rules**, press **Make Share String** and paste the `!AZUI1!` line in Discord or a guide. Importing it replaces the rule list of the profile it goes into, after showing what changes.
 
-In the game, **Share in Chat** does it without copying: it puts `[AzUI: name]` in your chat box, and anyone with the addon who clicks it gets the parts you ticked in their import preview.
+In the game, **Share in Chat** does it without copying: it puts `[ABCS: name]` in your chat box, and anyone with the addon who clicks it gets the parts you ticked in their import preview.

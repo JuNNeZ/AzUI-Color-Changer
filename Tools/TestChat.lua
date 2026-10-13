@@ -1,6 +1,6 @@
 -- Run from the addon directory: lua Tools/TestChat.lua (Lua 5.1).
 -- Sharing a setup through chat: two clients, Alice and Bob, each a Tools/Mock.lua game.
--- Alice puts [AzUI: ...] in chat, Bob's chat shows it as a link, a click asks Alice's
+-- Alice puts [ABCS: ...] in chat, Bob's chat shows it as a link, a click asks Alice's
 -- addon for it with addon messages, and it opens in Bob's import preview.
 local Mock = dofile("Tools/Mock.lua")
 local checks = 0
@@ -57,11 +57,11 @@ local p = alice.db.profile
 p.color = { 0.2, 0.7, 0.3, 1 }
 p.presets["Moss"] = { 0.1, 0.4, 0.1, 1 }
 local tag = A.OfferInChat("Raid: [night] | team")
-check(tag == "[AzUI: Raid night team]", "the link name loses brackets, colons and bars: " .. tostring(tag))
+check(tag == "[ABCS: Raid night team]", "the link name loses brackets, colons and bars: " .. tostring(tag))
 check(alice.chatBox[1] == tag, "and goes into a new chat box")
 alice.chatOpen = true
 A.OfferInChat()
-check(alice.chatBox[2] == "[AzUI: Alice's setup]", "with no name it goes under your character's")
+check(alice.chatBox[2] == "[ABCS: Alice's setup]", "with no name it goes under your character's")
 check(#alice.db.global.chatShares == 2 and alice.db.global.chatShares[1].name == "Alice's setup", "offers are kept, newest first")
 for i = 1, 6 do A.OfferInChat("Setup " .. i) end
 check(#alice.db.global.chatShares == 5, "five at most")
@@ -76,7 +76,7 @@ check(alice.db.global.chatShares[1].name == "Raid night team" and same == 1 and 
 -- The link in chat
 ---------------------------------------------------------------------------
 local line = bob.chat("CHAT_MSG_PARTY", "come see " .. tag .. " now", alice.name)
-check(line:find("|Haddon:AzUI_Color_Picker:share:Alice-MockRealm:Raid night team|h[AzUI: Raid night team]|h", 1, true),
+check(line:find("|Haddon:AzUI_Color_Picker:share:Alice-MockRealm:Raid night team|h[ABCS: Raid night team]|h", 1, true),
   "Bob's chat shows the text as a link to Alice's setup: " .. line)
 check(line:find("^come see ") and line:find(" now$"), "the rest of the line is left as it is")
 check(bob.chat("CHAT_MSG_PARTY", "no link here", alice.name) == "no link here", "other lines are left alone")
@@ -157,9 +157,9 @@ args.chatName.set(nil, "  Mythic+ [push]  ")
 check(args.chatName.get() == "Mythic+ push", "and is cleaned as you type it")
 alice.chatBox = {}
 args.chatBtn.func()
-check(alice.chatBox[1] == "[AzUI: Mythic+ push]", "Share in Chat puts it in chat")
+check(alice.chatBox[1] == "[ABCS: Mythic+ push]", "Share in Chat puts it in chat")
 
--- Pasting a share string in the AzUI window's import box, without the check in its corner
+-- Pasting a share string in the ABCS window's import box, without the check in its corner
 do
   local text = bob.P.Export(bob.P.shareParts)
   bob.ns.OpenPanel("share")

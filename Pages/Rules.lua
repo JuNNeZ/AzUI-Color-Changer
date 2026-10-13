@@ -1,4 +1,4 @@
--- Pages/Rules.lua - the Rules page in the classic window (the AzUI window draws its own).
+-- Pages/Rules.lua - the Rules page in the classic window (the ABCS window draws its own).
 local addonName, ns = ...
 local P = ns.P
 local L = P.L
@@ -179,7 +179,7 @@ function P.BuildRuleOptions()
   wipe(args)
   for key, option in pairs(rulesStatic) do args[key] = option end
   for index in ipairs(P.DB.profile.rules) do
-    -- the AzUI window draws rules as sentences on its Studio Rules page
+    -- the ABCS window draws rules as sentences on its Studio Rules page
     args["rule" .. index] = ForPanel(RuleGroup(index), { hidden = true })
   end
 end

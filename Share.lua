@@ -154,15 +154,15 @@ function P.Decode(text)
   if type(text) ~= "string" then return nil, L["Paste a share string first."] end
   text = text:gsub("%s", "")
   if text == "" then return nil, L["Paste a share string first."] end
-  if #text > MAX_TEXT then return nil, L["That string is too long to be an AzUI share string."] end
-  if text:sub(1, #PREFIX) ~= PREFIX then return nil, L["That is not an AzUI share string. They start with !AZUI1!"] end
+  if #text > MAX_TEXT then return nil, L["That string is too long to be an ABCS share string."] end
+  if text:sub(1, #PREFIX) ~= PREFIX then return nil, L["That is not an ABCS share string. They start with !AZUI1!"] end
   local ok, data = pcall(function()
     local E = C_EncodingUtil
     return E.DeserializeCBOR(E.DecompressString(E.DecodeBase64(text:sub(#PREFIX + 1))))
   end)
   if not ok or type(data) ~= "table" then return nil, L["That share string is damaged or incomplete."] end
   local clean = Sanitize(data)
-  if not clean then return nil, L["That share string is from a newer version of AzUI Color Picker."] end
+  if not clean then return nil, L["That share string is from a newer version of ABCS."] end
   return clean
 end
 

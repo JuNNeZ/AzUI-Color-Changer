@@ -1,6 +1,6 @@
 -- QuickPalette.lua - right-click the minimap button for the everyday changes without
 -- opening the full window: the colour you have, your presets as swatches, the effects,
--- pet colours on or off, and a way into the AzUI window.
+-- pet colours on or off, and a way into the ABCS window.
 --
 -- Drawn in AzeriteUI's style when the options kit has its art, Blizzard's otherwise.
 local _, ns = ...
@@ -70,7 +70,7 @@ local function Chip(parent, width, label, onClick)
 end
 
 local function Build()
-  -- the same art as the AzUI window, chosen once
+  -- the same art as the ABCS window, chosen once
   local kit = Kit()
   if kit and kit.PrepareArt then kit.PrepareArt(P.DB.global.panel.theme) end
   palette = CreateFrame("Frame", "AzUIColorPickerQuickPalette", UIParent, "BackdropTemplate")
@@ -129,7 +129,7 @@ local function Build()
   end
   local noPresets = Text(palette, 11, .6, .6, .6)
   noPresets:SetPoint("TOPLEFT", presetsLabel, "BOTTOMLEFT", 0, -10)
-  noPresets:SetText(L["No presets yet. Save one from the AzUI window."])
+  noPresets:SetText(L["No presets yet. Save one from the ABCS window."])
   palette.noPresets = noPresets
 
   -- effects, four to a row
@@ -178,7 +178,7 @@ local function Build()
   open:SetPoint("TOPLEFT", rule, "BOTTOMLEFT", 0, -6)
   local openText = Text(open, 13, 1, .82, 0)
   openText:SetPoint("LEFT")
-  openText:SetText(L["Open the AzUI window…"])
+  openText:SetText(L["Open the ABCS window…"])
   open:SetScript("OnClick", function() palette:Hide(); P.ToggleWindow() end)
   local hint = Text(palette, 10, .5, .5, .5)
   hint:SetPoint("RIGHT", palette, "RIGHT", -PAD, 0)

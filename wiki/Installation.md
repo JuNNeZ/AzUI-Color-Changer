@@ -12,7 +12,7 @@
 
 ## Method 1 — CurseForge App (recommended)
 
-1. Open the **CurseForge** desktop app and search for **AzUI Healthbar Color Changer** (Project ID `1286164`).
+1. Open the **CurseForge** desktop app and search for **ABCS – Advanced Bar Coloring System** (Project ID `1286164`).
 2. Click **Install**.
 3. Launch WoW — the addon is ready.
 
@@ -20,7 +20,7 @@
 
 ## Method 2 — Manual Installation
 
-1. Download the latest release ZIP from the [Releases](https://github.com/JuNNeZ/AzUI-Color-Changer/releases) page.
+1. Download the latest release ZIP from the [Releases](https://github.com/JuNNeZ/ABCS-Advanced-Bar-Coloring-System/releases) page.
 2. Unzip the archive. You should end up with a single folder called `AzUI_Color_Picker`.
 3. Move that folder into your WoW AddOns directory:
 
@@ -42,7 +42,7 @@ AzUI_Color_Picker\
 ├── Pages\            (the option pages)
 ├── Locales\          (translations)
 ├── icon.tga
-├── Options\          (the AzUI window)
+├── Options\          (the ABCS window)
 └── Libs\
     ├── LibStub\
     │   └── LibStub.lua
@@ -71,7 +71,7 @@ AzUI_Color_Picker\
 
 After logging in:
 
-- A small **AzUI icon** should appear on your minimap (unless you have hidden it) and in the AddOn Compartment.
+- A small **ABCS icon** should appear on your minimap (unless you have hidden it) and in the AddOn Compartment.
 - Type `/ahui` — the options panel should open immediately.
 - If neither of these happen, check that the addon is enabled in the AddOns list and that there are no Lua errors in your chat.
 
@@ -84,7 +84,7 @@ The app handles updates automatically. You can also click **Check for Updates** 
 
 ### Manual
 1. Delete the old `AzUI_Color_Picker` folder from your AddOns directory.
-2. Download the new ZIP from [Releases](https://github.com/JuNNeZ/AzUI-Color-Changer/releases) and repeat the steps above.
+2. Download the new ZIP from [Releases](https://github.com/JuNNeZ/ABCS-Advanced-Bar-Coloring-System/releases) and repeat the steps above.
 
 Your saved colors and presets are stored in `WTF\Account\<account>\SavedVariables\AzUI_Color_PickerDB.lua` and are **not** deleted when you update the addon.
 

@@ -1,4 +1,4 @@
--- ShareChat.lua - shares a setup through chat. "Share in Chat" puts [AzUI: Name] in your
+-- ShareChat.lua - shares a setup through chat. "Share in Chat" puts [ABCS: Name] in your
 -- chat box for you to send; anyone else with the addon sees it as a link. Clicking the
 -- link asks its owner's addon for the setup with addon messages, and what comes back
 -- opens in the import preview on the Share page, where nothing changes until Import.
@@ -37,7 +37,7 @@ P.CleanShareName = CleanName
 
 function P.DefaultShareName()
   local name = UnitName and UnitName("player")
-  return CleanName(string.format(L["%s's setup"], P.Accessible(name) or "AzUI")) or "AzUI"
+  return CleanName(string.format(L["%s's setup"], P.Accessible(name) or "ABCS")) or "ABCS"
 end
 
 -- Players by name only on your realm, Name-Realm on another, as the game compares them.
@@ -63,7 +63,7 @@ local function FindOffer(name)
   end
 end
 
--- Puts [AzUI: name] in the chat box: the one you are typing in, or a new one.
+-- Puts [ABCS: name] in the chat box: the one you are typing in, or a new one.
 local function IntoChat(text)
   local insert = (ChatFrameUtil and ChatFrameUtil.InsertLink) or ChatEdit_InsertLink
   if insert then
@@ -88,7 +88,7 @@ function P.OfferInChat(name)
   end
   table.insert(offers, 1, { name = name, text = text, time = time and time() or 0 })
   for i = #offers, MAX_OFFERS + 1, -1 do offers[i] = nil end
-  local tag = "[AzUI: " .. name .. "]"
+  local tag = "[ABCS: " .. name .. "]"
   if not IntoChat(tag) then return nil, L["There is no chat box to put the link in."] end
   return tag
 end
@@ -176,7 +176,7 @@ local function WatchRequest(key, request)
   request.token = token
   C_Timer.After(WAIT_TIME, function()
     if pending[key] ~= request or request.token ~= token then return end
-    GiveUp(key, L["No answer from %s about \"%s\". They may be offline, or not have AzUI Color Picker."])
+    GiveUp(key, L["No answer from %s about \"%s\". They may be offline, or not have ABCS."])
   end)
 end
 
@@ -264,14 +264,14 @@ local CHAT_EVENTS = {
   "CHAT_MSG_GUILD", "CHAT_MSG_OFFICER", "CHAT_MSG_WHISPER", "CHAT_MSG_WHISPER_INFORM", "CHAT_MSG_CHANNEL",
 }
 
--- [AzUI: Name] as a link to the setup `owner` offered.
+-- [ABCS: Name] as a link to the setup `owner` offered.
 function P.ShareLink(owner, name)
   return "|c" .. LINK_COLOUR .. "|Haddon:" .. LINK_ADDON .. ":share:" .. owner .. ":" .. name
-    .. "|h[AzUI: " .. name .. "]|h|r"
+    .. "|h[ABCS: " .. name .. "]|h|r"
 end
 
 local function Linked(owner, message)
-  return (message:gsub("%[AzUI: ([^%]|]+)%]", function(name)
+  return (message:gsub("%[ABCS: ([^%]|]+)%]", function(name)
     local clean = CleanName(name)
     if not clean then return nil end
     return P.ShareLink(owner, clean)
@@ -282,7 +282,7 @@ end
 -- in some restricted content) is left as it is.
 local function Filter(_, event, message, author, ...)
   if Secret(message) or Secret(author) or type(message) ~= "string" or type(author) ~= "string" then return false end
-  if not message:find("[AzUI: ", 1, true) then return false end
+  if not message:find("[ABCS: ", 1, true) then return false end
   -- a whisper you sent shows the other player as its author; the setup is yours
   local owner = author
   if event == "CHAT_MSG_WHISPER_INFORM" then

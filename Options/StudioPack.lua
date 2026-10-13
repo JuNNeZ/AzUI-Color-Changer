@@ -1,10 +1,10 @@
--- StudioPack.lua - the optional AzUI Studio art pack.
+-- StudioPack.lua - the optional ABCS Studio art pack.
 --
 -- Hand-drawn art that goes beyond the generated shapes in Media\Studio, briefed in
 -- Tools\AssetBrief. WoW cannot ask whether a file exists, so each piece is used only
 -- once it is switched on here, after its files are in Media\StudioPack:
 --
---   logo        logo.tga                  64x64    the mark beside "AzUI Studio"
+--   logo        logo.tga                  64x64    the mark beside "ABCS Studio"
 --   corners     corner.tga                64x64    bronze filigree, top-left corner;
 --                                                  mirrored for the other three
 --   conditions  condition-<key>.tga       64x64    one per rule condition: combat,

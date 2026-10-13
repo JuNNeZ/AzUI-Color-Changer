@@ -232,7 +232,7 @@ do
   env.printed = nil
   env.SlashCmdList.AZCOLORPICKER("check")
   local all = table.concat(game.printed, "\n")
-  check(all:find("AzUI Color Picker", 1, true) and all:find("Health bar: #4D9933", 1, true),
+  check(all:find("ABCS", 1, true) and all:find("Health bar: #4D9933", 1, true),
     "it says what your health bar shows")
   check(all:find("AzeriteUI · Health bar", 1, true) and all:find("Z-Perl · Health bar", 1, true),
     "and lists every bar found, with where it comes from")

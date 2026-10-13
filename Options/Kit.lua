@@ -329,7 +329,7 @@ local themes = {
 }
 
 local themeLabels = {
-	azerite = L["AzUI Azerite"],
+	azerite = L["ABCS Azerite"],
 	dark = L["Dark"],
 	light = L["Light"],
 	class = L["Class Color"]

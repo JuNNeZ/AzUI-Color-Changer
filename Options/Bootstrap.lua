@@ -6,7 +6,7 @@ for class, color in pairs(RAID_CLASS_COLORS) do
   ns.Colors.class[class] = { color.r, color.g, color.b }
 end
 
--- AzUI Azerite draws with the art of whichever AzeriteUI is installed, read from
+-- ABCS Azerite draws with the art of whichever AzeriteUI is installed, read from
 -- its own folder; nothing is copied or bundled. Each edition ships a slightly
 -- different set, checked against its Assets folder: only JuNNeZ Edition has the
 -- options window's own glyphs and close button, and AzeriteUI6 has no tooltip
@@ -33,7 +33,7 @@ end
 
 local plain = "Interface\\ChatFrame\\ChatFrameBackground"
 -- JuNNeZ Edition's themes (Legacy HUD, Hunter, Mage, Paladin) redraw its art, and
--- AzUI Azerite follows whichever is on: through the theme's own ResolveMedia and,
+-- ABCS Azerite follows whichever is on: through the theme's own ResolveMedia and,
 -- for the live preview, its own StyleHealth, so the casing fits by the theme's rules.
 local THEME_MODULES = { "LegacyHUD", "HunterTheme", "MageTheme", "PaladinTheme" }
 function ns.ActiveAzeriteTheme()

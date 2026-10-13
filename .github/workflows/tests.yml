@@ -29,25 +29,25 @@ jobs:
       - name: Hunter stable on Retail and Forever
         run: lua5.1 Tools/TestClients.lua
 
-      - name: AzUI window, Studio theme
+      - name: ABCS window, Studio theme
         run: lua5.1 Tools/TestPanel.lua
 
-      - name: AzUI window, Azerite theme with AzeriteUI art
+      - name: ABCS window, Azerite theme with AzeriteUI art
         run: lua5.1 Tools/TestPanel.lua art
 
-      - name: AzUI window, Azerite theme with Blizzard art
+      - name: ABCS window, Azerite theme with Blizzard art
         run: lua5.1 Tools/TestPanel.lua plain
 
-      - name: AzUI window, Azerite theme with stock AzeriteUI 5.x
+      - name: ABCS window, Azerite theme with stock AzeriteUI 5.x
         run: lua5.1 Tools/TestPanel.lua stock
 
-      - name: AzUI window, Azerite theme with AzeriteUI6
+      - name: ABCS window, Azerite theme with AzeriteUI6
         run: lua5.1 Tools/TestPanel.lua aui6
 
       - name: 5.1 and 5.2 features
         run: lua5.1 Tools/TestFeatures.lua
 
-      - name: AzUI Studio pages
+      - name: ABCS Studio pages
         run: lua5.1 Tools/TestStudio.lua
 
       - name: Unit frame addons, overlays, gradient and /ahui check

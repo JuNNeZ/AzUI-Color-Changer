@@ -688,7 +688,7 @@ function Health:GetControl(parent)
   return control
 end
 
--- AzUI Azerite: AzeriteUI's bars in their cases. Sized so every case's stone stays
+-- ABCS Azerite: AzeriteUI's bars in their cases. Sized so every case's stone stays
 -- inside the card, with the names under the portraits, clear of the stone's spikes,
 -- and the power bar under the health bar's case.
 -- With one of JuNNeZ Edition's themes on (Hunter, Mage, Paladin), the theme styles

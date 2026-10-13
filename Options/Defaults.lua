@@ -8,7 +8,7 @@
 -- Which settings differ from their defaults: the gem on a row, the dot beside a page
 -- and the tally in the window.
 --
--- JuNNeZ Edition looks a default up by the option's key. AzUI's getters read nested
+-- JuNNeZ Edition looks a default up by the option's key. ABCS's getters read nested
 -- settings (the Cast Bar list reads profile.cast.mode), so that cannot work here.
 -- Instead the getter itself is asked twice: once with your profile, once with a fresh
 -- copy of the defaults put in its place for that moment. A getter that does not read

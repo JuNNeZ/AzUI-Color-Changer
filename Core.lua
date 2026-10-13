@@ -1,6 +1,6 @@
 ---@diagnostic disable: undefined-global, undefined-field
 --[[
-Core.lua - AzUI Color Picker
+Core.lua - ABCS
 Custom colour, effects, rules, presets and hunter-pet colours for your own health bar
 on AzeriteUI (5.x, JuNNeZ Edition with every theme, AzeriteUI6), ElvUI, Shadowed and
 Unhalted Unit Frames and the default Blizzard player frame, plus the pet frames and,
@@ -23,7 +23,7 @@ private table `P` (ns.P); load order is set by the TOC:
   Paint.lua      channels, the mixer that picks a colour, fades, the painter
   Frames.lua     finds your bars in each unit frame addon and Blizzard's frames
   Share.lua      import and export strings
-  ShareChat.lua  [AzUI: ...] links in chat, fetched from their owner with addon messages
+  ShareChat.lua  [ABCS: ...] links in chat, fetched from their owner with addon messages
   Profiles.lua   per-specialization profiles and presets
   Pages/         the option table, one file per page
   Options.lua    windows, slash commands (/ahui check among them), key bindings, launcher
@@ -131,7 +131,7 @@ P.cbPresets = {
 P.DB = nil
 P.isHunter = false
 
-function P.Print(msg) print("|cffff8800[AzUI Color Picker]|r " .. tostring(msg)) end
+function P.Print(msg) print("|cffff8800[ABCS]|r " .. tostring(msg)) end
 function P.Debug(msg) if P.DB and P.DB.profile.debug then P.Print(msg) end end
 
 function P.IsAccessible(value)

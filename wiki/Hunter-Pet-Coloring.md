@@ -1,6 +1,6 @@
 # Hunter Pet Coloring
 
-AzUI Healthbar Color Changer can color your bars based on the pet you have out. Every hunter pet can have its own color and effect, pets without one use a color for their family, and you choose whether pet colors go on your health bar, the AzeriteUI pet frame, or both. When the pet is dismissed, your own color and effects come back.
+ABCS – Advanced Bar Coloring System can color your bars based on the pet you have out. Every hunter pet can have its own color and effect, pets without one use a color for their family, and you choose whether pet colors go on your health bar, the AzeriteUI pet frame, or both. When the pet is dismissed, your own color and effects come back.
 
 Pet colors are only shown on screen — they are never saved over your chosen color, so `/reload`ing or logging out with a pet out cannot lose your color.
 

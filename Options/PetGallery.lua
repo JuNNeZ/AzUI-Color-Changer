@@ -1,4 +1,4 @@
--- The pet gallery on the Hunter Pets page of the AzUI window.
+-- The pet gallery on the Hunter Pets page of the ABCS window.
 --
 -- From the AzUI Feature Plan: every pet as a card with its portrait, name, family
 -- and colour, the one that is out wearing a badge; filters for call slots and the
